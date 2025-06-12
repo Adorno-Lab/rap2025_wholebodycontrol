@@ -27,5 +27,5 @@ jobs:
             with:
               platforms: linux/amd64
               push: true
-              file: ubuntu_24/sas_robot_driver_unitree_b1z1/Dockerfile
+              file: docker/sas_robot_driver_unitree_b1z1/Dockerfile
               tags: ${{ vars.DOCKER_USERNAME }}/sas_robot_driver_unitree_b1z1  
