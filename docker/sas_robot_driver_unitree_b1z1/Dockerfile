@@ -3,8 +3,6 @@ SHELL ["/bin/bash", "-c"]
 ENV BASH_ENV="/etc/bash_env"
 
 
-# Install install_sas_drivers_b1z1 and build the ROS packages
-RUN chmod +x ~/git/docker_recipes/dependencies/install_sas_drivers_b1z1.sh
 
 # Clone this rep
 RUN mkdir -p ~/git/
