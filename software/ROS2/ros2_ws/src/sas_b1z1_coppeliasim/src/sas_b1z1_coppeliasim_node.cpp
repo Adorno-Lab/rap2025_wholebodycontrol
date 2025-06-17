@@ -34,15 +34,18 @@ int main(int argc, char** argv)
     {
         sas::RobotDriverB1Z1CoppeliaSimConfiguration configuration;
 
-        sas::get_ros_parameter(node,"host",configuration.host);
-        sas::get_ros_parameter(node,"port",configuration.port);
-        sas::get_ros_parameter(node,"TIMEOUT_IN_MILISECONDS",configuration.TIMEOUT_IN_MILISECONDS);
+        sas::get_ros_parameter(node,"host",configuration.cs_host);
+        sas::get_ros_parameter(node,"port",configuration.cs_port);
+        sas::get_ros_parameter(node,"TIMEOUT_IN_MILISECONDS",configuration.cs_TIMEOUT_IN_MILISECONDS);
+        sas::get_ros_parameter(node,"B1_robotname",configuration.cs_B1_robotname);
+        sas::get_ros_parameter(node,"Z1_robotname",configuration.cs_Z1_robotname);
+        sas::get_ros_parameter(node,"B1_topic_prefix",configuration.B1_topic_prefix);
+        sas::get_ros_parameter(node,"Z1_topic_prefix",configuration.Z1_topic_prefix);
+        sas::get_ros_parameter(node,"thread_sampling_time_sec",configuration.thread_sampling_time_sec);
 
         auto robot_driver = std::make_shared<sas::B1Z1CoppeliaSimROS>(node,
                                                                       configuration,
-                                                                      &kill_this_process,
-                                                                         "sas_b1/sas_B1",
-                                                                         "sas_z1/z1_1");
+                                                                      &kill_this_process);
 
         RCLCPP_INFO_STREAM_ONCE(node->get_logger(), "::Loading parameters from parameter server.");
 

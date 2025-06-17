@@ -52,9 +52,14 @@ namespace sas
 
 struct RobotDriverB1Z1CoppeliaSimConfiguration
 {
-    std::string host;
-    int port;
-    int TIMEOUT_IN_MILISECONDS;
+    std::string cs_host;
+    int cs_port;
+    int cs_TIMEOUT_IN_MILISECONDS;
+    std::string cs_B1_robotname;
+    std::string cs_Z1_robotname;
+    std::string B1_topic_prefix;
+    std::string Z1_topic_prefix;
+    double thread_sampling_time_sec;
 };
 
 class B1Z1CoppeliaSimROS
@@ -67,8 +72,6 @@ protected:
     std::shared_ptr<DQ_CoppeliaSimInterfaceZMQ> cs_;
 
 private:
-    double timer_period_;
-
     int print_count_;
 
     sas::Clock clock_;
@@ -166,9 +169,7 @@ public:
 
     B1Z1CoppeliaSimROS(std::shared_ptr<Node>& node,
                         const RobotDriverB1Z1CoppeliaSimConfiguration &configuration,
-                        std::atomic_bool* break_loops,
-                        const std::string& topic_prefix_b1,
-                        const std::string& topic_prefix_z1);
+                        std::atomic_bool* break_loops);
     void control_loop();
 
 };

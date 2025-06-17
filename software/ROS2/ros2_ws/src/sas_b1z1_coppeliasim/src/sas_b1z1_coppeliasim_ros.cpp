@@ -25,52 +25,50 @@ public:
 };
 
 B1Z1CoppeliaSimROS::B1Z1CoppeliaSimROS(std::shared_ptr<Node> &node,
-                                         const RobotDriverB1Z1CoppeliaSimConfiguration &configuration,
-                                         std::atomic_bool *break_loops,
-                                         const std::string &topic_prefix_b1,
-                                         const std::string &topic_prefix_z1)
+                                       const RobotDriverB1Z1CoppeliaSimConfiguration &configuration,
+                                       std::atomic_bool *break_loops)
     :st_break_loops_{break_loops},
-    topic_prefix_b1_{topic_prefix_b1},
-    topic_prefix_z1_{topic_prefix_z1},
-    node_{node}, timer_period_{0.002}, print_count_{0}, clock_{0.002}
+    topic_prefix_b1_{configuration.B1_topic_prefix},
+    topic_prefix_z1_{configuration.Z1_topic_prefix},
+    node_{node}, print_count_{0}, clock_{configuration.thread_sampling_time_sec}
 {
     impl_ = std::make_unique<B1Z1CoppeliaSimROS::Impl>();
 
     impl_->b1z1_cs_driver_ = std::make_shared<RobotDriverCoppeliaSimUnitreeB1Z1>(break_loops,
-                                                                                 "UnitreeB1",
-                                                                                 "UnitreeZ1",
-                                                                                 configuration.host,
-                                                                                 configuration.port,
-                                                                                 configuration.TIMEOUT_IN_MILISECONDS);
+                                                                                 configuration.cs_B1_robotname,
+                                                                                 configuration.cs_Z1_robotname,
+                                                                                 configuration.cs_host,
+                                                                                 configuration.cs_port,
+                                                                                 configuration.cs_TIMEOUT_IN_MILISECONDS);
 
 
     subscriber_FR_joint_states_ = node_->create_subscription<sensor_msgs::msg::JointState>(
-        topic_prefix_b1 + "/get/FR_joint_states", 1, std::bind(&B1Z1CoppeliaSimROS::_callback_FR_joint_states, this, std::placeholders::_1)
+        topic_prefix_b1_ + "/get/FR_joint_states", 1, std::bind(&B1Z1CoppeliaSimROS::_callback_FR_joint_states, this, std::placeholders::_1)
         );
     subscriber_FL_joint_states_ = node_->create_subscription<sensor_msgs::msg::JointState>(
-        topic_prefix_b1 + "/get/FL_joint_states", 1, std::bind(&B1Z1CoppeliaSimROS::_callback_FL_joint_states, this, std::placeholders::_1)
+        topic_prefix_b1_ + "/get/FL_joint_states", 1, std::bind(&B1Z1CoppeliaSimROS::_callback_FL_joint_states, this, std::placeholders::_1)
         );
     subscriber_RR_joint_states_ = node_->create_subscription<sensor_msgs::msg::JointState>(
-        topic_prefix_b1 + "/get/RR_joint_states", 1, std::bind(&B1Z1CoppeliaSimROS::_callback_RR_joint_states, this, std::placeholders::_1)
+        topic_prefix_b1_ + "/get/RR_joint_states", 1, std::bind(&B1Z1CoppeliaSimROS::_callback_RR_joint_states, this, std::placeholders::_1)
         );
     subscriber_RL_joint_states_ = node_->create_subscription<sensor_msgs::msg::JointState>(
-        topic_prefix_b1 + "/get/RL_joint_states", 1, std::bind(&B1Z1CoppeliaSimROS::_callback_RL_joint_states, this, std::placeholders::_1)
+        topic_prefix_b1_ + "/get/RL_joint_states", 1, std::bind(&B1Z1CoppeliaSimROS::_callback_RL_joint_states, this, std::placeholders::_1)
         );
 
     subscriber_pose_state_ = node_->create_subscription<geometry_msgs::msg::PoseStamped>(
-         topic_prefix_b1 + "/get/pose_state", 1, std::bind(&B1Z1CoppeliaSimROS::_callback_pose_state, this, std::placeholders::_1)
+         topic_prefix_b1_ + "/get/pose_state", 1, std::bind(&B1Z1CoppeliaSimROS::_callback_pose_state, this, std::placeholders::_1)
         );
 
     subscriber_Z1_joint_states_ = node_->create_subscription<sensor_msgs::msg::JointState>(
-        topic_prefix_z1 + "/get/joint_states", 1, std::bind(&B1Z1CoppeliaSimROS::_callback_Z1_joint_states, this, std::placeholders::_1)
+        topic_prefix_z1_ + "/get/joint_states", 1, std::bind(&B1Z1CoppeliaSimROS::_callback_Z1_joint_states, this, std::placeholders::_1)
         );
 
     subscriber_x_fkm_ = node_->create_subscription<geometry_msgs::msg::PoseStamped>(
-        topic_prefix_b1 + "/set/coppeliasim_frame_x", 1, std::bind(&B1Z1CoppeliaSimROS::_callback_x_fkm_state, this, std::placeholders::_1)
+        topic_prefix_b1_ + "/set/coppeliasim_frame_x", 1, std::bind(&B1Z1CoppeliaSimROS::_callback_x_fkm_state, this, std::placeholders::_1)
         );
 
     publisher_coppeliasim_frame_xd_ = node_->create_publisher<geometry_msgs::msg::PoseStamped>(
-        topic_prefix_b1 + "/get/coppeliasim_frame_xd", 1);
+        topic_prefix_b1_+ + "/get/coppeliasim_frame_xd", 1);
 
     publisher_robot_pose_ = node_->create_publisher<geometry_msgs::msg::PoseStamped>(
         "coppeliasim/get/robot_pose", 1);
