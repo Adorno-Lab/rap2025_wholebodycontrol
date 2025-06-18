@@ -133,6 +133,10 @@ public:
     void initialize();
     void deinitialize();
     void disconnect();
+
+    std::string get_status_message() const;
+    std::string get_ip () const;
+    int get_port() const;
 };
 
 

@@ -25,7 +25,7 @@ def generate_launch_description():
             parameters=[{
                 "cs_host": "localhost",
                 "cs_port": 23000,
-                "cs_TIMEOUT_IN_MILISECONDS": 1000,
+                "cs_TIMEOUT_IN_MILISECONDS": 2000,
                 "cs_B1_robotname": "UnitreeB1",
                 "cs_Z1_robotname": "UnitreeZ1",
                 "thread_sampling_time_sec": 0.002,

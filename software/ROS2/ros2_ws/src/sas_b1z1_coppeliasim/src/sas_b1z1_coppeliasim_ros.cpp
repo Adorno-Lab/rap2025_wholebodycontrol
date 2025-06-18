@@ -40,6 +40,10 @@ B1Z1CoppeliaSimROS::B1Z1CoppeliaSimROS(std::shared_ptr<Node> &node,
                                                                                  configuration.cs_host,
                                                                                  configuration.cs_port,
                                                                                  configuration.cs_TIMEOUT_IN_MILISECONDS);
+    impl_->b1z1_cs_driver_->connect();
+    RCLCPP_ERROR_STREAM_ONCE(node_->get_logger(),impl_->b1z1_cs_driver_->get_status_message());
+    impl_->b1z1_cs_driver_->initialize();
+    RCLCPP_ERROR_STREAM_ONCE(node_->get_logger(),impl_->b1z1_cs_driver_->get_status_message());
 
 
     subscriber_FR_joint_states_ = node_->create_subscription<sensor_msgs::msg::JointState>(

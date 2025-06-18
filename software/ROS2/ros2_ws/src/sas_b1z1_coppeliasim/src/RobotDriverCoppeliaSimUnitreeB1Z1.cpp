@@ -17,6 +17,7 @@ RobotDriverCoppeliaSimUnitreeB1Z1::RobotDriverCoppeliaSimUnitreeB1Z1(std::atomic
                                                                      const int &TIMEOUT_IN_MILISECONDS)
 :break_loops_{break_loops}, ip_{host}, port_{port}, timeout_{TIMEOUT_IN_MILISECONDS}, b1_name_{B1_robotname}, z1_name_{Z1_robotname}
 {
+    cs_ = std::make_shared<DQ_CoppeliaSimInterfaceZMQ>();
 }
 
 /**
@@ -31,6 +32,7 @@ void RobotDriverCoppeliaSimUnitreeB1Z1::connect()
             if (!cs_->connect(ip_, port_, timeout_))
                 throw std::runtime_error("Unable to connect to CoppeliaSim.");
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::cerr<<"Connected to CoppeliaSim! "<<std::endl;
             status_msg_ = "connected!";
             current_status_ = STATUS::CONNECTED;
             // Get the joint names from CoppeliaSim
@@ -44,11 +46,14 @@ void RobotDriverCoppeliaSimUnitreeB1Z1::connect()
             RR_jointnames_ = cs_->get_jointnames_from_object(RR_hip_rotor_);
             RL_jointnames_ = cs_->get_jointnames_from_object(RL_hip_rotor_);
             robot_b1_pose_ = cs_->get_object_pose(b1_name_);
+
+
         }
         catch (std::exception& e)
         {
             std::cout<<e.what()<<std::endl;
             current_status_ = STATUS::IDLE;
+            status_msg_ = "Unable to connect to CoppeliaSim.";
         }
     }
 }
@@ -64,7 +69,8 @@ void RobotDriverCoppeliaSimUnitreeB1Z1::initialize()
         current_status_ = STATUS::INITIALIZED;
         _start_echo_robot_state_mode_thread();
     }else{
-        std::cerr<<"The driver must be connected before to be initialized. "<<std::endl;
+        //std::cerr<<"The driver must be connected before to be initialized. "<<std::endl;
+        status_msg_ = "Unable to initialize.";
     }
 }
 
@@ -87,6 +93,21 @@ void RobotDriverCoppeliaSimUnitreeB1Z1::disconnect()
 {
     current_status_ = STATUS::DISCONNECTED;
     status_msg_ = "Deinitialized!";
+}
+
+std::string RobotDriverCoppeliaSimUnitreeB1Z1::get_status_message() const
+{
+    return status_msg_;
+}
+
+std::string RobotDriverCoppeliaSimUnitreeB1Z1::get_ip() const
+{
+    return ip_;
+}
+
+int RobotDriverCoppeliaSimUnitreeB1Z1::get_port() const
+{
+    return port_;
 }
 
 
