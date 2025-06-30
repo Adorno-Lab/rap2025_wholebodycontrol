@@ -18,7 +18,7 @@ def generate_launch_description():
                     default_value='30'
                 ),
         Node(
-            package='sas_b1z1_coppeliasim',
+            package='sas_coppeliasim_unitree_b1z1',
             executable='sas_b1z1_coppeliasim_node',
             name='b1z1_1',
             namespace="",
