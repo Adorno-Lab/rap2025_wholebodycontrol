@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(sas_b1z1_coppeliasim)
+project(sas_coppeliasim_unitree_b1z1)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
