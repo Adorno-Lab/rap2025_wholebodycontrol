@@ -26,6 +26,10 @@ RUN cp -r ~/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/sas_coppelias
  ~/ros2_ws/src/ \
 && /bin/bash -c "source /opt/ros/jazzy/setup.bash; cd ~/ros2_ws/; colcon build && source install/setup.bash" 
 
+RUN chmod +x ~/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/sas_coppeliasim_unitree_b1z1/scripts/launch_ROS2_drivers.sh  
+RUN chmod +x ~/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/sas_coppeliasim_unitree_b1z1/scripts/launch_scene.sh  
+RUN chmod +x ~/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/sas_coppeliasim_unitree_b1z1/scripts/launch_scene_and_ROS2_drivers.sh
+
 RUN echo "alias launch_ROS2_drivers='cdros2 && source install/setup.bash && ros2 launch sas_coppeliasim_unitree_b1z1 sas_coppeliasim_unitree_b1z1_launch.py ' " >> ~/.bashrc 
 RUN echo "alias launch_scene='~/utils/CoppeliaSim_Edu_V4_7_0_rev4_Ubuntu24_04/coppeliaSim.sh -s 0 -f ~/git/rap2025_wholebodycontrol/coppeliasim_scenes/B1_with_Z1_showcase.ttt'" >> ~/.bashrc 
 
