@@ -11,8 +11,8 @@ ENV UBUNTU_VERSION=$UBUNTU_VERSION
 ARG COPPELIASIM_FILE="CoppeliaSim_Edu_${COPPELIASIM_RELEASE}_${UBUNTU_VERSION}.tar.xz"
 ENV COPPELIASIM_FILE=$COPPELIASIM_FILE
 
-# Install CoppeliaSim. # This is temporal: && git reset --hard origin/master && git pull origin master
-RUN cd ~/git/docker_recipes && git reset --hard origin/master && git pull origin master
+# Install CoppeliaSim. # This is temporal: && git reset --hard origin/main && git pull origin master
+RUN cd ~/git/docker_recipes && git reset --hard origin/main && git pull origin master
 RUN chmod +x ~/git/docker_recipes/dependencies/install_coppeliasim.sh
 RUN bash -c '~/git/docker_recipes/dependencies/install_coppeliasim.sh'
 
