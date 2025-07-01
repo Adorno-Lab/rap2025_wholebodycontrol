@@ -5,4 +5,5 @@
 source /opt/ros/jazzy/setup.bash
 cd ~/ros2_ws/ && colcon build
 source ~/ros2_ws/install/setup.bash
+source ~/.bashrc
 launch_ROS2_drivers
