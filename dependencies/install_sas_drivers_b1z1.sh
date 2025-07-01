@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Install SAS
+
 
 # Suggested instructions to sas_robot_driver_unitree_z1 and sas_robot_driver_unitree_b1
 mkdir -p ~/ros2_ws/src
