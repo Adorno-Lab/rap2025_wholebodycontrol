@@ -1,10 +1,31 @@
+/*
+#    Copyright (c) 2024 Adorno-Lab
+#
+#    This is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU Lesser General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public License.
+#    If not, see <https://www.gnu.org/licenses/>.
+#
+# ################################################################
+#
+#   Author: Juan Jose Quiroz Omana (email: juanjose.quirozomana@manchester.ac.uk)
+#
+# ################################################################
+*/
 
 #include <rclcpp/rclcpp.hpp>
 #include <sas_common/sas_common.hpp>
 #include <sas_core/eigen3_std_conversions.hpp>
-//#include <sas_robot_driver_unitree_z1/sas_robot_driver_unitree_z1.hpp>
 #include <dqrobotics/utils/DQ_Math.h>
-#include "b1z1_wb_control.hpp"
+#include "sas_control_unitree_b1z1.hpp"
 
 /*********************************************
  * SIGNAL HANDLER
@@ -29,20 +50,27 @@ int main(int argc, char** argv)
     }
 
     rclcpp::init(argc,argv);
-    auto node = std::make_shared<rclcpp::Node>("b1z1_wb_control_node");
+    auto node = std::make_shared<rclcpp::Node>("sas_control_unitree_b1z1_node");
 
     try
     {
-        sas::ControllerConfiguration controller_configuration;
-        controller_configuration.vfi_file = "/home/clerice/git/unitree-b1-z1/software/ROS2/ros2_ws/src/b1z1_wholebody_control/cfg/vfi_constraints.yaml";
+        sas::ControllerConfiguration configuration;
+        //controller_configuration.vfi_file = "/home/clerice/git/unitree-b1-z1/software/ROS2/ros2_ws/src/b1z1_wholebody_control/cfg/vfi_constraints.yaml";
 
-        //sas::get_ros_parameter(node,"vfi_file", controller_configuration.vfi_file);
-        //   sas::get_ros_parameter(node,"LIE_DOWN_ROBOT_WHEN_DEINITIALIZE", robot_driver_unitree_b1_configuration.LIE_DOWN_ROBOT_WHEN_DEINITIALIZE);
+
+        sas::get_ros_parameter(node,"cs_host",configuration.cs_host);
+        sas::get_ros_parameter(node,"cs_port",configuration.cs_port);
+        sas::get_ros_parameter(node,"cs_TIMEOUT_IN_MILISECONDS",configuration.cs_TIMEOUT_IN_MILISECONDS);
+        sas::get_ros_parameter(node,"cs_B1_robotname",configuration.cs_B1_robotname);
+        sas::get_ros_parameter(node,"cs_Z1_robotname",configuration.cs_Z1_robotname);
+        sas::get_ros_parameter(node,"vfi_file", configuration.vfi_file);
+        sas::get_ros_parameter(node,"B1_topic_prefix",configuration.B1_topic_prefix);
+        sas::get_ros_parameter(node,"Z1_topic_prefix",configuration.Z1_topic_prefix);
+        sas::get_ros_parameter(node,"thread_sampling_time_sec",configuration.thread_sampling_time_sec);
 
         auto robot_driver = std::make_shared<sas::B1Z1WholeBodyControl>(node,
-                                                                        controller_configuration,
-                                                                        &kill_this_process,
-                                                                        "sas_b1/sas_B1", "sas_z1/z1_1");
+                                                                        configuration,
+                                                                        &kill_this_process); //,"sas_b1/sas_B1", "sas_z1/z1_1");
 
         RCLCPP_INFO_STREAM_ONCE(node->get_logger(), "::Loading parameters from parameter server.");
 

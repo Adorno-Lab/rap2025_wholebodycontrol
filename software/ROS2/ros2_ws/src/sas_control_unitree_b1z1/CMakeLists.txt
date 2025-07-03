@@ -20,6 +20,9 @@ find_package(tf2_ros REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
     src/sas_control_unitree_b1z1.cpp
+    src/UnitreeB1Z1CoppeliaSimZMQRobot.cpp
+    src/UnitreeZ1Robot.cpp
+    src/UnitreeB1Z1MobileRobot
     )
 
 target_link_libraries(${PROJECT_NAME}

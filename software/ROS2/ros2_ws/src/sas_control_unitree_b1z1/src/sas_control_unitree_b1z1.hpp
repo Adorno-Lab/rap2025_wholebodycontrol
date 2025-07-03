@@ -1,3 +1,26 @@
+/*
+#    Copyright (c) 2024 Adorno-Lab
+#
+#    This is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU Lesser General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public License.
+#    If not, see <https://www.gnu.org/licenses/>.
+#
+# ################################################################
+#
+#   Author: Juan Jose Quiroz Omana (email: juanjose.quirozomana@manchester.ac.uk)
+#
+# ################################################################
+*/
+
 #pragma once
 #include <atomic>
 #include <memory>
@@ -23,15 +46,30 @@ namespace sas
 
 struct ControllerConfiguration
 {
+    std::string cs_host;
+    int cs_port;
+    int cs_TIMEOUT_IN_MILISECONDS;
+    std::string cs_B1_robotname;
+    std::string cs_Z1_robotname;
+    std::string B1_topic_prefix;
+    std::string Z1_topic_prefix;
+    double thread_sampling_time_sec;
     std::string vfi_file;
 };
 
 class B1Z1WholeBodyControl
 {
 protected:
+    std::string cs_host_;
+    int cs_port_;
+    int cs_TIMEOUT_IN_MILISECONDS_;
+    std::string cs_Z1_robotname_;
+    std::string cs_B1_robotname_;
+
     std::atomic_bool* st_break_loops_;
     std::string topic_prefix_b1_;
     std::string topic_prefix_z1_;
+
 
     std::shared_ptr<rclcpp::Node> node_;
     DQ robot_pose_; // pose of the B1 robot;
@@ -42,6 +80,7 @@ protected:
     std::string vfi_file_;
 
 private:
+    /*
     MatrixXd I_;
 
     VectorXd qmin_arm;
@@ -57,6 +96,7 @@ private:
 
     VectorXd q_break_dot_min;
     VectorXd q_break_dot_max;
+*/
 
 
     bool update_handbreak_{true};
@@ -65,7 +105,7 @@ private:
     double controller_proportional_gain_{8};
     double controller_damping_{0.05};
 
-    double timer_period_;
+    //double timer_period_;
     double T_;
 
     int print_count_;
@@ -127,9 +167,7 @@ public:
 
     B1Z1WholeBodyControl(std::shared_ptr<Node>& node,
                          const  ControllerConfiguration &configuration,
-                         std::atomic_bool* break_loops,
-                         const std::string& topic_prefix_b1,
-                         const std::string& topic_prefix_z1);
+                         std::atomic_bool* break_loops);
 
 
     void control_loop();
