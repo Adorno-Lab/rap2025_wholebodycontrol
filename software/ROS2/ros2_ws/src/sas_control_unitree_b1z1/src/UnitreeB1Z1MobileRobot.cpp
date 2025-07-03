@@ -94,7 +94,9 @@ int UnitreeB1Z1MobileRobot::get_dim_configuration_space() const
     return dim_configuration_space_;
 }
 
-MatrixXd UnitreeB1Z1MobileRobot::pose_jacobian_derivative(const VectorXd &q, const VectorXd &q_dot, const int &to_ith_link) const
+MatrixXd UnitreeB1Z1MobileRobot::pose_jacobian_derivative([[maybe_unused]] const VectorXd &q,
+                                                          [[maybe_unused]] const VectorXd &q_dot,
+                                                          [[maybe_unused]] const int &to_ith_link) const
 {
     throw std::runtime_error("pose_jacobian_derivative is not implemented yet.");
 }
