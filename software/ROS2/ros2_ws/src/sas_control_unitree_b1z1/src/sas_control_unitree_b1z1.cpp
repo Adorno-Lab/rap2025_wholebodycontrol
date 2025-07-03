@@ -27,6 +27,7 @@
 #include <dqrobotics/solvers/DQ_QPOASESSolver.h>
 #include <dqrobotics/interfaces/coppeliasim/robots/FrankaEmikaPandaCoppeliaSimZMQRobot.h>
 #include <sas_core/eigen3_std_conversions.hpp>
+#include <dqrobotics/robot_control/DQ_ClassicQPController.h>
 
 namespace sas
 {
@@ -56,11 +57,11 @@ B1Z1WholeBodyControl::B1Z1WholeBodyControl(std::shared_ptr<Node> &node,
     topic_prefix_z1_{configuration.Z1_topic_prefix},
     node_{node},
     vfi_file_{configuration.vfi_file},
+    controller_proportional_gain_{configuration.controller_proportional_gain},
+    controller_damping_{configuration.controller_damping},
     T_{configuration.thread_sampling_time_sec},
     print_count_{0},
-    clock_{configuration.thread_sampling_time_sec},
-    datalogger_client_{node}, //node, 10
-    save_data_with_datalogger_{false}
+    clock_{configuration.thread_sampling_time_sec}
 {
     impl_ = std::make_unique<B1Z1WholeBodyControl::Impl>();
     impl_->cs_ = std::make_shared<DQ_CoppeliaSimInterfaceZMQ>();
@@ -172,6 +173,20 @@ VectorXd B1Z1WholeBodyControl::_get_mobile_platform_configuration_from_pose(cons
     return (VectorXd(3)<< p(0), p(1), rangle).finished();
 }
 
+VectorXd B1Z1WholeBodyControl::_get_planar_joint_velocities_at_body_frame(const VectorXd &planar_joint_velocities_at_inertial_frame) const
+{
+    // Alias
+    const VectorXd& ua = planar_joint_velocities_at_inertial_frame; // x_dot, y_dot, phi_dot
+    DQ p_dot_a_ab = ua(0)*i_ + ua(1)*j_;
+    DQ w_a_ab = ua(2)*k_;
+    DQ twist_a = w_a_ab + E_*(p_dot_a_ab + DQ_robotics::cross(robot_pose_.translation(), w_a_ab));
+    // Twist_a expressed in the body frame is given as
+    DQ twist_b = Ad(robot_pose_.conj(), twist_a);
+    VectorXd twist_b_vec = twist_b.vec6(); // [0 0 wb xb_dot yb_dot 0]
+                                                 //[xb_dot         yb_dot        wb]
+    return DQ_robotics_extensions::CVectorXd({twist_b_vec(3), twist_b_vec(4), twist_b_vec(2)});
+}
+
 
 void B1Z1WholeBodyControl::control_loop()
 {
@@ -211,6 +226,61 @@ void B1Z1WholeBodyControl::control_loop()
                                                                                                             impl_->kin_mobile_manipulator_,
                                                                                                             vfi_file_, true);
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Number of VFI constraints: "+ std::to_string(impl_->robot_constraint_manager_->get_number_of_vfi_constraints()));
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Starting control loop...");
+
+        VectorXd qi_arm = q_arm_;  // For numerical integration
+        VectorXd u;
+
+
+        DQ_ClassicQPController controller(impl_->kin_mobile_manipulator_, impl_->qpoases_solver_);
+        controller.set_control_objective(ControlObjective::Translation);
+        controller.set_gain(controller_proportional_gain_);
+        controller.set_damping(controller_damping_);
+
+        while(not _should_shutdown())
+        {
+            rclcpp::spin_some(node_);
+            clock_.update_and_sleep();
+            rclcpp::spin_some(node_);
+            VectorXd q;
+            q = DQ_robotics_extensions::Numpy::vstack(_get_mobile_platform_configuration_from_pose(robot_pose_), qi_arm);
+            DQ x = impl_->robot_model_->fkm(q);
+            _publish_coppeliasim_frame_x(x);
+
+            if (not is_unit(xd_))
+                RCLCPP_INFO_STREAM(node_->get_logger(), "::Problem reading desired pose");
+            try {
+
+                auto ineq_constraints = impl_->robot_constraint_manager_->get_inequality_constraints(q);
+                auto [A,b] = impl_->robot_constraint_manager_->get_inequality_constraints(q);
+
+
+                MatrixXd J = impl_->robot_model_->pose_jacobian(q);
+                u = controller.compute_setpoint_control_signal(q, xd_.translation().vec4());
+
+
+
+            } catch (const std::exception& e) {
+                _publish_target_B1_commands(VectorXd::Zero(3));
+                RCLCPP_INFO_STREAM(node_->get_logger(), "::QP not solved!");
+                RCLCPP_INFO_STREAM(node_->get_logger(), e.what());
+                u = VectorXd::Zero(9);
+                break;
+            }
+            // Numerical integration for to command the arm at joint position level
+            qi_arm = qi_arm + T_*u.tail(6);
+
+            // publish the commands on the respective topics
+            _publish_target_Z1_commands(qi_arm, target_gripper_position_);
+
+            // The u.head(3) command velocities for the B1 robot are given with respect to the inertial frame.
+            // However, we need to send the velocities with respect to the B1 frame.
+            VectorXd ub = _get_planar_joint_velocities_at_body_frame(u.head(3));
+
+            // publish the commands on the respective topics
+            _publish_target_B1_commands(ub);
+
+        }
 
     }
     catch(const std::exception& e)

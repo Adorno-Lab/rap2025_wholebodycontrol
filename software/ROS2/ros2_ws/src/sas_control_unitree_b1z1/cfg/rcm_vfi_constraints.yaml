@@ -1,0 +1,578 @@
+- Description: Configuration limits.
+  Parameters:
+     - vfi_mode: CONFIGURATION_LIMITS
+       q_min: [-10000, -10000, -10000, -30,  45,  -90, -80, -45, -160]
+       q_max: [ 10000,  10000,  10000,  30, 165,    0,  80,  45,  160]
+       unit: DEG
+       vfi_gain: 1.0
+
+
+- Description: Configuration velocity limits
+  Parameters:
+     - vfi_mode: CONFIGURATION_VELOCITY_LIMITS
+       q_dot_min: [-0.1, -0.1, -0.3, -1.57, -1.57, -1.57, -1.57, -1.57, -1.57]
+       q_dot_max: [ 0.1,  0.1,  0.3,  1.57,  1.57,  1.57,  1.57,  1.57,  1.57]
+       unit: RAD
+
+
+- Description: End-effector and Z1 Base self-collision
+  Parameters:
+     - vfi_mode: ROBOT_TO_ROBOT
+       cs_entity_one: B1_vfi_sphere_0
+       cs_entity_two: Sphere_effector
+       entity_one_primitive_type: POINT
+       entity_two_primitive_type: POINT
+       joint_index_one: 2
+       joint_index_two: 8
+       safe_distance: 0.5
+       vfi_gain: 5.0
+       tag: C1
+
+
+- Description: End-effector cone constraint
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: x_inertial
+       cs_entity_robot: line
+       entity_environment_primitive_type: LINE_ANGLE
+       entity_robot_primitive_type: LINE_ANGLE
+       joint_index: 8
+       safe_distance: 5
+       vfi_gain: 5.0
+       direction: KEEP_ROBOT_INSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C2
+
+
+- Description: Front bumper robot plane 0 -------------------------------
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: Plane_frame_0
+       cs_entity_robot: B1_vfi_sphere_front_bumper
+       entity_environment_primitive_type: PLANE
+       entity_robot_primitive_type: POINT
+       joint_index: 2
+       safe_distance: 0.3
+       vfi_gain: 0.41
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C3
+
+- Description: Front bumper robot plane 2
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: Plane_frame_2
+       cs_entity_robot: B1_vfi_sphere_front_bumper
+       entity_environment_primitive_type: PLANE
+       entity_robot_primitive_type: POINT
+       joint_index: 2
+       safe_distance: 0.3
+       vfi_gain: 0.41
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C4
+
+- Description: Front bumper robot plane 3
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: Plane_frame_3
+       cs_entity_robot: B1_vfi_sphere_front_bumper
+       entity_environment_primitive_type: PLANE
+       entity_robot_primitive_type: POINT
+       joint_index: 2
+       safe_distance: 0.3
+       vfi_gain: 0.41
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C5
+
+- Description: Front bumper robot plane 4
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: Plane_frame_4
+       cs_entity_robot: B1_vfi_sphere_front_bumper
+       entity_environment_primitive_type: PLANE
+       entity_robot_primitive_type: POINT
+       joint_index: 2
+       safe_distance: 0.3
+       vfi_gain: 0.41
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C6
+
+
+- Description: rear bumper robot plane 0  -------------------------------
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: Plane_frame_0
+       cs_entity_robot: B1_vfi_sphere_rear_bumper
+       entity_environment_primitive_type: PLANE
+       entity_robot_primitive_type: POINT
+       joint_index: 2
+       safe_distance: 0.3
+       vfi_gain: 0.41
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C7
+
+- Description: rear bumper robot plane 2
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: Plane_frame_2
+       cs_entity_robot: B1_vfi_sphere_rear_bumper
+       entity_environment_primitive_type: PLANE
+       entity_robot_primitive_type: POINT
+       joint_index: 2
+       safe_distance: 0.3
+       vfi_gain: 0.41
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C8
+
+- Description: rear bumper robot plane 3
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: Plane_frame_3
+       cs_entity_robot: B1_vfi_sphere_rear_bumper
+       entity_environment_primitive_type: PLANE
+       entity_robot_primitive_type: POINT
+       joint_index: 2
+       safe_distance: 0.3
+       vfi_gain: 0.41
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C9
+
+- Description: rear bumper robot plane 4
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: Plane_frame_4
+       cs_entity_robot: B1_vfi_sphere_rear_bumper
+       entity_environment_primitive_type: PLANE
+       entity_robot_primitive_type: POINT
+       joint_index: 2
+       safe_distance: 0.3
+       vfi_gain: 0.41
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C10
+
+
+- Description: center bumper robot plane 0   ------------------------------
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: Plane_frame_0
+       cs_entity_robot: B1_vfi_sphere_center_bumper
+       entity_environment_primitive_type: PLANE
+       entity_robot_primitive_type: POINT
+       joint_index: 2
+       safe_distance: 0.3
+       vfi_gain: 0.4
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C11
+
+- Description: center bumper robot plane 0
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: Plane_frame_2
+       cs_entity_robot: B1_vfi_sphere_center_bumper
+       entity_environment_primitive_type: PLANE
+       entity_robot_primitive_type: POINT
+       joint_index: 2
+       safe_distance: 0.3
+       vfi_gain: 0.4
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C12
+
+- Description: center bumper robot plane 0
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: Plane_frame_3
+       cs_entity_robot: B1_vfi_sphere_center_bumper
+       entity_environment_primitive_type: PLANE
+       entity_robot_primitive_type: POINT
+       joint_index: 2
+       safe_distance: 0.3
+       vfi_gain: 0.4
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C13
+
+- Description: center bumper robot plane 0
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: Plane_frame_4
+       cs_entity_robot: B1_vfi_sphere_center_bumper
+       entity_environment_primitive_type: PLANE
+       entity_robot_primitive_type: POINT
+       joint_index: 2
+       safe_distance: 0.3
+       vfi_gain: 0.4
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C14
+
+
+
+- Description: End-effector vs foam ------------------------------------------
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: foam_sphere1
+       cs_entity_robot: Sphere_effector
+       entity_environment_primitive_type: POINT
+       entity_robot_primitive_type: POINT
+       joint_index: 8
+       safe_distance: 0.175
+       vfi_gain: 1.0
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C15
+
+- Description: End-effector vs foam
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: foam_sphere2
+       cs_entity_robot: Sphere_effector
+       entity_environment_primitive_type: POINT
+       entity_robot_primitive_type: POINT
+       joint_index: 8
+       safe_distance: 0.175
+       vfi_gain: 1.0
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C16
+
+- Description: End-effector vs foam
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: foam_sphere3
+       cs_entity_robot: Sphere_effector
+       entity_environment_primitive_type: POINT
+       entity_robot_primitive_type: POINT
+       joint_index: 8
+       safe_distance: 0.175
+       vfi_gain: 1.0
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C17
+
+
+- Description: End-effector vs foam
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: foam_sphere4
+       cs_entity_robot: Sphere_effector
+       entity_environment_primitive_type: POINT
+       entity_robot_primitive_type: POINT
+       joint_index: 8
+       safe_distance: 0.175
+       vfi_gain: 1.0
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C18
+
+
+- Description: End-effector vs foam
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: foam_sphere5
+       cs_entity_robot: Sphere_effector
+       entity_environment_primitive_type: POINT
+       entity_robot_primitive_type: POINT
+       joint_index: 8
+       safe_distance: 0.175
+       vfi_gain: 1.0
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C19
+
+- Description: End-effector vs foam
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: foam_sphere6
+       cs_entity_robot: Sphere_effector
+       entity_environment_primitive_type: POINT
+       entity_robot_primitive_type: POINT
+       joint_index: 8
+       safe_distance: 0.175
+       vfi_gain: 1.0
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C20
+
+- Description: End-effector vs foam
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: foam_sphere7
+       cs_entity_robot: Sphere_effector
+       entity_environment_primitive_type: POINT
+       entity_robot_primitive_type: POINT
+       joint_index: 8
+       safe_distance: 0.175
+       vfi_gain: 1.0
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C21
+
+- Description: End-effector vs foam
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: foam_sphere8
+       cs_entity_robot: Sphere_effector
+       entity_environment_primitive_type: POINT
+       entity_robot_primitive_type: POINT
+       joint_index: 8
+       safe_distance: 0.175
+       vfi_gain: 1.0
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C22
+
+- Description: End-effector vs foam
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: foam_sphere9
+       cs_entity_robot: Sphere_effector
+       entity_environment_primitive_type: POINT
+       entity_robot_primitive_type: POINT
+       joint_index: 8
+       safe_distance: 0.175
+       vfi_gain: 1.0
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C23
+
+- Description: End-effector vs foam
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: foam_sphere10
+       cs_entity_robot: Sphere_effector
+       entity_environment_primitive_type: POINT
+       entity_robot_primitive_type: POINT
+       joint_index: 8
+       safe_distance: 0.175
+       vfi_gain: 1.0
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C24
+
+- Description: End-effector vs foam
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: foam_sphere11
+       cs_entity_robot: Sphere_effector
+       entity_environment_primitive_type: POINT
+       entity_robot_primitive_type: POINT
+       joint_index: 8
+       safe_distance: 0.175
+       vfi_gain: 1.0
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C25
+
+- Description: End-effector vs foam
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: foam_sphere12
+       cs_entity_robot: Sphere_effector
+       entity_environment_primitive_type: POINT
+       entity_robot_primitive_type: POINT
+       joint_index: 8
+       safe_distance: 0.175
+       vfi_gain: 1.0
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C26
+
+- Description: End-effector vs foam
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: foam_sphere13
+       cs_entity_robot: Sphere_effector
+       entity_environment_primitive_type: POINT
+       entity_robot_primitive_type: POINT
+       joint_index: 8
+       safe_distance: 0.175
+       vfi_gain: 1.0
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C27
+
+- Description: End-effector vs foam
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: foam_sphere14
+       cs_entity_robot: Sphere_effector
+       entity_environment_primitive_type: POINT
+       entity_robot_primitive_type: POINT
+       joint_index: 8
+       safe_distance: 0.175
+       vfi_gain: 1.0
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C28
+
+- Description: End-effector vs foam
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: foam_sphere15
+       cs_entity_robot: Sphere_effector
+       entity_environment_primitive_type: POINT
+       entity_robot_primitive_type: POINT
+       joint_index: 8
+       safe_distance: 0.175
+       vfi_gain: 1.0
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C29
+
+- Description: End-effector vs foam
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: foam_sphere16
+       cs_entity_robot: Sphere_effector
+       entity_environment_primitive_type: POINT
+       entity_robot_primitive_type: POINT
+       joint_index: 8
+       safe_distance: 0.175
+       vfi_gain: 1.0
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C30
+
+- Description: End-effector vs foam
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: foam_sphere17
+       cs_entity_robot: Sphere_effector
+       entity_environment_primitive_type: POINT
+       entity_robot_primitive_type: POINT
+       joint_index: 8
+       safe_distance: 0.175
+       vfi_gain: 1.0
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C31
+
+- Description: End-effector vs foam
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: foam_sphere18
+       cs_entity_robot: Sphere_effector
+       entity_environment_primitive_type: POINT
+       entity_robot_primitive_type: POINT
+       joint_index: 8
+       safe_distance: 0.175
+       vfi_gain: 1.0
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C32
+
+- Description: End-effector vs foam
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: foam_sphere19
+       cs_entity_robot: Sphere_effector
+       entity_environment_primitive_type: POINT
+       entity_robot_primitive_type: POINT
+       joint_index: 8
+       safe_distance: 0.175
+       vfi_gain: 1.0
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C33
+
+- Description: End-effector vs foam
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: foam_sphere20
+       cs_entity_robot: Sphere_effector
+       entity_environment_primitive_type: POINT
+       entity_robot_primitive_type: POINT
+       joint_index: 8
+       safe_distance: 0.175
+       vfi_gain: 1.0
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C34
+
+- Description: Front bumper sphere base foam ---------------------------
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: Sphere_base_foam
+       cs_entity_robot: B1_vfi_sphere_front_bumper
+       entity_environment_primitive_type: POINT
+       entity_robot_primitive_type: POINT
+       joint_index: 2
+       safe_distance: 0.7
+       vfi_gain: 0.4
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C35
+
+- Description: Rear bumper sphere base foam ---------------------------
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: Sphere_base_foam
+       cs_entity_robot: B1_vfi_sphere_rear_bumper
+       entity_environment_primitive_type: POINT
+       entity_robot_primitive_type: POINT
+       joint_index: 2
+       safe_distance: 0.8
+       vfi_gain: 0.4
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C36
+
+
+- Description: Center bumper sphere base foam ---------------------------
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: Sphere_base_foam
+       cs_entity_robot: B1_vfi_sphere_center_bumper
+       entity_environment_primitive_type: POINT
+       entity_robot_primitive_type: POINT
+       joint_index: 2
+       safe_distance: 0.7
+       vfi_gain: 0.4
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C37

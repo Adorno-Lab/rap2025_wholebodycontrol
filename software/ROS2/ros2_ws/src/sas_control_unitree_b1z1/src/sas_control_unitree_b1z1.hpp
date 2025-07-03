@@ -55,6 +55,8 @@ struct ControllerConfiguration
     std::string Z1_topic_prefix;
     double thread_sampling_time_sec;
     std::string vfi_file;
+    double controller_proportional_gain;
+    double controller_damping;
 };
 
 class B1Z1WholeBodyControl
@@ -79,24 +81,9 @@ protected:
 
     std::string vfi_file_;
 
+
+
 private:
-    /*
-    MatrixXd I_;
-
-    VectorXd qmin_arm;
-    VectorXd qmax_arm;
-    VectorXd q_dot_arm_max;
-
-    VectorXd qmin;
-    VectorXd qmax;
-
-    VectorXd q_dot_min;
-    VectorXd q_dot_max;
-
-
-    VectorXd q_break_dot_min;
-    VectorXd q_break_dot_max;
-*/
 
 
     bool update_handbreak_{true};
@@ -111,8 +98,6 @@ private:
     int print_count_;
 
     sas::Clock clock_;
-    sas::DataloggerClient datalogger_client_;
-    bool save_data_with_datalogger_;
 
 
     //also equivalent to rclcpp::TimerBase::SharedPtr
@@ -158,6 +143,8 @@ protected:
     void _update_kinematic_model();
 
     VectorXd _get_mobile_platform_configuration_from_pose(const DQ& pose) const;
+
+    VectorXd _get_planar_joint_velocities_at_body_frame(const VectorXd& planar_joint_velocities_at_inertial_frame) const;
 
 public:
 
