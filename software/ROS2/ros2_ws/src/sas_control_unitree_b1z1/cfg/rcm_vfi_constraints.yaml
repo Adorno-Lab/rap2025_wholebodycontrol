@@ -4,7 +4,7 @@
        q_min: [-10000, -10000, -10000, -30,  45,  -90, -80, -45, -160]
        q_max: [ 10000,  10000,  10000,  30, 165,    0,  80,  45,  160]
        unit: DEG
-       vfi_gain: 1.0
+       vfi_gain: 8.0
 
 
 - Description: Configuration velocity limits
