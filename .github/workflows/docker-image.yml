@@ -37,3 +37,11 @@ jobs:
               push: true
               file: docker/sas_coppeliasim_unitree_b1z1/Dockerfile
               tags: ${{ vars.DOCKER_USERNAME }}/sas_coppeliasim_unitree_b1z1 
+
+          - name: Build and push sas_control_unitree_b1z1
+            uses: docker/build-push-action@v6
+            with:
+              platforms: linux/amd64
+              push: true
+              file: docker/sas_control_unitree_b1z1/Dockerfile
+              tags: ${{ vars.DOCKER_USERNAME }}/sas_control_unitree_b1z1     
