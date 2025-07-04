@@ -121,7 +121,7 @@ void B1Z1WholeBodyControl::_update_kinematic_model()
     DQ X_J1_OFFSET;
     VectorXd q;
     // wait for the topics
-    RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Reading robot state from ROS2...");
+    RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Waiting for robot state from ROS2...");
     while (q_arm_.size() == 0 or not is_unit(robot_pose_)){
         rclcpp::spin_some(node_);
         if (_should_shutdown())
