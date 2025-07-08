@@ -1,7 +1,6 @@
 services:
   ros_jazzy_vicon:
-    image: juanjqo/ros_jazzy_vicon
-    platform: linux/amd64
+    build: https://github.com/Adorno-Lab/docker_recipes.git#main:ubuntu_24/ros_jazzy_vicon
     environment:
       DISPLAY: $DISPLAY # x server related
     privileged: true # Needed for some gpu configurations.
