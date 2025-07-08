@@ -1,0 +1,62 @@
+services:
+  ros_jazzy_vicon:
+    image: juanjqo/ros_jazzy_vicon
+    platform: linux/amd64
+    environment:
+      DISPLAY: $DISPLAY # x server related
+    privileged: true # Needed for some gpu configurations.
+    volumes:
+      - repo-data:/root/sas_tutorial_workspace/src/sas_ur_control_template/
+      - /tmp/.X11-unix:/tmp/.X11-unix # x server related
+      - ~/.Xauthority:/root/.Xauthority # x server related
+    network_mode: "host" # x server related
+    command: /bin/bash -c "
+      source /opt/ros/jazzy/setup.bash;
+      cd ~/ros2_ws/ && colcon build;
+      source ~/ros2_ws/install/setup.bash ;
+      export ROS_DOMAIN_ID=77;
+      ros2 launch motion_capture_tracking launch.py"
+
+  sas_coppeliasim_unitree_b1z1:
+    build: https://github.com/Adorno-Lab/rap2025_wholebodycontrol.git#main:docker/sas_coppeliasim_unitree_b1z1
+    environment:
+      DISPLAY: $DISPLAY # x server related
+    privileged: true # Needed for some gpu configurations.
+    volumes:
+      - repo-data:/root/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/sas_coppeliasim_unitree_b1z1/
+      - /tmp/.X11-unix:/tmp/.X11-unix # x server related
+      - ~/.Xauthority:/root/.Xauthority # x server related
+    network_mode: "host" # x server related
+    ipc: "host"
+    command: /bin/bash -c "
+      source /opt/ros/jazzy/setup.bash;
+      export ROS_DOMAIN_ID=77;
+      cd ~/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/sas_coppeliasim_unitree_b1z1/scripts
+      && chmod +x launch_scene_and_ROS2_drivers.sh
+      && . ./launch_scene_and_ROS2_drivers.sh "
+
+  sas_control_unitree_b1z1:
+    build: https://github.com/Adorno-Lab/rap2025_wholebodycontrol.git#main:docker/sas_control_unitree_b1z1
+    environment:
+      DISPLAY: $DISPLAY # x server related
+    privileged: true # Needed for some gpu configurations.
+    volumes:
+      - repo-data:/root/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/sas_control_unitree_b1z1/
+      - /tmp/.X11-unix:/tmp/.X11-unix # x server related
+      - ~/.Xauthority:/root/.Xauthority # x server related
+    network_mode: "host" # x server related
+    ipc: "host"
+    command: /bin/bash -c "
+      source /opt/ros/jazzy/setup.bash;
+      export ROS_DOMAIN_ID=77;
+      cd ~/ros2_ws/ && colcon build;
+      source ~/ros2_ws/install/setup.bash ;
+      sleep 10;
+      ros2 launch sas_control_unitree_b1z1 sas_control_unitree_b1z1_launch.py "
+
+
+volumes:
+  repo-data:      
+
+
+
