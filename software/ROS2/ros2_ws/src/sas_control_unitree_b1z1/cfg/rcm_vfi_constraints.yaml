@@ -22,7 +22,7 @@
        cs_entity_two: Sphere_effector
        entity_one_primitive_type: POINT
        entity_two_primitive_type: POINT
-       joint_index_one: 2
+       joint_index_one: 3
        joint_index_two: 8
        safe_distance: 0.5
        vfi_gain: 5.0
@@ -36,7 +36,7 @@
        cs_entity_robot: line
        entity_environment_primitive_type: LINE_ANGLE
        entity_robot_primitive_type: LINE_ANGLE
-       joint_index: 8
+       joint_index: 9
        safe_distance: 5
        vfi_gain: 5.0
        direction: KEEP_ROBOT_INSIDE
@@ -52,7 +52,7 @@
        cs_entity_robot: B1_vfi_sphere_front_bumper
        entity_environment_primitive_type: PLANE
        entity_robot_primitive_type: POINT
-       joint_index: 2
+       joint_index: 3
        safe_distance: 0.3
        vfi_gain: 0.41
        direction: KEEP_ROBOT_OUTSIDE
@@ -67,7 +67,7 @@
        cs_entity_robot: B1_vfi_sphere_front_bumper
        entity_environment_primitive_type: PLANE
        entity_robot_primitive_type: POINT
-       joint_index: 2
+       joint_index: 3
        safe_distance: 0.3
        vfi_gain: 0.41
        direction: KEEP_ROBOT_OUTSIDE
@@ -97,7 +97,7 @@
        cs_entity_robot: B1_vfi_sphere_front_bumper
        entity_environment_primitive_type: PLANE
        entity_robot_primitive_type: POINT
-       joint_index: 2
+       joint_index: 3
        safe_distance: 0.3
        vfi_gain: 0.41
        direction: KEEP_ROBOT_OUTSIDE
@@ -113,7 +113,7 @@
        cs_entity_robot: B1_vfi_sphere_rear_bumper
        entity_environment_primitive_type: PLANE
        entity_robot_primitive_type: POINT
-       joint_index: 2
+       joint_index: 3
        safe_distance: 0.3
        vfi_gain: 0.41
        direction: KEEP_ROBOT_OUTSIDE
@@ -128,7 +128,7 @@
        cs_entity_robot: B1_vfi_sphere_rear_bumper
        entity_environment_primitive_type: PLANE
        entity_robot_primitive_type: POINT
-       joint_index: 2
+       joint_index: 3
        safe_distance: 0.3
        vfi_gain: 0.41
        direction: KEEP_ROBOT_OUTSIDE
@@ -143,7 +143,7 @@
        cs_entity_robot: B1_vfi_sphere_rear_bumper
        entity_environment_primitive_type: PLANE
        entity_robot_primitive_type: POINT
-       joint_index: 2
+       joint_index: 3
        safe_distance: 0.3
        vfi_gain: 0.41
        direction: KEEP_ROBOT_OUTSIDE
@@ -158,7 +158,7 @@
        cs_entity_robot: B1_vfi_sphere_rear_bumper
        entity_environment_primitive_type: PLANE
        entity_robot_primitive_type: POINT
-       joint_index: 2
+       joint_index: 3
        safe_distance: 0.3
        vfi_gain: 0.41
        direction: KEEP_ROBOT_OUTSIDE
@@ -174,7 +174,7 @@
        cs_entity_robot: B1_vfi_sphere_center_bumper
        entity_environment_primitive_type: PLANE
        entity_robot_primitive_type: POINT
-       joint_index: 2
+       joint_index: 3
        safe_distance: 0.3
        vfi_gain: 0.4
        direction: KEEP_ROBOT_OUTSIDE
@@ -189,7 +189,7 @@
        cs_entity_robot: B1_vfi_sphere_center_bumper
        entity_environment_primitive_type: PLANE
        entity_robot_primitive_type: POINT
-       joint_index: 2
+       joint_index: 3
        safe_distance: 0.3
        vfi_gain: 0.4
        direction: KEEP_ROBOT_OUTSIDE
@@ -204,7 +204,7 @@
        cs_entity_robot: B1_vfi_sphere_center_bumper
        entity_environment_primitive_type: PLANE
        entity_robot_primitive_type: POINT
-       joint_index: 2
+       joint_index: 3
        safe_distance: 0.3
        vfi_gain: 0.4
        direction: KEEP_ROBOT_OUTSIDE
@@ -219,7 +219,7 @@
        cs_entity_robot: B1_vfi_sphere_center_bumper
        entity_environment_primitive_type: PLANE
        entity_robot_primitive_type: POINT
-       joint_index: 2
+       joint_index: 3
        safe_distance: 0.3
        vfi_gain: 0.4
        direction: KEEP_ROBOT_OUTSIDE
@@ -236,7 +236,7 @@
        cs_entity_robot: Sphere_effector
        entity_environment_primitive_type: POINT
        entity_robot_primitive_type: POINT
-       joint_index: 8
+       joint_index: 9
        safe_distance: 0.175
        vfi_gain: 1.0
        direction: KEEP_ROBOT_OUTSIDE
@@ -251,7 +251,7 @@
        cs_entity_robot: Sphere_effector
        entity_environment_primitive_type: POINT
        entity_robot_primitive_type: POINT
-       joint_index: 8
+       joint_index: 9
        safe_distance: 0.175
        vfi_gain: 1.0
        direction: KEEP_ROBOT_OUTSIDE
@@ -266,7 +266,7 @@
        cs_entity_robot: Sphere_effector
        entity_environment_primitive_type: POINT
        entity_robot_primitive_type: POINT
-       joint_index: 8
+       joint_index: 9
        safe_distance: 0.175
        vfi_gain: 1.0
        direction: KEEP_ROBOT_OUTSIDE
@@ -282,7 +282,7 @@
        cs_entity_robot: Sphere_effector
        entity_environment_primitive_type: POINT
        entity_robot_primitive_type: POINT
-       joint_index: 8
+       joint_index: 9
        safe_distance: 0.175
        vfi_gain: 1.0
        direction: KEEP_ROBOT_OUTSIDE
@@ -298,7 +298,7 @@
        cs_entity_robot: Sphere_effector
        entity_environment_primitive_type: POINT
        entity_robot_primitive_type: POINT
-       joint_index: 8
+       joint_index: 9
        safe_distance: 0.175
        vfi_gain: 1.0
        direction: KEEP_ROBOT_OUTSIDE
@@ -313,7 +313,7 @@
        cs_entity_robot: Sphere_effector
        entity_environment_primitive_type: POINT
        entity_robot_primitive_type: POINT
-       joint_index: 8
+       joint_index: 9
        safe_distance: 0.175
        vfi_gain: 1.0
        direction: KEEP_ROBOT_OUTSIDE
@@ -328,7 +328,7 @@
        cs_entity_robot: Sphere_effector
        entity_environment_primitive_type: POINT
        entity_robot_primitive_type: POINT
-       joint_index: 8
+       joint_index: 9
        safe_distance: 0.175
        vfi_gain: 1.0
        direction: KEEP_ROBOT_OUTSIDE
@@ -343,7 +343,7 @@
        cs_entity_robot: Sphere_effector
        entity_environment_primitive_type: POINT
        entity_robot_primitive_type: POINT
-       joint_index: 8
+       joint_index: 9
        safe_distance: 0.175
        vfi_gain: 1.0
        direction: KEEP_ROBOT_OUTSIDE
@@ -358,7 +358,7 @@
        cs_entity_robot: Sphere_effector
        entity_environment_primitive_type: POINT
        entity_robot_primitive_type: POINT
-       joint_index: 8
+       joint_index: 9
        safe_distance: 0.175
        vfi_gain: 1.0
        direction: KEEP_ROBOT_OUTSIDE
@@ -373,7 +373,7 @@
        cs_entity_robot: Sphere_effector
        entity_environment_primitive_type: POINT
        entity_robot_primitive_type: POINT
-       joint_index: 8
+       joint_index: 9
        safe_distance: 0.175
        vfi_gain: 1.0
        direction: KEEP_ROBOT_OUTSIDE
@@ -388,7 +388,7 @@
        cs_entity_robot: Sphere_effector
        entity_environment_primitive_type: POINT
        entity_robot_primitive_type: POINT
-       joint_index: 8
+       joint_index: 9
        safe_distance: 0.175
        vfi_gain: 1.0
        direction: KEEP_ROBOT_OUTSIDE
@@ -403,7 +403,7 @@
        cs_entity_robot: Sphere_effector
        entity_environment_primitive_type: POINT
        entity_robot_primitive_type: POINT
-       joint_index: 8
+       joint_index: 9
        safe_distance: 0.175
        vfi_gain: 1.0
        direction: KEEP_ROBOT_OUTSIDE
@@ -418,7 +418,7 @@
        cs_entity_robot: Sphere_effector
        entity_environment_primitive_type: POINT
        entity_robot_primitive_type: POINT
-       joint_index: 8
+       joint_index: 9
        safe_distance: 0.175
        vfi_gain: 1.0
        direction: KEEP_ROBOT_OUTSIDE
@@ -433,7 +433,7 @@
        cs_entity_robot: Sphere_effector
        entity_environment_primitive_type: POINT
        entity_robot_primitive_type: POINT
-       joint_index: 8
+       joint_index: 9
        safe_distance: 0.175
        vfi_gain: 1.0
        direction: KEEP_ROBOT_OUTSIDE
@@ -448,7 +448,7 @@
        cs_entity_robot: Sphere_effector
        entity_environment_primitive_type: POINT
        entity_robot_primitive_type: POINT
-       joint_index: 8
+       joint_index: 9
        safe_distance: 0.175
        vfi_gain: 1.0
        direction: KEEP_ROBOT_OUTSIDE
@@ -463,7 +463,7 @@
        cs_entity_robot: Sphere_effector
        entity_environment_primitive_type: POINT
        entity_robot_primitive_type: POINT
-       joint_index: 8
+       joint_index: 9
        safe_distance: 0.175
        vfi_gain: 1.0
        direction: KEEP_ROBOT_OUTSIDE
@@ -478,7 +478,7 @@
        cs_entity_robot: Sphere_effector
        entity_environment_primitive_type: POINT
        entity_robot_primitive_type: POINT
-       joint_index: 8
+       joint_index: 9
        safe_distance: 0.175
        vfi_gain: 1.0
        direction: KEEP_ROBOT_OUTSIDE
@@ -493,7 +493,7 @@
        cs_entity_robot: Sphere_effector
        entity_environment_primitive_type: POINT
        entity_robot_primitive_type: POINT
-       joint_index: 8
+       joint_index: 9
        safe_distance: 0.175
        vfi_gain: 1.0
        direction: KEEP_ROBOT_OUTSIDE
@@ -508,7 +508,7 @@
        cs_entity_robot: Sphere_effector
        entity_environment_primitive_type: POINT
        entity_robot_primitive_type: POINT
-       joint_index: 8
+       joint_index: 9
        safe_distance: 0.175
        vfi_gain: 1.0
        direction: KEEP_ROBOT_OUTSIDE
@@ -523,7 +523,7 @@
        cs_entity_robot: Sphere_effector
        entity_environment_primitive_type: POINT
        entity_robot_primitive_type: POINT
-       joint_index: 8
+       joint_index: 9
        safe_distance: 0.175
        vfi_gain: 1.0
        direction: KEEP_ROBOT_OUTSIDE
@@ -538,7 +538,7 @@
        cs_entity_robot: B1_vfi_sphere_front_bumper
        entity_environment_primitive_type: POINT
        entity_robot_primitive_type: POINT
-       joint_index: 2
+       joint_index: 3
        safe_distance: 0.7
        vfi_gain: 0.4
        direction: KEEP_ROBOT_OUTSIDE
@@ -553,7 +553,7 @@
        cs_entity_robot: B1_vfi_sphere_rear_bumper
        entity_environment_primitive_type: POINT
        entity_robot_primitive_type: POINT
-       joint_index: 2
+       joint_index: 3
        safe_distance: 0.8
        vfi_gain: 0.4
        direction: KEEP_ROBOT_OUTSIDE
@@ -569,7 +569,7 @@
        cs_entity_robot: B1_vfi_sphere_center_bumper
        entity_environment_primitive_type: POINT
        entity_robot_primitive_type: POINT
-       joint_index: 2
+       joint_index: 3
        safe_distance: 0.7
        vfi_gain: 0.4
        direction: KEEP_ROBOT_OUTSIDE
