@@ -57,6 +57,7 @@ B1Z1WholeBodyControl::B1Z1WholeBodyControl(std::shared_ptr<Node> &node,
     topic_prefix_z1_{configuration.Z1_topic_prefix},
     node_{node},
     vfi_file_{configuration.vfi_file},
+    debug_wait_for_topics_{configuration.debug_wait_for_topics},
     controller_proportional_gain_{configuration.controller_proportional_gain},
     controller_damping_{configuration.controller_damping},
     T_{configuration.thread_sampling_time_sec},
@@ -121,12 +122,21 @@ void B1Z1WholeBodyControl::_update_kinematic_model()
     DQ X_J1_OFFSET;
     VectorXd q;
     // wait for the topics
-    RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Waiting for robot state from ROS2...");
-    while (q_arm_.size() == 0 or not is_unit(robot_pose_)){
+    if (debug_wait_for_topics_)
+    {
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Waiting for robot state from ROS2...");
+        while (q_arm_.size() == 0 or not is_unit(robot_pose_)){
+            rclcpp::spin_some(node_);
+            if (_should_shutdown())
+                break;
+        };
+    }else{
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::[DEBUG MODE] No Waiting for topics!");
+        robot_pose_ = DQ{1};
+        q_arm_ = VectorXd::Zero(6);
         rclcpp::spin_some(node_);
-        if (_should_shutdown())
-            break;
-    };
+    }
+
     RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Robot state from ROS2 OK!");
     RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Reading info from CoppeliaSim...");
     const int iter1 = 5;

@@ -33,7 +33,8 @@ def generate_launch_description():
                 "Z1_topic_prefix": "sas_z1/z1_1",
                 "thread_sampling_time_sec": 0.002,
                 "controller_proportional_gain": 8.0,
-                "controller_damping": 0.05
+                "controller_damping": 0.05,
+                "debug_wait_for_topics": True
             }]
         ),
 

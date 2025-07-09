@@ -57,6 +57,7 @@ struct ControllerConfiguration
     std::string vfi_file;
     double controller_proportional_gain;
     double controller_damping;
+    bool debug_wait_for_topics;
 };
 
 class B1Z1WholeBodyControl
@@ -80,7 +81,7 @@ protected:
     std::vector<std::string> z1_jointnames_;
 
     std::string vfi_file_;
-
+    bool debug_wait_for_topics_;
 
 
 private:
