@@ -43,7 +43,7 @@ services:
       - repo-data:/root/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/sas_control_unitree_b1z1/
       - /tmp/.X11-unix:/tmp/.X11-unix # x server related
       - ~/.Xauthority:/root/.Xauthority # x server related
-    network_mode: "host" # x server related
+    network_mode: "host" # x server related.
     ipc: "host"
     command: /bin/bash -c "
       source /opt/ros/jazzy/setup.bash;
