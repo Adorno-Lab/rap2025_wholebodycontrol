@@ -82,7 +82,7 @@
        cs_entity_robot: B1_vfi_sphere_front_bumper
        entity_environment_primitive_type: PLANE
        entity_robot_primitive_type: POINT
-       joint_index: 2
+       joint_index: 3
        safe_distance: 0.3
        vfi_gain: 0.41
        direction: KEEP_ROBOT_OUTSIDE
