@@ -234,8 +234,21 @@ void B1Z1WholeBodyControl::control_loop()
         impl_->robot_constraint_manager_ = std::make_shared<DQ_robotics_extensions::RobotConstraintManager>(impl_->cs_,
                                                                                                             impl_->robot_cs_,
                                                                                                             impl_->kin_mobile_manipulator_,
-                                                                                                            vfi_file_, true);
+                                                                                                            vfi_file_,
+                                                                                                            true);
+        auto [qmin, qmax]    = impl_->robot_constraint_manager_->get_configuration_limits();
+        auto [qmin_d, qmax_d]= impl_->robot_constraint_manager_->get_configuration_velocity_limits();
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Number of VFI constraints: "+ std::to_string(impl_->robot_constraint_manager_->get_number_of_vfi_constraints()));
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::qmin: ");
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(),  qmin.transpose());
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::qmax: ");
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(),  qmax.transpose());
+
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::qmin_dot: ");
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(),  qmin_d.transpose());
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::qmax_dot: ");
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(),  qmax_d.transpose());
+
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Starting control loop...");
 
         VectorXd qi_arm = q_arm_;  // For numerical integration

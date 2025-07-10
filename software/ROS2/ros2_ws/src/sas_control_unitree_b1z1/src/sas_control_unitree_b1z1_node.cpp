@@ -55,7 +55,6 @@ int main(int argc, char** argv)
     try
     {
         sas::ControllerConfiguration configuration;
-        //controller_configuration.vfi_file = "/home/clerice/git/unitree-b1-z1/software/ROS2/ros2_ws/src/b1z1_wholebody_control/cfg/vfi_constraints.yaml";
 
 
         sas::get_ros_parameter(node,"cs_host",configuration.cs_host);
@@ -73,7 +72,7 @@ int main(int argc, char** argv)
 
         auto robot_driver = std::make_shared<sas::B1Z1WholeBodyControl>(node,
                                                                         configuration,
-                                                                        &kill_this_process); //,"sas_b1/sas_B1", "sas_z1/z1_1");
+                                                                        &kill_this_process); //,"sas_b1/b1_1", "sas_z1/z1_1");
 
         RCLCPP_INFO_STREAM_ONCE(node->get_logger(), "::Loading parameters from parameter server.");
 
