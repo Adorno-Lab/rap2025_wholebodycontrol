@@ -57,8 +57,9 @@ struct ControllerConfiguration
     std::string vfi_file;
     double controller_proportional_gain;
     double controller_damping;
+    double controller_target_region_size;
+    double controller_target_exit_size;
     bool debug_wait_for_topics;
-    bool debug_mode_use_simulation_only;
 };
 
 class B1Z1WholeBodyControl
@@ -83,7 +84,6 @@ protected:
 
     std::string vfi_file_;
     bool debug_wait_for_topics_;
-    bool debug_mode_use_simulation_only_;
 
 
 private:
@@ -92,8 +92,11 @@ private:
     bool update_handbreak_{true};
     bool update_handbreak_released_{true};
 
-    double controller_proportional_gain_{8};
-    double controller_damping_{0.05};
+    double controller_proportional_gain_;//{8};
+    double controller_damping_;//{0.05};
+    double controller_target_region_size_;
+    double controller_target_exit_size_;
+    bool robot_reached_region_;
 
     //double timer_period_;
     double T_;

@@ -58,9 +58,11 @@ B1Z1WholeBodyControl::B1Z1WholeBodyControl(std::shared_ptr<Node> &node,
     node_{node},
     vfi_file_{configuration.vfi_file},
     debug_wait_for_topics_{configuration.debug_wait_for_topics},
-    debug_mode_use_simulation_only_{configuration.debug_mode_use_simulation_only},
     controller_proportional_gain_{configuration.controller_proportional_gain},
     controller_damping_{configuration.controller_damping},
+    controller_target_region_size_{configuration.controller_target_region_size},
+    controller_target_exit_size_{configuration.controller_target_exit_size},
+    robot_reached_region_{false},
     T_{configuration.thread_sampling_time_sec},
     print_count_{0},
     clock_{configuration.thread_sampling_time_sec}
@@ -219,16 +221,21 @@ void B1Z1WholeBodyControl::control_loop()
         qarm_target(5) = -M_PI/2;
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Setting custom arm configuration...");
 
-        const int size = 200;
+        const int size = 500;
         auto qarm_inter = DQ_robotics_extensions::Numpy::linspace(q_arm_, qarm_target, size);
-        for (int i=0;i<200;i++)
+        for (int i=0;i<size;i++)
         {
             clock_.update_and_sleep();
             rclcpp::spin_some(node_);
             _publish_target_Z1_commands(qarm_inter.col(i), target_gripper_position_);
-            RCLCPP_INFO_STREAM(node_->get_logger(), "::Setting custom arm configuration: "+std::to_string(i)+"/100");
+            RCLCPP_INFO_STREAM(node_->get_logger(), "::Setting custom arm configuration: "+std::to_string(i)+"/"+std::to_string(size));
         }
-        _publish_target_Z1_commands(qarm_target, target_gripper_position_);
+        for (int i=0;i<100;i++)
+        {
+            clock_.update_and_sleep();
+            rclcpp::spin_some(node_);
+            _publish_target_Z1_commands(qarm_target, target_gripper_position_);
+        }
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::custom arm configuration set!");
 
 
@@ -274,15 +281,26 @@ void B1Z1WholeBodyControl::control_loop()
             if (not is_unit(xd_))
                 RCLCPP_INFO_STREAM(node_->get_logger(), "::Problem reading desired pose");
             try {
+                //Compute the distance between the end-effector and desired points
+                double distance = (x.translation()-xd_.translation()).vec3().norm();
 
-                auto ineq_constraints = impl_->robot_constraint_manager_->get_inequality_constraints(q);
-                auto [A,b] = impl_->robot_constraint_manager_->get_inequality_constraints(q);
+                // If the distance between them is below a threshold and the robot did not reach the target region
+                // I stop the robot.
+                if (distance <controller_target_region_size_ and !robot_reached_region_)
+                {
+                    RCLCPP_INFO_STREAM(node_->get_logger(), "::Reached target zone!");
+                    u = VectorXd::Zero(9);
+                }else
+                {
+                    // Otherwise, I compute the control inputs to reduce the task error.
+                    auto ineq_constraints = impl_->robot_constraint_manager_->get_inequality_constraints(q);
+                    auto [A,b] = impl_->robot_constraint_manager_->get_inequality_constraints(q);
+                    controller.set_inequality_constraint(A,b);
+                    u = controller.compute_setpoint_control_signal(q, xd_.translation().vec4());
+                }
 
-
-                MatrixXd J = impl_->robot_model_->pose_jacobian(q);
-                u = controller.compute_setpoint_control_signal(q, xd_.translation().vec4());
-
-
+                if (distance > controller_target_exit_size_)
+                    robot_reached_region_ = false;
 
             } catch (const std::exception& e) {
                 _publish_target_B1_commands(VectorXd::Zero(3));

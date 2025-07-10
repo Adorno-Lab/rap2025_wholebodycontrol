@@ -34,8 +34,9 @@ def generate_launch_description():
                 "thread_sampling_time_sec": 0.002,
                 "controller_proportional_gain": 8.0,
                 "controller_damping": 0.05,
+                "controller_target_region_size": 0.1,
+                "controller_target_exit_size":, 0.26
                 "debug_wait_for_topics": True
-                "debug_mode_use_simulation_only": True
             }]
         ),
 
