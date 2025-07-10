@@ -59,6 +59,7 @@ struct ControllerConfiguration
     double controller_damping;
     double controller_target_region_size;
     double controller_target_exit_size;
+    bool controller_enable_parking_break_when_gripper_is_open;
     bool debug_wait_for_topics;
 };
 
@@ -84,10 +85,7 @@ protected:
 
     std::string vfi_file_;
     bool debug_wait_for_topics_;
-
-
-private:
-
+    bool controller_enable_parking_break_when_gripper_is_open_;
 
     bool update_handbreak_{true};
     bool update_handbreak_released_{true};
@@ -98,10 +96,14 @@ private:
     double controller_target_exit_size_;
     bool robot_reached_region_;
 
+
+
+private:
+
     //double timer_period_;
     double T_;
 
-    int print_count_;
+
 
     sas::Clock clock_;
 

@@ -71,6 +71,7 @@ int main(int argc, char** argv)
         sas::get_ros_parameter(node,"debug_wait_for_topics", configuration.debug_wait_for_topics);
         sas::get_ros_parameter(node,"controller_target_region_size", configuration.controller_target_region_size);
         sas::get_ros_parameter(node,"controller_target_exit_size", configuration.controller_target_exit_size);
+        sas::get_ros_parameter(node, "controller_enable_parking_break_when_gripper_is_open", configuration.controller_enable_parking_break_when_gripper_is_open);
 
         auto robot_driver = std::make_shared<sas::B1Z1WholeBodyControl>(node,
                                                                         configuration,

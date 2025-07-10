@@ -58,13 +58,13 @@ B1Z1WholeBodyControl::B1Z1WholeBodyControl(std::shared_ptr<Node> &node,
     node_{node},
     vfi_file_{configuration.vfi_file},
     debug_wait_for_topics_{configuration.debug_wait_for_topics},
+    controller_enable_parking_break_when_gripper_is_open_{configuration.controller_enable_parking_break_when_gripper_is_open},
     controller_proportional_gain_{configuration.controller_proportional_gain},
     controller_damping_{configuration.controller_damping},
     controller_target_region_size_{configuration.controller_target_region_size},
     controller_target_exit_size_{configuration.controller_target_exit_size},
     robot_reached_region_{false},
     T_{configuration.thread_sampling_time_sec},
-    print_count_{0},
     clock_{configuration.thread_sampling_time_sec}
 {
     impl_ = std::make_unique<B1Z1WholeBodyControl::Impl>();
@@ -244,18 +244,27 @@ void B1Z1WholeBodyControl::control_loop()
                                                                                                             impl_->kin_mobile_manipulator_,
                                                                                                             vfi_file_,
                                                                                                             true);
-        auto [qmin, qmax]    = impl_->robot_constraint_manager_->get_configuration_limits();
-        auto [qmin_d, qmax_d]= impl_->robot_constraint_manager_->get_configuration_velocity_limits();
+        auto  const [q_min, q_max]    = impl_->robot_constraint_manager_->get_configuration_limits();
+        auto const [q_dot_min, q_dot_max]= impl_->robot_constraint_manager_->get_configuration_velocity_limits();
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Number of VFI constraints: "+ std::to_string(impl_->robot_constraint_manager_->get_number_of_vfi_constraints()));
-        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::qmin: ");
-        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(),  qmin.transpose());
-        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::qmax: ");
-        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(),  qmax.transpose());
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::q_min: ");
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(),  q_min.transpose());
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::q_max: ");
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(),  q_max.transpose());
 
-        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::qmin_dot: ");
-        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(),  qmin_d.transpose());
-        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::qmax_dot: ");
-        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(),  qmax_d.transpose());
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::q_dot_min: ");
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(),  q_dot_min.transpose());
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::q_dot_max: ");
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(),  q_dot_max.transpose());
+
+        //-----------------------For parking break----------------------------------
+        const VectorXd q_break_dot_min = DQ_robotics_extensions::Numpy::vstack(DQ_robotics_extensions::CVectorXd({0,0,0}), -q_dot_max.tail(6));
+        const VectorXd q_break_dot_max = DQ_robotics_extensions::Numpy::vstack(DQ_robotics_extensions::CVectorXd({0,0,0}),  q_dot_max.tail(6));
+
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::q_break_dot_min: ");
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(),  q_break_dot_min.transpose());
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::q_break_dot_max: ");
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(),   q_break_dot_max.transpose());
 
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Starting control loop...");
 
@@ -267,6 +276,9 @@ void B1Z1WholeBodyControl::control_loop()
         controller.set_control_objective(ControlObjective::Translation);
         controller.set_gain(controller_proportional_gain_);
         controller.set_damping(controller_damping_);
+
+        double region_size = controller_target_region_size_;
+        double region_exit_size = controller_target_exit_size_;
 
         while(not _should_shutdown())
         {
@@ -286,20 +298,53 @@ void B1Z1WholeBodyControl::control_loop()
 
                 // If the distance between them is below a threshold and the robot did not reach the target region
                 // I stop the robot.
-                if (distance <controller_target_region_size_ and !robot_reached_region_)
+                if (distance < region_size and !robot_reached_region_)
                 {
-                    RCLCPP_INFO_STREAM(node_->get_logger(), "::Reached target zone!");
+                    //RCLCPP_INFO_STREAM(node_->get_logger(), "::Reached target zone!");
                     u = VectorXd::Zero(9);
                 }else
                 {
                     // Otherwise, I compute the control inputs to reduce the task error.
+
+                    // If the parking break is eanble
+                    if (controller_enable_parking_break_when_gripper_is_open_)
+                    {
+                            // if the gripper is open (more than 30 degrees)
+                            if (std::abs(target_gripper_position_) > 0.5) // 30 degrees
+                            {
+                                //When the gripper is open, the target region size and exit size are lower.
+                                // This improve the teleoperation accuracy of the arm (Z1 robot).
+                                region_size = 0.01;
+                                region_exit_size = 0.03;
+                                // set the control input constraints to enforce zero velocities in the base (B1 robot).
+                                impl_->robot_constraint_manager_->set_configuration_velocity_limits({q_break_dot_min, q_break_dot_max});
+                                if (update_handbreak_)
+                                {
+                                    RCLCPP_INFO_STREAM(node_->get_logger(), "::Parking break enabled!");
+                                    update_handbreak_ = false;
+                                    update_handbreak_released_ = true;
+
+                                }
+                            }else{ // The gripper is closed. No parking break constraints here.
+                                region_size = controller_target_region_size_;
+                                region_exit_size = controller_target_exit_size_;
+                                impl_->robot_constraint_manager_->set_configuration_velocity_limits({q_dot_min, q_dot_max});
+                                if(update_handbreak_released_)
+                                {
+                                    RCLCPP_INFO_STREAM(node_->get_logger(), "::Parking break disabled!");
+                                    update_handbreak_released_ = false;
+                                    update_handbreak_ = true;
+                                }
+                            }
+                    }
+
                     auto ineq_constraints = impl_->robot_constraint_manager_->get_inequality_constraints(q);
                     auto [A,b] = impl_->robot_constraint_manager_->get_inequality_constraints(q);
                     controller.set_inequality_constraint(A,b);
                     u = controller.compute_setpoint_control_signal(q, xd_.translation().vec4());
                 }
 
-                if (distance > controller_target_exit_size_)
+                if (distance > region_exit_size)
                     robot_reached_region_ = false;
 
             } catch (const std::exception& e) {

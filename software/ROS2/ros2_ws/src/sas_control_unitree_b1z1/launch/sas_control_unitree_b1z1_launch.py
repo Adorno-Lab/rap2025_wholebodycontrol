@@ -36,6 +36,7 @@ def generate_launch_description():
                 "controller_damping": 0.05,
                 "controller_target_region_size": 0.1,
                 "controller_target_exit_size": 0.26,
+                "controller_enable_parking_break_when_gripper_is_open": True,
                 "debug_wait_for_topics": True
             }]
         ),
