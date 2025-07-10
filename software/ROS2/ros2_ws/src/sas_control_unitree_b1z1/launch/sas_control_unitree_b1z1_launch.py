@@ -29,7 +29,7 @@ def generate_launch_description():
                 "cs_B1_robotname": "UnitreeB1",
                 "cs_Z1_robotname": "UnitreeZ1",
                 "vfi_file":"/root/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/sas_control_unitree_b1z1/cfg/rcm_vfi_constraints.yaml",
-                "B1_topic_prefix": "sas_b1/sas_B1",
+                "B1_topic_prefix": "sas_b1/b1_1",
                 "Z1_topic_prefix": "sas_z1/z1_1",
                 "thread_sampling_time_sec": 0.002,
                 "controller_proportional_gain": 8.0,
