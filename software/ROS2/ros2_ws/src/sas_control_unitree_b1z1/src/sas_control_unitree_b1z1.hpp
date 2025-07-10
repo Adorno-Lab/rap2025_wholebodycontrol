@@ -58,6 +58,7 @@ struct ControllerConfiguration
     double controller_proportional_gain;
     double controller_damping;
     bool debug_wait_for_topics;
+    bool debug_mode_use_simulation_only;
 };
 
 class B1Z1WholeBodyControl
@@ -82,6 +83,7 @@ protected:
 
     std::string vfi_file_;
     bool debug_wait_for_topics_;
+    bool debug_mode_use_simulation_only_;
 
 
 private:

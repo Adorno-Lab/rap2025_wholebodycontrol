@@ -35,6 +35,7 @@ def generate_launch_description():
                 "controller_proportional_gain": 8.0,
                 "controller_damping": 0.05,
                 "debug_wait_for_topics": True
+                "debug_mode_use_simulation_only": True
             }]
         ),
 

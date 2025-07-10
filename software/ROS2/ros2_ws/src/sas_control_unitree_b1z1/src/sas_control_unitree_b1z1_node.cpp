@@ -69,6 +69,7 @@ int main(int argc, char** argv)
         sas::get_ros_parameter(node,"controller_proportional_gain",configuration.controller_proportional_gain);
         sas::get_ros_parameter(node,"controller_damping",configuration.controller_damping);
         sas::get_ros_parameter(node,"debug_wait_for_topics", configuration.debug_wait_for_topics);
+        sas::get_ros_parameter(node, "debug_mode_use_simulation_only", configuration.debug_mode_use_simulation_only);
 
         auto robot_driver = std::make_shared<sas::B1Z1WholeBodyControl>(node,
                                                                         configuration,
