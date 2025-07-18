@@ -62,7 +62,7 @@ int main(int argc, char** argv)
         std::cerr << std::string("::Exception::") << e.what();
     }
 
-    sas::display_signal_handler_none_bug_info(node);
+    //sas::display_signal_handler_none_bug_info(node);
     return 0;
 
 
