@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: uommscrobotics/sfr_ros2
+  IMAGE_NAME: Adorno-Lab/rap2025_wholebodycontrol
   BUILDX_NO_DEFAULT_ATTESTATIONS: 1 # https://github.com/orgs/community/discussions/45969    
 
 jobs:
