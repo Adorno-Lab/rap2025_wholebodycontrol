@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  NAMESPACE: adorno_lab/rap2025_wholebodycontrol
+  NAMESPACE: adorno-lab/rap2025_wholebodycontrol
   BUILDX_NO_DEFAULT_ATTESTATIONS: 1 # https://github.com/orgs/community/discussions/45969    
 
 jobs:
