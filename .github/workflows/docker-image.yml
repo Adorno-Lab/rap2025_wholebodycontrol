@@ -1,47 +1,60 @@
-name: publish
+name: Create and publish a Docker image to ghcr.io
 
-on: [push, pull_request, workflow_dispatch]
+on:
+  push:
+    branches: ['main']
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: uommscrobotics/sfr_ros2
+  BUILDX_NO_DEFAULT_ATTESTATIONS: 1 # https://github.com/orgs/community/discussions/45969    
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  build-and-push-image:
     strategy:
       fail-fast: false
+      matrix:
+        arch: [amd64]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
 
     steps:
-          - uses: actions/checkout@v2
-          - name: Log in to Docker Hub
+          - name: Checkout repository
+            uses: actions/checkout@v4
+
+          - name: Log in to the Container registry
             uses: docker/login-action@v3
             with:
-             username: ${{ vars.DOCKER_USERNAME }}
-             password: ${{ secrets.DOCKER_PASSWORD }}
+              registry: ${{ env.REGISTRY }}
+              username: ${{ github.actor }}
+              password: ${{ secrets.GH_TOKEN }}
 
-          - name: Set up QEMU
-            uses: docker/setup-qemu-action@v3
-    
           - name: Set up Docker Buildx
-            uses: docker/setup-buildx-action@v3    
-              
-          - name: Build and push sas_robot_driver_unitree_b1z1
+            uses: docker/setup-buildx-action@v3
+          
+          - name: Build and push sas_robot_driver_unitree_b1z1 Docker image
             uses: docker/build-push-action@v6
             with:
-              platforms: linux/amd64
-              push: true
               file: docker/sas_robot_driver_unitree_b1z1/Dockerfile
-              tags: ${{ vars.DOCKER_USERNAME }}/sas_robot_driver_unitree_b1z1  
+              push: true
+              tags: ${{ env.REGISTRY }}/sas_robot_driver_unitree_b1z1  
 
-          - name: Build and push sas_coppeliasim_unitree_b1z1
+          - name: Build and push sas_coppeliasim_unitree_b1z1 Docker image
             uses: docker/build-push-action@v6
             with:
-              platforms: linux/amd64
-              push: true
               file: docker/sas_coppeliasim_unitree_b1z1/Dockerfile
-              tags: ${{ vars.DOCKER_USERNAME }}/sas_coppeliasim_unitree_b1z1 
+              push: true
+              tags: ${{ env.REGISTRY }}/sas_coppeliasim_unitree_b1z1 
 
-          - name: Build and push sas_control_unitree_b1z1
+          - name: Build and push sas_control_unitree_b1z1 Docker image
             uses: docker/build-push-action@v6
             with:
-              platforms: linux/amd64
-              push: true
               file: docker/sas_control_unitree_b1z1/Dockerfile
-              tags: ${{ vars.DOCKER_USERNAME }}/sas_control_unitree_b1z1     
+              push: true
+              tags: ${{ env.REGISTRY }}/sas_control_unitree_b1z1    
+
+         
