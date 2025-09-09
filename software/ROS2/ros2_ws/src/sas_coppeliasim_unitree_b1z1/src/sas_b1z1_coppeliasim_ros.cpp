@@ -74,8 +74,10 @@ B1Z1CoppeliaSimROS::B1Z1CoppeliaSimROS(std::shared_ptr<Node> &node,
     publisher_coppeliasim_frame_xd_ = node_->create_publisher<geometry_msgs::msg::PoseStamped>(
         topic_prefix_b1_+ + "/get/coppeliasim_frame_xd", 1);
 
+    // To remove-----------------------------------------------
     publisher_robot_pose_ = node_->create_publisher<geometry_msgs::msg::PoseStamped>(
         "coppeliasim/get/robot_pose", 1);
+    //--------------------------------------------------------
 
     publisher_gripper_position_from_coppeliasim_ = node_->create_publisher<std_msgs::msg::Float64MultiArray>(
         "coppeliasim/get/gripper_position", 1);
@@ -415,6 +417,8 @@ DQ B1Z1CoppeliaSimROS::_compute_robot_pose_from_IMU_and_markers()
 
 }
 
+
+// To be remove---------------------------------------------------------
 void B1Z1CoppeliaSimROS::_publish_robot_pose()
 {
     geometry_msgs::msg::PoseStamped ros_msg_robot_pose;
@@ -432,6 +436,9 @@ void B1Z1CoppeliaSimROS::_publish_robot_pose()
     publisher_robot_pose_->publish(ros_msg_robot_pose);
 
 }
+//--------------------------------------------------------------------
+
+
 
 void B1Z1CoppeliaSimROS::_publish_gripper_position()
 {

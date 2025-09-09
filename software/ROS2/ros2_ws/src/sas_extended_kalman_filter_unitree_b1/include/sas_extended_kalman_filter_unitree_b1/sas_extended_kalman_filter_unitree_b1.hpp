@@ -75,15 +75,20 @@ private:
      * The UnitreeB1 driver provides the linear and angular velocity based on
      * the IMU data. Therefore, I'll use them instead of using raw IMU data.
      *
+     */
 
     rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr subscriber_IMU_state_;
     void _callback_subscriber_IMU_state(const sensor_msgs::msg::Imu& msg);
     bool new_IMU_data_available_{false};
 
-    DQ linear_acceleration_IMU_{0};
-    DQ angular_velocity_IMU_{0};
-    DQ orientation_IMU_{1};
-    */
+    // DQ linear_acceleration_IMU_{0}; Not used
+    // DQ angular_velocity_IMU_{0};  Not used
+    DQ orientation_IMU_{1}; // Used to compute the orientation offset between the Vicon marker
+                            // and the IMU orientation
+
+    DQ r_offset_{1};
+    DQ p_offset_ = 0.25*i_ -0.15933*k_;
+
 
     //-----------------------------------------
     rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr subscriber_twist_state_;
@@ -118,7 +123,7 @@ private:
 
 
 
-    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_test_pose_;
+    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_estimated_robot_pose_with_offset_;
     void _publish_test_pose(const std::string& frame_id, const DQ& pose);
 
     void _prediction_step();

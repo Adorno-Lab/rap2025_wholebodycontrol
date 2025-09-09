@@ -134,8 +134,6 @@ private:
 
     DQ geometry_msgs_msg_TransformStamped_to_dq(const geometry_msgs::msg::TransformStamped& msg);
 
-
-    //std::shared_ptr<tf2_ros::StaticTransformBroadcaster> tf_static_broadcaster_;
     std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
     std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
 

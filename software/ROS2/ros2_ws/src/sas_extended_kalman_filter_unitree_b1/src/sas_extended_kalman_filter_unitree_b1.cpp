@@ -28,13 +28,13 @@ ExtendedKalmanFilter::ExtendedKalmanFilter(std::shared_ptr<rclcpp::Node> &node,
 :st_break_loops_{break_loops},configuration_{configuration},clock_{configuration.thread_sampling_time_sec},
     node_{node}, datalogger_client_{node}
 {
-    /*
+
     subscriber_IMU_state_ = node_->create_subscription<sensor_msgs::msg::Imu>(
         configuration_.topic_prefix + "/get/IMU_state",
         1,
         std::bind(&ExtendedKalmanFilter::_callback_subscriber_IMU_state, this, std::placeholders::_1)
         );
-    */
+
 
     subscriber_twist_state_ = node_->create_subscription<geometry_msgs::msg::TwistStamped>(
         configuration_.topic_prefix + "/get/twist_state",
@@ -50,8 +50,8 @@ ExtendedKalmanFilter::ExtendedKalmanFilter(std::shared_ptr<rclcpp::Node> &node,
     publisher_estimated_robot_pose_ = node_->create_publisher<geometry_msgs::msg::PoseStamped>(
         "ekf/get/robot_pose", 1);
 
-    publisher_test_pose_ = node_->create_publisher<geometry_msgs::msg::PoseStamped>(
-        "ekf/get/test_pose", 1);
+    publisher_estimated_robot_pose_with_offset_ = node_->create_publisher<geometry_msgs::msg::PoseStamped>(
+        "ekf/get/robot_pose_with_offset", 1);
 
 
 
@@ -88,19 +88,19 @@ bool ExtendedKalmanFilter::_should_shutdown() const
     return (*st_break_loops_);
 }
 
-/*
+
 void ExtendedKalmanFilter::_callback_subscriber_IMU_state(const sensor_msgs::msg::Imu &msg)
 {
-    const DQ w = msg.angular_velocity.x*i_ + msg.angular_velocity.y*j_ + msg.angular_velocity.z*k_;
-    const DQ p_dot_dot = msg.linear_acceleration.x*i_ + msg.linear_acceleration.y*j_ + msg.linear_acceleration.z*k_;
+    //const DQ w = msg.angular_velocity.x*i_ + msg.angular_velocity.y*j_ + msg.angular_velocity.z*k_;
+    //const DQ p_dot_dot = msg.linear_acceleration.x*i_ + msg.linear_acceleration.y*j_ + msg.linear_acceleration.z*k_;
     const DQ r = sas::geometry_msgs_quaternion_to_dq(msg.orientation);
 
-    angular_velocity_IMU_ = w;
-    linear_acceleration_IMU_ = p_dot_dot;
+    // angular_velocity_IMU_ = w;
+    // linear_acceleration_IMU_ = p_dot_dot;
     orientation_IMU_ = r;
     new_IMU_data_available_ = true;
 }
-*/
+
 
 /**
  * @brief ExtendedKalmanFilter::_callback_subscriber_twist_state callback method for the twist state suscriber
@@ -303,7 +303,7 @@ void ExtendedKalmanFilter::_publish_test_pose(const std::string &frame_id, const
     posed_stamped.header.frame_id = frame_id;
     posed_stamped.header.stamp = rclcpp::Clock().now();
     posed_stamped.pose = dq_to_geometry_msgs_pose(pose);
-    publisher_test_pose_->publish(posed_stamped);
+    publisher_estimated_robot_pose_with_offset_->publish(posed_stamped);
 }
 
 /**
