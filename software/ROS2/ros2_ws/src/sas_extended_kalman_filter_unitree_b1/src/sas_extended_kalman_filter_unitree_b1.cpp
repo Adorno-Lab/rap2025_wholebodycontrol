@@ -16,7 +16,12 @@ namespace sas
 
 
 
-
+/**
+ * @brief ExtendedKalmanFilter::ExtendedKalmanFilter ctor of the class
+ * @param node The ROS2 node
+ * @param configuration the configuration parameters
+ * @param break_loops flag to finish all loops
+ */
 ExtendedKalmanFilter::ExtendedKalmanFilter(std::shared_ptr<rclcpp::Node> &node,
                                            const ExtendedKalmanFilterConfiguration &configuration,
                                            std::atomic_bool* break_loops)
@@ -30,8 +35,6 @@ ExtendedKalmanFilter::ExtendedKalmanFilter(std::shared_ptr<rclcpp::Node> &node,
         std::bind(&ExtendedKalmanFilter::_callback_subscriber_IMU_state, this, std::placeholders::_1)
         );
     */
-
-
 
     subscriber_twist_state_ = node_->create_subscription<geometry_msgs::msg::TwistStamped>(
         configuration_.topic_prefix + "/get/twist",
@@ -75,6 +78,11 @@ ExtendedKalmanFilter::ExtendedKalmanFilter(std::shared_ptr<rclcpp::Node> &node,
 
 }
 
+/**
+ * @brief ExtendedKalmanFilter::_should_shutdown return a boolean indicanting if the control loops are
+ *                              requested to break.
+ * @return True if the control loops are requested to break. False otherwise
+ */
 bool ExtendedKalmanFilter::_should_shutdown() const
 {
     return (*st_break_loops_);
@@ -94,6 +102,10 @@ void ExtendedKalmanFilter::_callback_subscriber_IMU_state(const sensor_msgs::msg
 }
 */
 
+/**
+ * @brief ExtendedKalmanFilter::_callback_subscriber_twist_state callback method for the twist state suscriber
+ * @param msg The TwistStamped message.
+ */
 void ExtendedKalmanFilter::_callback_subscriber_twist_state(const geometry_msgs::msg::TwistStamped &msg)
 {
     angular_velocity_from_robot_data_ = msg.twist.angular.x*i_ + msg.twist.angular.y*j_ + msg.twist.angular.z*k_;
@@ -103,7 +115,9 @@ void ExtendedKalmanFilter::_callback_subscriber_twist_state(const geometry_msgs:
 
 
 
-
+/**
+ * @brief ExtendedKalmanFilter::control_loop starts the ROS 2 control loop
+ */
 void ExtendedKalmanFilter::control_loop()
 {
     try{
@@ -201,17 +215,12 @@ void ExtendedKalmanFilter::control_loop()
 
             _publish_estimated_robot_pose();
 
-
             if (save_data_with_datalogger_)
             {
                 VectorXd vicon_pose_vec = vicon_pose_.vec8();
                 datalogger_client_.log("x_vicon", vicon_pose_vec);
                 ///datalogger_client_.log("SIGMA", vicon_pose_vec);
             }
-
-
-
-
             rclcpp::spin_some(node_);
         }
     }
@@ -221,7 +230,9 @@ void ExtendedKalmanFilter::control_loop()
     }
 }
 
-
+/**
+ * @brief ExtendedKalmanFilter::_try_update_vicon_markers update the Vicon data if available
+ */
 void ExtendedKalmanFilter::_try_update_vicon_markers()
 {
     try {
@@ -246,7 +257,11 @@ void ExtendedKalmanFilter::_try_update_vicon_markers()
     };
 }
 
-
+/**
+ * @brief ExtendedKalmanFilter::_geometry_msgs_msg_TransformStamped_to_dq
+ * @param msg
+ * @return
+ */
 DQ ExtendedKalmanFilter::_geometry_msgs_msg_TransformStamped_to_dq(const geometry_msgs::msg::TransformStamped &msg)
 {
     const  DQ r  = DQ(msg.transform.rotation.w,
@@ -263,7 +278,9 @@ DQ ExtendedKalmanFilter::_geometry_msgs_msg_TransformStamped_to_dq(const geometr
     return (nr + 0.5*E_*t*nr).normalize();
 }
 
-
+/**
+ * @brief ExtendedKalmanFilter::_publish_estimated_robot_pose
+ */
 void ExtendedKalmanFilter::_publish_estimated_robot_pose()
 {
     geometry_msgs::msg::PoseStamped posed_stamped;
@@ -274,6 +291,11 @@ void ExtendedKalmanFilter::_publish_estimated_robot_pose()
     publisher_estimated_robot_pose_->publish(posed_stamped);
 }
 
+/**
+ * @brief ExtendedKalmanFilter::_publish_test_pose
+ * @param frame_id
+ * @param pose
+ */
 void ExtendedKalmanFilter::_publish_test_pose(const std::string &frame_id, const DQ &pose)
 {
     geometry_msgs::msg::PoseStamped posed_stamped;
@@ -284,57 +306,57 @@ void ExtendedKalmanFilter::_publish_test_pose(const std::string &frame_id, const
     publisher_test_pose_->publish(posed_stamped);
 }
 
+/**
+ * @brief ExtendedKalmanFilter::_prediction_step performs the prediction based on the model
+ */
 void ExtendedKalmanFilter::_prediction_step()
 {
-  //  if (new_twist_data_available_)
-  //  {
-        new_twist_data_available_ = false;
-        double x = x_(0);
-        double y = x_(1);
-        double phi = x_(2);
+    new_twist_data_available_ = false;
+    double x = x_(0);
+    double y = x_(1);
+    double phi = x_(2);
 
-        double dt = configuration_.thread_sampling_time_sec;
+    double dt = configuration_.thread_sampling_time_sec;
 
-        const DQ& r_ = estimated_robot_pose_.P();
+    const DQ& r_ = estimated_robot_pose_.P();
 
-        // Express the velocities in the world frame
-        DQ angular_velocity_world_frame = r_*angular_velocity_from_robot_data_*r_.conj();
-        DQ linear_velocity_world_frame = r_*linear_velocity_from_robot_data_*r_.conj();
+    // Express the velocities in the world frame
+    DQ angular_velocity_world_frame = r_*angular_velocity_from_robot_data_*r_.conj();
+    DQ linear_velocity_world_frame = r_*linear_velocity_from_robot_data_*r_.conj();
 
-        VectorXd linear_velocities = linear_velocity_world_frame.vec3();
-        VectorXd angular_velocities = angular_velocity_world_frame.vec3();
-        const double& vx = linear_velocities(0);
-        const double& vy = linear_velocities(1);
-        const double& wz =  angular_velocities(2);
+    VectorXd linear_velocities = linear_velocity_world_frame.vec3();
+    VectorXd angular_velocities = angular_velocity_world_frame.vec3();
+    const double& vx = linear_velocities(0);
+    const double& vy = linear_velocities(1);
+    const double& wz =  angular_velocities(2);
 
-        x = x + vx * dt;
-        y = y + vy * dt;
+    x = x + vx * dt;
+    y = y + vy * dt;
 
-        phi += wz * dt;
-        phi = normalize_angle(phi);
+    phi += wz * dt;
+    phi = normalize_angle(phi);
 
-        // Update state vector
-        x_(0) = x;
-        x_(1) = y;
-        x_(2) = phi;
+    // Update state vector
+    x_(0) = x;
+    x_(1) = y;
+    x_(2) = phi;
 
 
-        DQ r = cos(phi/2) + k_*sin(phi/2);
-        DQ t = x*i_ + y*j_ +z_*k_;
-        estimated_robot_pose_ = r + 0.5*E_*t*r;
+    DQ r = cos(phi/2) + k_*sin(phi/2);
+    DQ t = x*i_ + y*j_ +z_*k_;
+    estimated_robot_pose_ = r + 0.5*E_*t*r;
 
-        // Compute Jacobian for state transition
-        double v = std::sqrt( vx*vx + vy*vy );
-        Eigen::MatrixXd G = jacobian_matrix(v, phi);
+    // Compute Jacobian for state transition
+    double v = std::sqrt( vx*vx + vy*vy );
+    Eigen::MatrixXd G = jacobian_matrix(v, phi);
 
-        // Propagate covariance:
-        SIGMA_ = G * SIGMA_ * G.transpose() + R_;
-
-
-   // }
-
+    // Propagate covariance:
+    SIGMA_ = G * SIGMA_ * G.transpose() + R_;
 }
 
+/**
+ * @brief ExtendedKalmanFilter::_update_step performs the estimation update based on the measurements
+ */
 void ExtendedKalmanFilter::_update_step()
 {
     Eigen::MatrixXd Kt = SIGMA_*H_.transpose()*(H_*SIGMA_*H_.transpose() + Q_).inverse();
@@ -355,7 +377,11 @@ void ExtendedKalmanFilter::_update_step()
 }
 
 
-
+/**
+ * @brief ExtendedKalmanFilter::normalize_angle
+ * @param angle
+ * @return
+ */
 double ExtendedKalmanFilter::normalize_angle(double angle) {
     // Normalize angle to [-pi, pi]
     while (angle > M_PI) angle -= 2.0 * M_PI;
@@ -363,6 +389,11 @@ double ExtendedKalmanFilter::normalize_angle(double angle) {
     return angle;
 }
 
+/**
+ * @brief ExtendedKalmanFilter::_get_mobile_platform_configuration_from_pose
+ * @param pose
+ * @return
+ */
 VectorXd ExtendedKalmanFilter::_get_mobile_platform_configuration_from_pose(const DQ &pose) const
 {
     DQ x = pose;
@@ -374,6 +405,12 @@ VectorXd ExtendedKalmanFilter::_get_mobile_platform_configuration_from_pose(cons
     return (VectorXd(3)<< p(0), p(1), rangle).finished();
 }
 
+/**
+ * @brief ExtendedKalmanFilter::jacobian_matrix
+ * @param v
+ * @param phi
+ * @return
+ */
 MatrixXd ExtendedKalmanFilter::jacobian_matrix(const double &v, const double &phi)
 {
     const double& T = configuration_.thread_sampling_time_sec;
@@ -384,7 +421,9 @@ MatrixXd ExtendedKalmanFilter::jacobian_matrix(const double &v, const double &ph
     return J;
 }
 
-
+/**
+ * @brief ExtendedKalmanFilter::~ExtendedKalmanFilter
+ */
 ExtendedKalmanFilter::~ExtendedKalmanFilter()
 {
 
