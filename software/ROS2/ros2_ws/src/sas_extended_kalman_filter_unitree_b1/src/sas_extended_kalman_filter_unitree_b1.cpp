@@ -37,7 +37,7 @@ ExtendedKalmanFilter::ExtendedKalmanFilter(std::shared_ptr<rclcpp::Node> &node,
     */
 
     subscriber_twist_state_ = node_->create_subscription<geometry_msgs::msg::TwistStamped>(
-        configuration_.topic_prefix + "/get/twist",
+        configuration_.topic_prefix + "/get/twist_state",
         1,
         std::bind(&ExtendedKalmanFilter::_callback_subscriber_twist_state, this, std::placeholders::_1)
         );
