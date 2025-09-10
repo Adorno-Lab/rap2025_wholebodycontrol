@@ -160,8 +160,6 @@ void B1Z1CoppeliaSimROS::control_loop()
         clock_.init();
         impl_->b1z1_cs_driver_->connect();
         impl_->b1z1_cs_driver_->initialize();
-        //RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "Updating vicon markers...");
-        //RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "Waiting stable frames...");
 
         while (!new_robot_pose_data_available_ && !_should_shutdown())
         {
@@ -183,90 +181,19 @@ void B1Z1CoppeliaSimROS::control_loop()
             clock_.update_and_sleep();
         }
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "Done!");
-        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "Updating vicon markers...");
 
-        /*
-        for (int i=0;i<1000;i++)
-        {
-            impl_->b1z1_cs_driver_->set_IMU_pose(robot_pose_);
-            clock_.update_and_sleep();
-            //_update_robot_pose();
-
-            _set_joint_states_on_coppeliasim();
-            rclcpp::spin_some(node_);
-        }
-        */
-
-        /*
-        for (int i=0;i<1000;i++)
-        {
-            DQ rimu = IMU_pose_.P();
-            VectorXd pimu = IMU_pose_.translation().vec3();
-            VectorXd p = x_world_1_average_.translation().vec3();
-            robot_pose_ = rimu + 0.5*E_*DQ(0, p(0), p(1), pimu(2))*rimu;
-            impl_->b1z1_cs_driver_->set_IMU_pose(robot_pose_);
-            clock_.update_and_sleep();
-            rclcpp::spin_some(node_);
-        }
-        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "Computing offsets...");
-*/
-
-        /*
-        for (int i=0;i<500;i++)
-        {
-            x_IMU_orientation_offset_ = IMU_pose_.conj()*x_world_1_average_;
-            //UnitreeB1_initial_pose_ = impl_->b1z1_cs_driver_->get_IMU_pose();
-            clock_.update_and_sleep();
-            rclcpp::spin_some(node_);
-        }
-
-*/
-
-        //robot_pose_ = _compute_robot_pose_from_IMU_and_markers();
-        //impl_->b1z1_cs_driver_->set_IMU_pose(robot_pose_);
-
-
-
-        //RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "Updating robot state...");
-/*
-        for (int i=0;i<500;i++)
-        {
-            clock_.update_and_sleep();
-            rclcpp::spin_some(node_);
-            x_IMU_orientation_offset_ = IMU_pose_.conj()*x_world_1_average_;
-            //_update_robot_pose();
-            rclcpp::spin_some(node_);
-
-        }
-*/
-
-
-
-        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "Done!");
 
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "Control loop running!");
-        while(not _should_shutdown())
+        while(!_should_shutdown())
         {
             clock_.update_and_sleep();
             rclcpp::spin_some(node_);
-
             _set_joint_states_on_coppeliasim();
-            //_set_robot_pose_on_coppeliasim();
-            //robot_pose_ = _compute_robot_pose_from_IMU_and_markers();
             _set_robot_pose_on_coppeliasim(robot_pose_);
-
-
             _read_xd_and_publish();
-            //_update_robot_pose();
             _publish_gripper_position();
-
-
-
-
-
             rclcpp::spin_some(node_);
         }
-        //impl_->unitree_b1_driver_->set_high_level_speed(0,0,0);
     }
     catch(const std::exception& e)
     {
@@ -328,30 +255,8 @@ DQ B1Z1CoppeliaSimROS::geometry_msgs_msg_TransformStamped_to_dq(const geometry_m
         msg.transform.translation.x,
         msg.transform.translation.y,
         msg.transform.translation.z);
-
-
     return (nr + 0.5*E_*t*nr).normalize();
 }
-
-
-
-
-
-/*
-DQ B1Z1CoppeliaSimROS::_compute_robot_pose_from_IMU_and_markers()
-{
-    DQ rimu = (IMU_pose_.P()*x_IMU_orientation_offset_.P()).normalize();
-    VectorXd pimu = IMU_pose_.translation().vec3();
-    VectorXd p = x_world_1_average_.translation().vec3();
-    DQ x = rimu + 0.5*E_*DQ(0, p(0), p(1), pimu(2))*rimu;
-    DQ offset = 1 + 0.5*E_*(0.27*i_);
-    return (x*offset).normalize();
-
-}*/
-
-
-
-
 
 
 void B1Z1CoppeliaSimROS::_publish_gripper_position()
@@ -362,8 +267,6 @@ void B1Z1CoppeliaSimROS::_publish_gripper_position()
     ros_msg.data = gripper_position;
     publisher_gripper_position_from_coppeliasim_->publish(ros_msg);
 }
-
-
 
 
 B1Z1CoppeliaSimROS::~B1Z1CoppeliaSimROS()

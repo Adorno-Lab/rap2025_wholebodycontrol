@@ -1,5 +1,5 @@
 /*
-#    Copyright (c) 2024 Adorno-Lab
+#    Copyright (c) 2024-2025 Adorno-Lab
 #
 #    This is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Lesser General Public License as published by
@@ -79,9 +79,11 @@ B1Z1WholeBodyControl::B1Z1WholeBodyControl(std::shared_ptr<Node> &node,
         topic_prefix_b1_ + "/set/holonomic_target_velocities", 1);
 
     subscriber_pose_state_ = node_->create_subscription<geometry_msgs::msg::PoseStamped>(
-        "/coppeliasim/get/robot_pose", 1, std::bind(&B1Z1WholeBodyControl::_callback_pose_state,
+        topic_prefix_b1_ + "/get/ekf/robot_pose", 1, std::bind(&B1Z1WholeBodyControl::_callback_pose_state,
                   this, std::placeholders::_1)
         );
+
+
     subscriber_Z1_joint_states_ = node_->create_subscription<sensor_msgs::msg::JointState>(
         topic_prefix_z1_ + "/get/joint_states", 1, std::bind(&B1Z1WholeBodyControl::_callback_Z1_joint_states,
                   this, std::placeholders::_1)
@@ -206,6 +208,25 @@ void B1Z1WholeBodyControl::control_loop()
     try {
         clock_.init();
         rclcpp::spin_some(node_);
+
+        while (!new_robot_pose_data_available_ && !_should_shutdown())
+        {
+            rclcpp::spin_some(node_);
+            clock_.update_and_sleep();
+            rclcpp::spin_some(node_);
+            RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Waiting for ekf robot pose data");
+        }
+
+        while (!new_coppeliasim_xd_data_available_ && !_should_shutdown())
+        {
+            rclcpp::spin_some(node_);
+            clock_.update_and_sleep();
+            rclcpp::spin_some(node_);
+            RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Waiting for desired pose from CoppeliaSim ");
+        }
+
+
+
         _connect();
         _update_kinematic_model();
 
@@ -216,7 +237,7 @@ void B1Z1WholeBodyControl::control_loop()
             RCLCPP_INFO_STREAM(node_->get_logger(), "::Reading topics: "+std::to_string(i)+"/100");
         }
 
-
+        /*
         VectorXd qarm_target = q_arm_;
         qarm_target(5) = -M_PI/2;
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Setting custom arm configuration...");
@@ -230,6 +251,8 @@ void B1Z1WholeBodyControl::control_loop()
             _publish_target_Z1_commands(qarm_inter.col(i), target_gripper_position_);
             RCLCPP_INFO_STREAM(node_->get_logger(), "::Setting custom arm configuration: "+std::to_string(i)+"/"+std::to_string(size));
         }
+
+
         for (int i=0;i<100;i++)
         {
             clock_.update_and_sleep();
@@ -237,6 +260,7 @@ void B1Z1WholeBodyControl::control_loop()
             _publish_target_Z1_commands(qarm_target, target_gripper_position_);
         }
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::custom arm configuration set!");
+        */
 
 
         impl_->robot_constraint_manager_ = std::make_shared<DQ_robotics_extensions::RobotConstraintManager>(impl_->cs_,
@@ -280,25 +304,36 @@ void B1Z1WholeBodyControl::control_loop()
         double region_size = controller_target_region_size_;
         double region_exit_size = controller_target_exit_size_;
 
-        while(not _should_shutdown())
+        while(!_should_shutdown())
         {
             rclcpp::spin_some(node_);
             clock_.update_and_sleep();
             rclcpp::spin_some(node_);
-            VectorXd q;
-            q = DQ_robotics_extensions::Numpy::vstack(_get_mobile_platform_configuration_from_pose(robot_pose_), qi_arm);
+            VectorXd q = DQ_robotics_extensions::Numpy::vstack(_get_mobile_platform_configuration_from_pose(robot_pose_), qi_arm);
             DQ x = impl_->robot_model_->fkm(q);
+            DQ xd = x;
             _publish_coppeliasim_frame_x(x);
 
-            if (not is_unit(xd_))
-                RCLCPP_INFO_STREAM(node_->get_logger(), "::Problem reading desired pose");
+
+
+            if (new_coppeliasim_xd_data_available_)
+            {
+                // There is new data, then we update the desired pose;
+                xd = xd_;
+                new_coppeliasim_xd_data_available_ = false;
+            }else{
+                // There is no new data about xd, then the desired pose is the same
+                // as the current pose. Consequently, the error is zero and robot stops.
+                xd = x;
+            }
+
             try {
                 //Compute the distance between the end-effector and desired points
                 double distance = (x.translation()-xd_.translation()).vec3().norm();
 
                 // If the distance between them is below a threshold and the robot did not reach the target region
                 // I stop the robot.
-                if (distance < region_size and !robot_reached_region_)
+                if (distance < region_size && !robot_reached_region_)
                 {
                     //RCLCPP_INFO_STREAM(node_->get_logger(), "::Reached target zone!");
                     u = VectorXd::Zero(9);
@@ -341,7 +376,7 @@ void B1Z1WholeBodyControl::control_loop()
                     auto ineq_constraints = impl_->robot_constraint_manager_->get_inequality_constraints(q);
                     auto [A,b] = impl_->robot_constraint_manager_->get_inequality_constraints(q);
                     controller.set_inequality_constraint(A,b);
-                    u = controller.compute_setpoint_control_signal(q, xd_.translation().vec4());
+                    u = controller.compute_setpoint_control_signal(q, xd.translation().vec4());
                 }
 
                 if (distance > region_exit_size)
@@ -385,6 +420,7 @@ void B1Z1WholeBodyControl::_callback_Z1_joint_states(const sensor_msgs::msg::Joi
 void B1Z1WholeBodyControl::_callback_pose_state(const geometry_msgs::msg::PoseStamped &msg)
 {
     robot_pose_ =   sas::geometry_msgs_pose_stamped_to_dq(msg);
+    new_robot_pose_data_available_ = true;
 }
 
 void B1Z1WholeBodyControl::_callback_gripper_position_from_coppeliasim(const std_msgs::msg::Float64MultiArray &msg)
@@ -396,6 +432,12 @@ void B1Z1WholeBodyControl::_callback_gripper_position_from_coppeliasim(const std
 void B1Z1WholeBodyControl::_callback_xd_state(const geometry_msgs::msg::PoseStamped &msg)
 {
     xd_ = sas::geometry_msgs_pose_stamped_to_dq(msg);
+    if (!is_unit(xd_))
+    {
+        RCLCPP_INFO_STREAM(node_->get_logger(), "::Problem reading desired pose");
+        new_coppeliasim_xd_data_available_ = false;
+    }
+    new_coppeliasim_xd_data_available_ = true;
 }
 
 bool B1Z1WholeBodyControl::_should_shutdown() const
