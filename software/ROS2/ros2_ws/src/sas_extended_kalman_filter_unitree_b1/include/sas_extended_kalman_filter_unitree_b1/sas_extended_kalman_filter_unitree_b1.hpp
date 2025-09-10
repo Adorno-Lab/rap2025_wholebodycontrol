@@ -86,7 +86,7 @@ private:
     DQ orientation_IMU_{1}; // Used to compute the orientation offset between the Vicon marker
                             // and the IMU orientation
 
-    DQ x_offset_ = 1 + 0.5*E_*(0.25*i_ -0.15933*k_);
+    DQ x_offset_ = 1 + 0.5*E_*(0.25*i_ -0.17*k_); //0.15933
 
 
     double _get_rotation_error_norm(const DQ &x, const DQ &x2);

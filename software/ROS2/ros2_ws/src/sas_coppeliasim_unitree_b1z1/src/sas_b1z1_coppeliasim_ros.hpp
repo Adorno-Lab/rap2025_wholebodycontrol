@@ -39,8 +39,7 @@
 #include <sas_conversions/DQ_geometry_msgs_conversions.hpp>
 
 #include <dqrobotics/interfaces/coppeliasim/DQ_CoppeliaSimInterfaceZMQ.h>
-#include <tf2_ros/transform_listener.h>
-#include <tf2_ros/buffer.h>
+
 
 
 //using namespace Eigen;
@@ -68,6 +67,7 @@ protected:
     std::atomic_bool* st_break_loops_;
     std::string topic_prefix_b1_;
     std::string topic_prefix_z1_;
+    //RobotDriverB1Z1CoppeliaSimConfiguration  configuration_;
     std::shared_ptr<rclcpp::Node> node_;
     std::shared_ptr<DQ_CoppeliaSimInterfaceZMQ> cs_;
 
@@ -96,14 +96,21 @@ private:
     void _callback_FL_joint_states(const sensor_msgs::msg::JointState& msg);
     void _callback_RR_joint_states(const sensor_msgs::msg::JointState& msg);
     void _callback_RL_joint_states(const sensor_msgs::msg::JointState& msg);
-
     void _callback_Z1_joint_states(const sensor_msgs::msg::JointState& msg);
 
-    DQ IMU_pose_{1};
+    //DQ IMU_pose_{1};
+    DQ robot_pose_{1};
     Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr subscriber_pose_state_;
     void _callback_pose_state(const geometry_msgs::msg::PoseStamped& msg);
+    bool new_robot_pose_data_available_{false};
 
-    Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_robot_pose_;
+    DQ robot_marker_{1};
+    Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr subscriber_robot_marker_;
+    void _callback_robot_marker(const geometry_msgs::msg::PoseStamped& msg);
+
+
+
+
 
 
     DQ x_fkm_{1};
@@ -112,21 +119,12 @@ private:
 
 
     DQ B1Z1_Frame_1_previous_{1};
-    DQ robot_pose_{1};
+
     DQ UnitreeB1_initial_pose_{1};
     DQ B1Z1_Frame_1_offset_{1};
     DQ x_IMU_orientation_offset_{1};
 
-    DQ x_world_0_average_;
-    DQ x_world_0_previous_{1};
-    DQ x_world_1_average_;
-    DQ x_world_1_previous_{1};
-    DQ x_world_2_average_;
-    DQ x_world_2_previous_{1};
-    DQ x_world_3_average_;
-    DQ x_world_3_previous_{1};
-    DQ x_world_4_average_;
-    DQ x_world_4_previous_{1};
+
 
     double gripper_position_{0};
 
@@ -134,8 +132,7 @@ private:
 
     DQ geometry_msgs_msg_TransformStamped_to_dq(const geometry_msgs::msg::TransformStamped& msg);
 
-    std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
-    std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
+
 
 
     Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_coppeliasim_frame_xd_;
@@ -151,11 +148,10 @@ protected:
     void _set_robot_pose_on_coppeliasim(const DQ& pose);
     void _read_xd_and_publish();
     bool _should_shutdown() const;
-    void _update_vicon_markers();
-    void _update_frames();
-    DQ _compute_robot_pose_from_IMU_and_markers();
 
-    void _publish_robot_pose();
+   // DQ _compute_robot_pose_from_IMU_and_markers();
+
+
     void _publish_gripper_position();
 
 
