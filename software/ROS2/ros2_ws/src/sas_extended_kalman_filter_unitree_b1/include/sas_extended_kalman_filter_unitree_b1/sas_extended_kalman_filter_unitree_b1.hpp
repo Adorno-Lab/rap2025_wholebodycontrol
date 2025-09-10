@@ -99,7 +99,6 @@ private:
     DQ linear_velocity_from_robot_data_{0};
     DQ angular_velocity_from_robot_data_{0};
 
-    //-----------------------------------------
 
 
     //------------------------
@@ -119,14 +118,11 @@ private:
 
 
     DQ estimated_robot_pose_{1};
+    DQ predicted_robot_pose_{1};
     double vicon_height_;
     rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_estimated_robot_pose_;
-    void _publish_estimated_robot_pose();
-
-
-
     rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_estimated_robot_pose_with_offset_;
-    void _publish_estimated_robot_pose_with_offset(const std::string& frame_id, const DQ& pose);
+    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_predicted_pose_;
 
 
     void _publish_pose_stamped(const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr& publisher,
