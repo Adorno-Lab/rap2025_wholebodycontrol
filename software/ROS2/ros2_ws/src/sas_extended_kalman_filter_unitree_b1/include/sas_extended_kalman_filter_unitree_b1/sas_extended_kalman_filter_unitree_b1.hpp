@@ -86,8 +86,10 @@ private:
     DQ orientation_IMU_{1}; // Used to compute the orientation offset between the Vicon marker
                             // and the IMU orientation
 
-    DQ r_offset_{1};
-    DQ p_offset_ = 0.25*i_ -0.15933*k_;
+    DQ x_offset_ = 1 + 0.5*E_*(0.25*i_ -0.15933*k_);
+
+
+    double _get_rotation_error_norm(const DQ &x, const DQ &x2);
 
 
     //-----------------------------------------
@@ -117,14 +119,19 @@ private:
 
 
     DQ estimated_robot_pose_{1};
-    double z_;
+    double vicon_height_;
     rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_estimated_robot_pose_;
     void _publish_estimated_robot_pose();
 
 
 
     rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_estimated_robot_pose_with_offset_;
-    void _publish_test_pose(const std::string& frame_id, const DQ& pose);
+    void _publish_estimated_robot_pose_with_offset(const std::string& frame_id, const DQ& pose);
+
+
+    void _publish_pose_stamped(const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr& publisher,
+                               const std::string& frame_id,
+                               const DQ& pose);
 
     void _prediction_step();
     void _update_step();

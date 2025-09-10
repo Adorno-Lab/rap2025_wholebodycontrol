@@ -1,6 +1,7 @@
 #include "sas_extended_kalman_filter_unitree_b1/sas_extended_kalman_filter_unitree_b1.hpp"
 
 #include <memory>
+#include <rclcpp/logging.hpp>
 #include <sas_core/eigen3_std_conversions.hpp>
 #include <sas_conversions/DQ_geometry_msgs_conversions.hpp>
 #include <rclcpp/rclcpp.hpp>
@@ -169,7 +170,7 @@ void ExtendedKalmanFilter::control_loop()
         }
         estimated_robot_pose_ = xk; // Add a filter here.
         VectorXd t = estimated_robot_pose_.translation().vec3();
-        z_ = t(2);
+        vicon_height_ = t(2);
 
 
         auto pose = _get_mobile_platform_configuration_from_pose(estimated_robot_pose_);
@@ -213,7 +214,9 @@ void ExtendedKalmanFilter::control_loop()
                 RCLCPP_INFO_ONCE(node_->get_logger(), "::NO VICON DATA!!!");
             }
 
-            _publish_estimated_robot_pose();
+            //_publish_estimated_robot_pose();
+            _publish_pose_stamped(publisher_estimated_robot_pose_, "/world", estimated_robot_pose_);
+            _publish_pose_stamped(publisher_estimated_robot_pose_with_offset_, "/world", estimated_robot_pose_*x_offset_);
 
             if (save_data_with_datalogger_)
             {
@@ -240,11 +243,29 @@ void ExtendedKalmanFilter::_try_update_vicon_markers()
                                                                                configuration_.robot_vicon_marker,
                                                                                tf2::TimePointZero);
         const unsigned int stamp_nanosec = msg.header.stamp.nanosec;
+        // Check if the stamp is different. Otherwise, the data is not new.
         if (stamp_nanosec != vicon_stamp_)
         {
-            vicon_stamp_ = stamp_nanosec;
-            new_vicon_data_available_ = true;
-            vicon_pose_ = _geometry_msgs_msg_TransformStamped_to_dq(msg);
+            // Ok the data, it is new. But, we need to check the data is OK.
+            // Sometimes, when the marker is near to the borders of the Vicon workspace,
+            // the pose is completly wrong.
+            const DQ x_vicon = _geometry_msgs_msg_TransformStamped_to_dq(msg);
+            const double error_norm = _get_rotation_error_norm(x_vicon, orientation_IMU_);
+            if (error_norm < 1.0)
+            {
+                vicon_stamp_ = stamp_nanosec;
+                new_vicon_data_available_ = true;
+                vicon_pose_ = _geometry_msgs_msg_TransformStamped_to_dq(msg);
+
+                //updated the height
+                VectorXd t = vicon_pose_.translation().vec3();
+                vicon_height_ = t(2);
+            }else
+            {
+                new_vicon_data_available_ = false;
+                std::cerr<<"Vicon data rejected! error norm: "<<error_norm<<std::endl;
+            }
+
             data_loss_counter_= 0;
         }else{
             data_loss_counter_++;
@@ -296,7 +317,8 @@ void ExtendedKalmanFilter::_publish_estimated_robot_pose()
  * @param frame_id
  * @param pose
  */
-void ExtendedKalmanFilter::_publish_test_pose(const std::string &frame_id, const DQ &pose)
+void ExtendedKalmanFilter::_publish_estimated_robot_pose_with_offset(const std::string &frame_id,
+                                                                     const DQ &pose)
 {
     geometry_msgs::msg::PoseStamped posed_stamped;
     posed_stamped.header = std_msgs::msg::Header();
@@ -304,6 +326,18 @@ void ExtendedKalmanFilter::_publish_test_pose(const std::string &frame_id, const
     posed_stamped.header.stamp = rclcpp::Clock().now();
     posed_stamped.pose = dq_to_geometry_msgs_pose(pose);
     publisher_estimated_robot_pose_with_offset_->publish(posed_stamped);
+}
+
+void ExtendedKalmanFilter::_publish_pose_stamped(const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr &publisher,
+                                                 const std::string &frame_id,
+                                                 const DQ &pose)
+{
+    geometry_msgs::msg::PoseStamped posed_stamped;
+    posed_stamped.header = std_msgs::msg::Header();
+    posed_stamped.header.frame_id = frame_id;
+    posed_stamped.header.stamp = rclcpp::Clock().now();
+    posed_stamped.pose = dq_to_geometry_msgs_pose(pose);
+    publisher->publish(posed_stamped);
 }
 
 /**
@@ -343,7 +377,7 @@ void ExtendedKalmanFilter::_prediction_step()
 
 
     DQ r = cos(phi/2) + k_*sin(phi/2);
-    DQ t = x*i_ + y*j_ +z_*k_;
+    DQ t = x*i_ + y*j_ +vicon_height_*k_;
     estimated_robot_pose_ = r + 0.5*E_*t*r;
 
     // Compute Jacobian for state transition
@@ -372,7 +406,7 @@ void ExtendedKalmanFilter::_update_step()
     const double& y = x_(1);
     const double& phi = x_(2);
     DQ r = cos(phi/2) + k_*sin(phi/2);
-    DQ t = x*i_ + y*j_ +z_*k_;
+    DQ t = x*i_ + y*j_ +vicon_height_*k_;
     estimated_robot_pose_ = r + 0.5*E_*t*r;
 }
 
@@ -420,6 +454,17 @@ MatrixXd ExtendedKalmanFilter::jacobian_matrix(const double &v, const double &ph
          0, 0,             1;
     return J;
 }
+
+double ExtendedKalmanFilter::_get_rotation_error_norm(const DQ &x, const DQ &x2)
+{
+    VectorXd error_1 =  vec4( x.rotation().conj()*x2.rotation() - 1 );
+    VectorXd error_2 =  vec4( x.rotation().conj()*x2.rotation() + 1 );
+
+    double norm_1 = error_1.norm();
+    double norm_2 = error_2.norm();
+    return norm_1 < norm_2 ? norm_1 : norm_2;
+}
+
 
 /**
  * @brief ExtendedKalmanFilter::~ExtendedKalmanFilter
