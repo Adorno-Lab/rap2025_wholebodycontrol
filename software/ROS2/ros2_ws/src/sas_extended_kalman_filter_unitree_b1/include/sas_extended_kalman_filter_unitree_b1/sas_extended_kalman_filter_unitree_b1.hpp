@@ -122,7 +122,7 @@ private:
     double vicon_height_;
     rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_estimated_robot_pose_;
     rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_estimated_robot_pose_with_offset_;
-    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_predicted_pose_;
+
 
 
     void _publish_pose_stamped(const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr& publisher,

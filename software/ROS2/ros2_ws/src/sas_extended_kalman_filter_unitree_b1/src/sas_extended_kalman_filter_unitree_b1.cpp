@@ -52,13 +52,11 @@ ExtendedKalmanFilter::ExtendedKalmanFilter(std::shared_ptr<rclcpp::Node> &node,
     tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
     publisher_estimated_robot_pose_ = node_->create_publisher<geometry_msgs::msg::PoseStamped>(
-        "ekf/get/robot_pose", 1);
+        configuration_.topic_prefix +"/get/ekf/robot_pose", 1);
 
     publisher_estimated_robot_pose_with_offset_ = node_->create_publisher<geometry_msgs::msg::PoseStamped>(
-        "ekf/get/robot_pose_with_offset", 1);
+        configuration_.topic_prefix +"/get/ekf/robot_pose_with_offset", 1);
 
-    publisher_predicted_pose_ = node_->create_publisher<geometry_msgs::msg::PoseStamped>(
-        "ekf/get/robot_predicted_pose", 1);
 
 
 
@@ -228,7 +226,7 @@ void ExtendedKalmanFilter::control_loop()
 
             _publish_pose_stamped(publisher_estimated_robot_pose_, "/world", estimated_robot_pose_);
             _publish_pose_stamped(publisher_estimated_robot_pose_with_offset_, "/world", estimated_robot_pose_*x_offset_);
-            _publish_pose_stamped(publisher_predicted_pose_, "/world", predicted_robot_pose_);
+
 
             if (save_data_with_datalogger_)
             {
