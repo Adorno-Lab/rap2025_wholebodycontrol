@@ -51,11 +51,11 @@ ExtendedKalmanFilter::ExtendedKalmanFilter(std::shared_ptr<rclcpp::Node> &node,
     tf_buffer_ = std::make_unique<tf2_ros::Buffer>(node_->get_clock());
     tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
-    publisher_estimated_robot_pose_ = node_->create_publisher<geometry_msgs::msg::PoseStamped>(
-        configuration_.topic_prefix +"/get/ekf/robot_pose", 1);
+    publisher_estimated_robot_marker_pose_ = node_->create_publisher<geometry_msgs::msg::PoseStamped>(
+        configuration_.topic_prefix +"/get/ekf/robot_marker_pose", 1);
 
-    publisher_estimated_robot_pose_with_offset_ = node_->create_publisher<geometry_msgs::msg::PoseStamped>(
-        configuration_.topic_prefix +"/get/ekf/robot_pose_with_offset", 1);
+    publisher_estimated_robot_marker_pose_with_offset_ = node_->create_publisher<geometry_msgs::msg::PoseStamped>(
+        configuration_.topic_prefix +"/get/ekf/robot_pose", 1);
 
 
 
@@ -170,8 +170,8 @@ void ExtendedKalmanFilter::control_loop()
 
             std::cout<<"converging..."<<K-i<<std::endl;
             _try_update_vicon_markers();
-            _publish_pose_stamped(publisher_estimated_robot_pose_, "/world", estimated_robot_pose_);
-            _publish_pose_stamped(publisher_estimated_robot_pose_with_offset_, "/world", estimated_robot_pose_*x_offset_);
+            _publish_pose_stamped(publisher_estimated_robot_marker_pose_, "/world", estimated_robot_pose_);
+            _publish_pose_stamped(publisher_estimated_robot_marker_pose_with_offset_, "/world", estimated_robot_pose_*x_offset_);
             if (_should_shutdown())
                 break;
         }
@@ -224,8 +224,8 @@ void ExtendedKalmanFilter::control_loop()
             }
 
 
-            _publish_pose_stamped(publisher_estimated_robot_pose_, "/world", estimated_robot_pose_);
-            _publish_pose_stamped(publisher_estimated_robot_pose_with_offset_, "/world", estimated_robot_pose_*x_offset_);
+            _publish_pose_stamped(publisher_estimated_robot_marker_pose_, "/world", estimated_robot_pose_);
+            _publish_pose_stamped(publisher_estimated_robot_marker_pose_with_offset_, "/world", estimated_robot_pose_*x_offset_);
 
 
             if (save_data_with_datalogger_)

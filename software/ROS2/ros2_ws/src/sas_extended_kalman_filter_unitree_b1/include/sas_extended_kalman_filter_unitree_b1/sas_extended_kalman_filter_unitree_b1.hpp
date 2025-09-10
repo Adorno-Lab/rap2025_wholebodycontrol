@@ -120,8 +120,8 @@ private:
     DQ estimated_robot_pose_{1};
     DQ predicted_robot_pose_{1};
     double vicon_height_;
-    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_estimated_robot_pose_;
-    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_estimated_robot_pose_with_offset_;
+    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_estimated_robot_marker_pose_;
+    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_estimated_robot_marker_pose_with_offset_;
 
 
 

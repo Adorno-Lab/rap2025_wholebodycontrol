@@ -60,11 +60,11 @@ B1Z1CoppeliaSimROS::B1Z1CoppeliaSimROS(std::shared_ptr<Node> &node,
         );
 
     subscriber_pose_state_ = node_->create_subscription<geometry_msgs::msg::PoseStamped>(
-         topic_prefix_b1_ + "/get/ekf/robot_pose_with_offset", 1, std::bind(&B1Z1CoppeliaSimROS::_callback_pose_state, this, std::placeholders::_1)
+         topic_prefix_b1_ + "/get/ekf/robot_pose", 1, std::bind(&B1Z1CoppeliaSimROS::_callback_pose_state, this, std::placeholders::_1)
         );
 
     subscriber_robot_marker_ = node_->create_subscription<geometry_msgs::msg::PoseStamped>(
-        topic_prefix_b1_ + "/get/ekf/robot_pose", 1, std::bind(&B1Z1CoppeliaSimROS::_callback_robot_marker, this, std::placeholders::_1)
+        topic_prefix_b1_ + "/get/ekf/robot_marker_pose", 1, std::bind(&B1Z1CoppeliaSimROS::_callback_robot_marker, this, std::placeholders::_1)
         );
 
     subscriber_Z1_joint_states_ = node_->create_subscription<sensor_msgs::msg::JointState>(
