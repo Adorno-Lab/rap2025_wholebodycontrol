@@ -28,7 +28,7 @@ def generate_launch_description():
                 "cs_TIMEOUT_IN_MILISECONDS": 8000,
                 "cs_B1_robotname": "UnitreeB1",
                 "cs_Z1_robotname": "UnitreeZ1",
-                "thread_sampling_time_sec": 0.002,
+                "thread_sampling_time_sec": 0.001,
                 "B1_topic_prefix": "sas_b1/b1_1",
                 "Z1_topic_prefix": "sas_z1/z1_1",
             }]

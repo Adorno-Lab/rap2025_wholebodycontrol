@@ -1,5 +1,5 @@
 /*
-#    Copyright (c) 2024 Adorno-Lab
+#    Copyright (c) 2024-2025 Adorno-Lab
 #
 #    This is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Lesser General Public License as published by
@@ -115,6 +115,7 @@ private:
     Subscription <sensor_msgs::msg::JointState>::SharedPtr subscriber_Z1_joint_states_;
     void _callback_Z1_joint_states(const sensor_msgs::msg::JointState& msg);
 
+    bool new_robot_pose_data_available_;
     Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr subscriber_pose_state_;
     void _callback_pose_state(const geometry_msgs::msg::PoseStamped& msg);
 
@@ -130,6 +131,7 @@ private:
 
 
     DQ xd_;
+    bool new_coppeliasim_xd_data_available_{false};
     Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr subscriber_xd_;
     void _callback_xd_state(const geometry_msgs::msg::PoseStamped& msg);
 
