@@ -35,7 +35,8 @@ int main(int argc, char** argv)
         sas::ExtendedKalmanFilterConfiguration configuration;
         sas::get_ros_parameter(node,"thread_sampling_time_sec",configuration.thread_sampling_time_sec);
         sas::get_ros_parameter(node,"topic_prefix",configuration.topic_prefix);
-        sas::get_ros_parameter(node, "robot_vicon_marker", configuration.robot_vicon_marker);
+        sas::get_ros_parameter(node, "robot_vicon_marker_rear", configuration.robot_vicon_marker_rear);
+        sas::get_ros_parameter(node, "robot_vicon_marker_front", configuration.robot_vicon_marker_front);
         RCLCPP_INFO_STREAM_ONCE(node->get_logger(), "::Parameters OK.");
 
         auto ekf_driver = std::make_shared<sas::ExtendedKalmanFilter>(node, configuration, &kill_this_process);
