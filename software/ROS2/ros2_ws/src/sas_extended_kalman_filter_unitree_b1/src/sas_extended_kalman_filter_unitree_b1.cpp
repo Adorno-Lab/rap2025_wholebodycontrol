@@ -202,8 +202,6 @@ void ExtendedKalmanFilter::control_loop()
         vicon_height_ = t(2);
 
 
-
-
         auto pose = _get_mobile_platform_configuration_from_pose(estimated_robot_pose_);
         auto phi = normalize_angle(pose(2));
         //x, y, phi, vx, vy, wz
@@ -267,7 +265,8 @@ void ExtendedKalmanFilter::control_loop()
 }
 
 /**
- * @brief ExtendedKalmanFilter::_try_update_vicon_markers update the Vicon data if available
+ * @brief ExtendedKalmanFilter::_try_update_vicon_markers update the Vicon data if available.
+ *
  */
 void ExtendedKalmanFilter::_try_update_vicon_markers()
 {
@@ -332,13 +331,7 @@ void ExtendedKalmanFilter::_try_update_vicon_markers()
                 vicon_stamp_nano_front_ = stamp_nanosec;
                 new_vicon_data_available_front_ = true;
                 vicon_pose_front_ = x_vicon_front;
-
-                //updated the height
-               // VectorXd t = vicon_pose_rear_.translation().vec3();
-               // vicon_height_ = t(2);
                 data_loss_counter_front_= 0;
-                //vicon_pose_ = vicon_pose_rear_;
-                //std::cerr<<"f: "<<f<<std::endl;
             }else
             {
                 new_vicon_data_available_front_ = false;
