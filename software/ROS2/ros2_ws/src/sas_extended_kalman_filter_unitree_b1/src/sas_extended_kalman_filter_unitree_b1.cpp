@@ -239,7 +239,10 @@ void ExtendedKalmanFilter::control_loop()
                 _update_step();
                 RCLCPP_INFO_ONCE(node_->get_logger(), "::VICON DATA OK");
             }else{
-                RCLCPP_INFO_ONCE(node_->get_logger(), "::NO VICON DATA!!!");
+                if (!new_vicon_data_available_rear_ )
+                    RCLCPP_INFO_ONCE(node_->get_logger(), "::REAR MARKER LOST!!!");
+                if (!new_vicon_data_available_front_)
+                    RCLCPP_INFO_ONCE(node_->get_logger(), "::FRONT MARKER LOST!!!");
             }
 
 
