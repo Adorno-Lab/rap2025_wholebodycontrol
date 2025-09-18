@@ -52,7 +52,9 @@ struct ExtendedKalmanFilterConfiguration
 {
     std::string topic_prefix;
     double thread_sampling_time_sec;
-    std::string robot_vicon_marker;
+    std::string robot_vicon_marker_rear;
+    std::string robot_vicon_marker_front;
+
 };
 
 class ExtendedKalmanFilter
@@ -84,13 +86,11 @@ private:
     // DQ linear_acceleration_IMU_{0}; Not used
     // DQ angular_velocity_IMU_{0};  Not used
     DQ orientation_IMU_{1}; // Used to compute the orientation offset between the Vicon marker
-                            // and the IMU orientation
-
-    DQ x_offset_ = 1 + 0.5*E_*(0.25*i_ -0.17*k_); //0.15933
 
 
-    double _get_rotation_error_norm(const DQ &x, const DQ &x2);
+    DQ x_offset_rear_to_central_body_frame_ = 1 + 0.5*E_*(0.25*i_ -0.17*k_); //0.15933
 
+    DQ x_rear_to_front_{1};
 
     //-----------------------------------------
     rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr subscriber_twist_state_;
@@ -105,15 +105,22 @@ private:
     std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
     std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
     void _try_update_vicon_markers();
-    bool new_vicon_data_available_{false};
-    unsigned int vicon_stamp_{0};
-    int data_loss_counter_{0};
+    bool new_vicon_data_available_rear_{false};
+    bool new_vicon_data_available_front_{false};
+    unsigned int vicon_stamp_nano_rear_{0};
+    unsigned int vicon_stamp_nano_front_{0};
+    int data_loss_counter_rear_{0};
+    int data_loss_counter_front_{0};
     const int DATA_LOSS_THRESHOLD_ = 10;
     DQ _geometry_msgs_msg_TransformStamped_to_dq(const geometry_msgs::msg::TransformStamped &msg);
+    DQ vicon_pose_rear_{1};
+    DQ vicon_pose_front_{1};
     DQ vicon_pose_{1};
+
+
     //-------------------------
-
-
+    double _compute_line_to_line_angle_distance(const DQ& vicon_pose_marker);
+    void _set_height_from_marker(const DQ& x);
     //-----------------------
 
 
@@ -122,7 +129,7 @@ private:
     double vicon_height_;
     rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_estimated_robot_marker_pose_;
     rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_estimated_robot_marker_pose_with_offset_;
-
+    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_pose_debug_;
 
 
     void _publish_pose_stamped(const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr& publisher,

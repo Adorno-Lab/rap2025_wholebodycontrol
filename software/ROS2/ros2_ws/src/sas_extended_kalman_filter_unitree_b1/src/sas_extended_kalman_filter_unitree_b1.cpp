@@ -44,10 +44,6 @@ ExtendedKalmanFilter::ExtendedKalmanFilter(std::shared_ptr<rclcpp::Node> &node,
         );
 
 
-
-
-
-
     tf_buffer_ = std::make_unique<tf2_ros::Buffer>(node_->get_clock());
     tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
@@ -57,7 +53,8 @@ ExtendedKalmanFilter::ExtendedKalmanFilter(std::shared_ptr<rclcpp::Node> &node,
     publisher_estimated_robot_marker_pose_with_offset_ = node_->create_publisher<geometry_msgs::msg::PoseStamped>(
         configuration_.topic_prefix +"/get/ekf/robot_pose", 1);
 
-
+    publisher_pose_debug_  = node_->create_publisher<geometry_msgs::msg::PoseStamped>(
+        configuration_.topic_prefix +"/get/ekf/debug_pose", 1);
 
 
     // Initialize state vector: [x, y, phi]
@@ -93,7 +90,10 @@ bool ExtendedKalmanFilter::_should_shutdown() const
     return (*st_break_loops_);
 }
 
-
+/**
+ * @brief ExtendedKalmanFilter::_callback_subscriber_IMU_state callback method for the subscriber_IMU_state_
+ * @param msg
+ */
 void ExtendedKalmanFilter::_callback_subscriber_IMU_state(const sensor_msgs::msg::Imu &msg)
 {
     //const DQ w = msg.angular_velocity.x*i_ + msg.angular_velocity.y*j_ + msg.angular_velocity.z*k_;
@@ -129,7 +129,7 @@ void ExtendedKalmanFilter::control_loop()
     try{
 
         clock_.init();
-        /*
+
         while (!new_IMU_data_available_ && !_should_shutdown())
         {
             rclcpp::spin_some(node_);
@@ -137,7 +137,7 @@ void ExtendedKalmanFilter::control_loop()
             rclcpp::spin_some(node_);
             RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Waiting for IMU data");
 
-        }*/
+        }
         while (!new_twist_data_available_ && !_should_shutdown())
         {
             rclcpp::spin_some(node_);
@@ -145,41 +145,60 @@ void ExtendedKalmanFilter::control_loop()
             rclcpp::spin_some(node_);
             RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Waiting for Twist data");
         }
-        while (!new_vicon_data_available_ && !_should_shutdown())
+        while (!new_vicon_data_available_rear_ && !_should_shutdown())
         {
             rclcpp::spin_some(node_);
             clock_.update_and_sleep();
             rclcpp::spin_some(node_);
             _try_update_vicon_markers();
-            RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Waiting for VICON data");
+            RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Waiting for rear VICON data");
+        }
+        while (!new_vicon_data_available_front_ && !_should_shutdown())
+        {
+            rclcpp::spin_some(node_);
+            clock_.update_and_sleep();
+            rclcpp::spin_some(node_);
+            _try_update_vicon_markers();
+            RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Waiting for front VICON data");
         }
 
         const double K{100.0};
+
         DQ xk;
         DQ x_vicon_k_previous_= vicon_pose_;
 
+
+        x_rear_to_front_ = vicon_pose_rear_.conj()*vicon_pose_front_;
+        DQ x_rear_to_front_previous_= x_rear_to_front_;
+
         for (int i=0;i<K;i++)
         {
-            RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Initializing pose from Vicon...");
+            RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Initializing poses from Vicon...");
             rclcpp::spin_some(node_);
             clock_.update_and_sleep();
             rclcpp::spin_some(node_);
             xk = x_vicon_k_previous_*DQ_robotics::pow(x_vicon_k_previous_.conj()*vicon_pose_, 1/K);
-
+            x_vicon_k_previous_ = xk;
             estimated_robot_pose_ = xk;
 
-            std::cout<<"converging..."<<K-i<<std::endl;
+
+            DQ x_rear_to_front_current = vicon_pose_rear_.conj()*vicon_pose_front_;
+            x_rear_to_front_ = x_rear_to_front_previous_*DQ_robotics::pow(x_rear_to_front_previous_.conj()*x_rear_to_front_current, 1/K);
+            x_rear_to_front_previous_ = x_rear_to_front_;
+
+
+
+
+            std::cout<<"Initializing the reference frames..."<<K-i<<std::endl;
             _try_update_vicon_markers();
             _publish_pose_stamped(publisher_estimated_robot_marker_pose_, "/world", estimated_robot_pose_);
-            _publish_pose_stamped(publisher_estimated_robot_marker_pose_with_offset_, "/world", estimated_robot_pose_*x_offset_);
+            _publish_pose_stamped(publisher_estimated_robot_marker_pose_with_offset_, "/world", estimated_robot_pose_*x_offset_rear_to_central_body_frame_);
+            _publish_pose_stamped(publisher_pose_debug_, "/world", vicon_pose_rear_*x_rear_to_front_);
             if (_should_shutdown())
                 break;
         }
-        estimated_robot_pose_ = xk; // Add a filter here.
         VectorXd t = estimated_robot_pose_.translation().vec3();
         vicon_height_ = t(2);
-
-
 
 
         auto pose = _get_mobile_platform_configuration_from_pose(estimated_robot_pose_);
@@ -215,17 +234,21 @@ void ExtendedKalmanFilter::control_loop()
 
             _prediction_step();
 
-            if (new_vicon_data_available_)
+            if (new_vicon_data_available_rear_ || new_vicon_data_available_front_)
             {
                 _update_step();
                 RCLCPP_INFO_ONCE(node_->get_logger(), "::VICON DATA OK");
             }else{
-                RCLCPP_INFO_ONCE(node_->get_logger(), "::NO VICON DATA!!!");
+                if (!new_vicon_data_available_rear_ )
+                    RCLCPP_INFO_ONCE(node_->get_logger(), "::REAR MARKER LOST!!!");
+                if (!new_vicon_data_available_front_)
+                    RCLCPP_INFO_ONCE(node_->get_logger(), "::FRONT MARKER LOST!!!");
             }
 
 
             _publish_pose_stamped(publisher_estimated_robot_marker_pose_, "/world", estimated_robot_pose_);
-            _publish_pose_stamped(publisher_estimated_robot_marker_pose_with_offset_, "/world", estimated_robot_pose_*x_offset_);
+            _publish_pose_stamped(publisher_estimated_robot_marker_pose_with_offset_, "/world", estimated_robot_pose_*x_offset_rear_to_central_body_frame_);
+            _publish_pose_stamped(publisher_pose_debug_, "/world", vicon_pose_rear_*x_rear_to_front_);
 
 
             if (save_data_with_datalogger_)
@@ -244,62 +267,121 @@ void ExtendedKalmanFilter::control_loop()
 }
 
 /**
- * @brief ExtendedKalmanFilter::_try_update_vicon_markers update the Vicon data if available
+ * @brief ExtendedKalmanFilter::_try_update_vicon_markers update the Vicon data if available.
+ *
  */
 void ExtendedKalmanFilter::_try_update_vicon_markers()
 {
+    // The vicon_pose_ represents the measurement of the position and orientation of the B1 robot.
+    // There are two markers rigidly attached to the robot. vicon_marker_rear_ and vicon_marker_front_.
+    // If only the rear marker is detected, vicon_pose_ is vicon_marker_rear_.
+    // If only the front marker is detected, we compute vicon_marker_rear_ using the rigid body transformation
+    // x_rear_to_front_.
+    // Finally, if both markers are detected, we compute the average bewteen them.
     try {
         geometry_msgs::msg::TransformStamped msg = tf_buffer_->lookupTransform("world",
-                                                                               configuration_.robot_vicon_marker,
+                                                                               configuration_.robot_vicon_marker_rear,
                                                                                tf2::TimePointZero);
         const unsigned int stamp_nanosec = msg.header.stamp.nanosec;
         // Check if the stamp is different. Otherwise, the data is not new.
-        if (stamp_nanosec != vicon_stamp_)
+        if (stamp_nanosec != vicon_stamp_nano_rear_)
         {
-            // Ok the data, it is new. But, we need to check the data is OK.
+            // Ok, the data is new. But, we need to check if the data is OK.
             // Sometimes, when the marker is near to the borders of the Vicon workspace,
-            // the pose is completly wrong.
+            // the pose is completly wrong. Since we are modeling the B1 robot as a planar joint,
+            // we assume the z-axis is perpendicular to the ground. The distance between the orientation
+            // line attached to the z-axis of the marker, and the static line k_ must be lower than a threshold,
+            // otherwise the measurement is rejected.
 
-            DQ x_vicon = _geometry_msgs_msg_TransformStamped_to_dq(msg);
-
-
-
-
-            //const double error_norm = _get_rotation_error_norm(x_vicon, orientation_IMU_);
-
-            //const DQ& r_IMU =  orientation_IMU_;
-
-            const DQ workspace_line = k_;
-            const DQ robot_line =  x_vicon.P()*(k_)*x_vicon.P().conj();
-            const double phi = DQ_Geometry::line_to_line_angle(robot_line, workspace_line);
-            const double f = 2-2*cos(phi);
+            DQ x_vicon_rear = _geometry_msgs_msg_TransformStamped_to_dq(msg);
+            const double f = _compute_line_to_line_angle_distance(x_vicon_rear);
 
             if (f < 0.01)
             {
-                vicon_stamp_ = stamp_nanosec;
-                new_vicon_data_available_ = true;
-                vicon_pose_ = _geometry_msgs_msg_TransformStamped_to_dq(msg);
+                vicon_stamp_nano_rear_ = stamp_nanosec;
+                new_vicon_data_available_rear_ = true;
+                vicon_pose_rear_ = x_vicon_rear;
+                data_loss_counter_rear_= 0;
 
-                //updated the height
-                VectorXd t = vicon_pose_.translation().vec3();
-                vicon_height_ = t(2);
-                data_loss_counter_= 0;
-                //std::cerr<<"f: "<<f<<std::endl;
             }else
             {
-                new_vicon_data_available_ = false;
+                new_vicon_data_available_rear_ = false;
                 //std::cerr<<"Vicon data rejected! error norm: "<<f<<std::endl;
             }
 
         }else{
-            data_loss_counter_++;
-            if (data_loss_counter_ > DATA_LOSS_THRESHOLD_)
-                new_vicon_data_available_ = false;
+            data_loss_counter_rear_++;
+            if (data_loss_counter_rear_ > DATA_LOSS_THRESHOLD_)
+                new_vicon_data_available_rear_ = false;
         }
     } catch (const tf2::TransformException & ex) {
-        new_vicon_data_available_ = false;
-        RCLCPP_INFO_STREAM(node_->get_logger(), "Marker "+configuration_.robot_vicon_marker+" not detected!");
+        new_vicon_data_available_rear_ = false;
+        RCLCPP_INFO_STREAM(node_->get_logger(), "Marker "+configuration_.robot_vicon_marker_rear+" not detected!");
     };
+
+
+    //-------------------------------------------------------------------------------------------------------------------
+    try {
+        geometry_msgs::msg::TransformStamped msg = tf_buffer_->lookupTransform("world",
+                                                                               configuration_.robot_vicon_marker_front,
+                                                                               tf2::TimePointZero);
+        const unsigned int stamp_nanosec = msg.header.stamp.nanosec;
+        // Check if the stamp is different. Otherwise, the data is not new.
+        if (stamp_nanosec != vicon_stamp_nano_front_)
+        {
+            // Ok, the data is new. But, we need to check if the data is OK.
+            // Sometimes, when the marker is near to the borders of the Vicon workspace,
+            // the pose is completly wrong.
+
+            DQ x_vicon_front = _geometry_msgs_msg_TransformStamped_to_dq(msg);
+            const double f = _compute_line_to_line_angle_distance(x_vicon_front);
+            // if the distance between the line orienations is above a threshold, the data is
+            // rejected.
+            if (f < 0.01)
+            {
+                vicon_stamp_nano_front_ = stamp_nanosec;
+                new_vicon_data_available_front_ = true;
+                vicon_pose_front_ = x_vicon_front;
+                data_loss_counter_front_= 0;
+            }else
+            {
+                new_vicon_data_available_front_ = false;
+            }
+
+        }else{
+            data_loss_counter_front_++;
+            if (data_loss_counter_front_ > DATA_LOSS_THRESHOLD_)
+                new_vicon_data_available_front_ = false;
+        }
+    } catch (const tf2::TransformException & ex) {
+        new_vicon_data_available_front_ = false;
+        RCLCPP_INFO_STREAM(node_->get_logger(), "Marker "+configuration_.robot_vicon_marker_front+" not detected!");
+    };
+    //--------------------------------------------------------------------------------------------------------------------
+    // If only the rear marker is available, the vicon pose marker is set
+    if (new_vicon_data_available_rear_ && !new_vicon_data_available_front_)
+    {
+        vicon_pose_ = vicon_pose_rear_;
+        //updated the height
+        _set_height_from_marker(vicon_pose_);
+    }
+
+    // If both are available, we compute the average
+    if (new_vicon_data_available_rear_ && new_vicon_data_available_front_)
+    {
+        const DQ& x1 = vicon_pose_rear_;
+        const DQ& x2 = vicon_pose_front_*x_rear_to_front_.conj();
+        vicon_pose_  = x1*DQ_robotics::pow(x1.conj()*x2, 0.5);
+        _set_height_from_marker(vicon_pose_);
+    }
+
+    // If the rear marker is lost, we compute its pose using the from marker and its corresponding offset.
+    if (!new_vicon_data_available_rear_ && new_vicon_data_available_front_)
+    {
+        vicon_pose_ = vicon_pose_front_*x_rear_to_front_.conj();
+        //updated the height
+        _set_height_from_marker(vicon_pose_);
+    }
 }
 
 /**
@@ -323,8 +405,45 @@ DQ ExtendedKalmanFilter::_geometry_msgs_msg_TransformStamped_to_dq(const geometr
     return (nr + 0.5*E_*t*nr).normalize();
 }
 
+/**
+ * @brief ExtendedKalmanFilter::_compute_line_to_line_angle_distance compute the distance function between
+ *                          the orientation line attached to the z-axis of the vicon marker and the static line k_
+ *                          This distance function corresponds to the equation (9) of [1].
+ *
+ *  [1] J. J. Quiroz-Omaña and B. V. Adorno,
+ *  "Whole-Body Control With (Self) Collision Avoidance Using Vector Field Inequalities,"
+ *  in IEEE Robotics and Automation Letters, vol. 4, no. 4, pp. 4048-4053,
+ *  Oct. 2019, doi: 10.1109/LRA.2019.2928783.
+ *
+ * @param vicon_pose_marker
+ * @return the desired distance between the orientation lines
+ */
+double ExtendedKalmanFilter::_compute_line_to_line_angle_distance(const DQ &vicon_pose_marker)
+{
+    const DQ workspace_line = k_;
+    const DQ robot_line =  vicon_pose_marker.P()*(k_)*vicon_pose_marker.P().conj();
+    const double phi = DQ_Geometry::line_to_line_angle(robot_line, workspace_line);
+    const double f = 2-2*cos(phi);
+    return f;
+}
+
+/**
+ * @brief ExtendedKalmanFilter::_set_height_from_marker updates the height of the estimation pose
+ * @param x pose The unit dual quaternion that represents the pose. This is usual a vicon marker pose.
+ */
+void ExtendedKalmanFilter::_set_height_from_marker(const DQ &x)
+{
+    VectorXd t = x.translation().vec3();
+    vicon_height_ = t(2);
+}
 
 
+/**
+ * @brief ExtendedKalmanFilter::_publish_pose_stamped publishes a ROS 2 Pose Stamped message
+ * @param publisher The publisher pointer
+ * @param frame_id The reference frame
+ * @param pose The unit dual quaternion that represents the pose
+ */
 void ExtendedKalmanFilter::_publish_pose_stamped(const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr &publisher,
                                                  const std::string &frame_id,
                                                  const DQ &pose)
@@ -423,9 +542,10 @@ double ExtendedKalmanFilter::normalize_angle(double angle) {
 }
 
 /**
- * @brief ExtendedKalmanFilter::_get_mobile_platform_configuration_from_pose
+ * @brief ExtendedKalmanFilter::_get_mobile_platform_configuration_from_pose returns the configuration vector
+ *                          q = [x,y,phi] given a unit dual quaternion
  * @param pose
- * @return
+ * @return The desired configuration vector
  */
 VectorXd ExtendedKalmanFilter::_get_mobile_platform_configuration_from_pose(const DQ &pose) const
 {
@@ -439,10 +559,10 @@ VectorXd ExtendedKalmanFilter::_get_mobile_platform_configuration_from_pose(cons
 }
 
 /**
- * @brief ExtendedKalmanFilter::jacobian_matrix
- * @param v
- * @param phi
- * @return
+ * @brief ExtendedKalmanFilter::jacobian_matrix compute the Jacobian matrix of the model
+ * @param v the linear velocitiy
+ * @param phi the rotation angle
+ * @return The deisred Jacobian matrix
  */
 MatrixXd ExtendedKalmanFilter::jacobian_matrix(const double &v, const double &phi)
 {
@@ -452,16 +572,6 @@ MatrixXd ExtendedKalmanFilter::jacobian_matrix(const double &v, const double &ph
          0, 0,  T*v*cos(phi),
          0, 0,             1;
     return J;
-}
-
-double ExtendedKalmanFilter::_get_rotation_error_norm(const DQ &x, const DQ &x2)
-{
-    VectorXd error_1 =  vec4( x.rotation().conj()*x2.rotation() - 1 );
-    VectorXd error_2 =  vec4( x.rotation().conj()*x2.rotation() + 1 );
-
-    double norm_1 = error_1.norm();
-    double norm_2 = error_2.norm();
-    return norm_1 < norm_2 ? norm_1 : norm_2;
 }
 
 
