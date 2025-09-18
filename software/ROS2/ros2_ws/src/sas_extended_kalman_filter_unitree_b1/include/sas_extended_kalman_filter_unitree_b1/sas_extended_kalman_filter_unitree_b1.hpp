@@ -92,10 +92,6 @@ private:
 
     DQ x_rear_to_front_{1};
 
-
-    double _get_rotation_error_norm(const DQ &x, const DQ &x2);
-    DQ _create_dq_from_rotation_and_translation(const DQ& r, const DQ& t);
-
     //-----------------------------------------
     rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr subscriber_twist_state_;
     void _callback_subscriber_twist_state(const geometry_msgs::msg::TwistStamped& msg);

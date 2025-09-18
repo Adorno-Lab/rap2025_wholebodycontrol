@@ -44,10 +44,6 @@ ExtendedKalmanFilter::ExtendedKalmanFilter(std::shared_ptr<rclcpp::Node> &node,
         );
 
 
-
-
-
-
     tf_buffer_ = std::make_unique<tf2_ros::Buffer>(node_->get_clock());
     tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
@@ -94,7 +90,10 @@ bool ExtendedKalmanFilter::_should_shutdown() const
     return (*st_break_loops_);
 }
 
-
+/**
+ * @brief ExtendedKalmanFilter::_callback_subscriber_IMU_state callback method for the subscriber_IMU_state_
+ * @param msg
+ */
 void ExtendedKalmanFilter::_callback_subscriber_IMU_state(const sensor_msgs::msg::Imu &msg)
 {
     //const DQ w = msg.angular_velocity.x*i_ + msg.angular_velocity.y*j_ + msg.angular_velocity.z*k_;
@@ -270,6 +269,12 @@ void ExtendedKalmanFilter::control_loop()
  */
 void ExtendedKalmanFilter::_try_update_vicon_markers()
 {
+    // The vicon_pose_ represents the measurement of the position and orientation of the B1 robot.
+    // There are two markers rigidly attached to the robot. vicon_marker_rear_ and vicon_marker_front_.
+    // If only the rear marker is detected, vicon_pose_ is vicon_marker_rear_.
+    // If only the front marker is detected, we compute vicon_marker_rear_ using the rigid body transformation
+    // x_rear_to_front_.
+    // Finally, if both markers are detected, we compute the average bewteen them.
     try {
         geometry_msgs::msg::TransformStamped msg = tf_buffer_->lookupTransform("world",
                                                                                configuration_.robot_vicon_marker_rear,
@@ -280,7 +285,10 @@ void ExtendedKalmanFilter::_try_update_vicon_markers()
         {
             // Ok, the data is new. But, we need to check if the data is OK.
             // Sometimes, when the marker is near to the borders of the Vicon workspace,
-            // the pose is completly wrong.
+            // the pose is completly wrong. Since we are modeling the B1 robot as a planar joint,
+            // we assume the z-axis is perpendicular to the ground. The distance between the orientation
+            // line attached to the z-axis of the marker, and the static line k_ must be lower than a threshold,
+            // otherwise the measurement is rejected.
 
             DQ x_vicon_rear = _geometry_msgs_msg_TransformStamped_to_dq(msg);
             const double f = _compute_line_to_line_angle_distance(x_vicon_rear);
@@ -335,7 +343,6 @@ void ExtendedKalmanFilter::_try_update_vicon_markers()
             }else
             {
                 new_vicon_data_available_front_ = false;
-                //std::cerr<<"Vicon data rejected! error norm: "<<f<<std::endl;
             }
 
         }else{
@@ -356,7 +363,7 @@ void ExtendedKalmanFilter::_try_update_vicon_markers()
         _set_height_from_marker(vicon_pose_);
     }
 
-    // If both are available,
+    // If both are available, we compute the average
     if (new_vicon_data_available_rear_ && new_vicon_data_available_front_)
     {
         const DQ& x1 = vicon_pose_rear_;
@@ -398,7 +405,7 @@ DQ ExtendedKalmanFilter::_geometry_msgs_msg_TransformStamped_to_dq(const geometr
 /**
  * @brief ExtendedKalmanFilter::_compute_line_to_line_angle_distance compute the distance function between
  *                          the orientation line attached to the z-axis of the vicon marker and the static line k_
- *                          This distance function corresponds to the equation (9) of the paper [1].
+ *                          This distance function corresponds to the equation (9) of [1].
  *
  *  [1] J. J. Quiroz-Omaña and B. V. Adorno,
  *  "Whole-Body Control With (Self) Collision Avoidance Using Vector Field Inequalities,"
@@ -417,6 +424,10 @@ double ExtendedKalmanFilter::_compute_line_to_line_angle_distance(const DQ &vico
     return f;
 }
 
+/**
+ * @brief ExtendedKalmanFilter::_set_height_from_marker updates the height of the estimation pose
+ * @param x pose The unit dual quaternion that represents the pose. This is usual a vicon marker pose.
+ */
 void ExtendedKalmanFilter::_set_height_from_marker(const DQ &x)
 {
     VectorXd t = x.translation().vec3();
@@ -424,7 +435,12 @@ void ExtendedKalmanFilter::_set_height_from_marker(const DQ &x)
 }
 
 
-
+/**
+ * @brief ExtendedKalmanFilter::_publish_pose_stamped publishes a ROS 2 Pose Stamped message
+ * @param publisher The publisher pointer
+ * @param frame_id The reference frame
+ * @param pose The unit dual quaternion that represents the pose
+ */
 void ExtendedKalmanFilter::_publish_pose_stamped(const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr &publisher,
                                                  const std::string &frame_id,
                                                  const DQ &pose)
@@ -523,9 +539,10 @@ double ExtendedKalmanFilter::normalize_angle(double angle) {
 }
 
 /**
- * @brief ExtendedKalmanFilter::_get_mobile_platform_configuration_from_pose
+ * @brief ExtendedKalmanFilter::_get_mobile_platform_configuration_from_pose returns the configuration vector
+ *                          q = [x,y,phi] given a unit dual quaternion
  * @param pose
- * @return
+ * @return The desired configuration vector
  */
 VectorXd ExtendedKalmanFilter::_get_mobile_platform_configuration_from_pose(const DQ &pose) const
 {
@@ -539,10 +556,10 @@ VectorXd ExtendedKalmanFilter::_get_mobile_platform_configuration_from_pose(cons
 }
 
 /**
- * @brief ExtendedKalmanFilter::jacobian_matrix
- * @param v
- * @param phi
- * @return
+ * @brief ExtendedKalmanFilter::jacobian_matrix compute the Jacobian matrix of the model
+ * @param v the linear velocitiy
+ * @param phi the rotation angle
+ * @return The deisred Jacobian matrix
  */
 MatrixXd ExtendedKalmanFilter::jacobian_matrix(const double &v, const double &phi)
 {
@@ -552,21 +569,6 @@ MatrixXd ExtendedKalmanFilter::jacobian_matrix(const double &v, const double &ph
          0, 0,  T*v*cos(phi),
          0, 0,             1;
     return J;
-}
-
-double ExtendedKalmanFilter::_get_rotation_error_norm(const DQ &x, const DQ &x2)
-{
-    VectorXd error_1 =  vec4( x.rotation().conj()*x2.rotation() - 1 );
-    VectorXd error_2 =  vec4( x.rotation().conj()*x2.rotation() + 1 );
-
-    double norm_1 = error_1.norm();
-    double norm_2 = error_2.norm();
-    return norm_1 < norm_2 ? norm_1 : norm_2;
-}
-
-DQ ExtendedKalmanFilter::_create_dq_from_rotation_and_translation(const DQ &r, const DQ &t)
-{
-    return r + 0.5*E_*t*r;
 }
 
 
