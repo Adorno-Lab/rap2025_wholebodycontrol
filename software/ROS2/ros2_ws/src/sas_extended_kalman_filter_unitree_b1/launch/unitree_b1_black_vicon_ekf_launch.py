@@ -17,10 +17,6 @@ def generate_launch_description():
     # Get the package share directory
     pkg_share = get_package_share_directory('sas_extended_kalman_filter_unitree_b1')
     
-    # Construct the full path to the RViz config file
-    rviz_config_path = os.path.join(pkg_share, 'launch', 'config', 'ekf_config.rviz')
-
-
     return LaunchDescription([
         DeclareLaunchArgument(
                     'sigterm_timeout',
@@ -35,17 +31,9 @@ def generate_launch_description():
             parameters=[{
                 "topic_prefix": "/sas_b1/b1_1",
                 "thread_sampling_time_sec": 0.001,
-                "robot_vicon_marker_rear": "B1Z1_Frame_robot_white_rear",
-                "robot_vicon_marker_front": "B1Z1_Frame_robot_white_front"
+                "robot_vicon_marker_rear": "B1Z1_Frame_robot_black_rear",
+                "robot_vicon_marker_front": "B1Z1_Frame_robot_black_front"
             }]
-        ),
-
-        Node(
-            package='rviz2',
-            namespace='',
-            executable='rviz2',
-            name='rviz2',
-            arguments=['-d', rviz_config_path]
         )
 
     ])
