@@ -25,11 +25,11 @@ def generate_launch_description():
         Node(
             package='sas_extended_kalman_filter_unitree_b1',
             executable='sas_extended_kalman_filter_unitree_b1_node',
-            name='ekf_b1_1',
+            name='ekf_b1_2',
             namespace="sas_b1",
             output="screen",
             parameters=[{
-                "topic_prefix": "/sas_b1/b1_1",
+                "topic_prefix": "/sas_b1/b1_2",
                 "thread_sampling_time_sec": 0.001,
                 "robot_vicon_marker_rear": "B1Z1_Frame_robot_black_rear",
                 "robot_vicon_marker_front": "B1Z1_Frame_robot_black_front"
