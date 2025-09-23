@@ -18,9 +18,9 @@ services:
       ros2 launch motion_capture_tracking launch.py"
 
   sas_coppeliasim_unitree_b1z1:
-    #build: https://github.com/Adorno-Lab/rap2025_wholebodycontrol.git#main:docker/sas_coppeliasim_unitree_b1z1
-    image: juanjqo/sas_coppeliasim_unitree_b1z1
-    platform: linux/amd64
+    build: https://github.com/Adorno-Lab/rap2025_wholebodycontrol.git#main:docker/sas_coppeliasim_unitree_b1z1
+    #image: juanjqo/sas_coppeliasim_unitree_b1z1
+    #platform: linux/amd64
     environment:
       DISPLAY: $DISPLAY # x server related
     privileged: true # Needed for some gpu configurations.
