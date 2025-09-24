@@ -38,7 +38,9 @@ int main(int argc, char** argv)
         sas::get_ros_parameter(node,"cs_port",configuration.cs_port);
         sas::get_ros_parameter(node,"cs_TIMEOUT_IN_MILISECONDS",configuration.cs_TIMEOUT_IN_MILISECONDS);
         sas::get_ros_parameter(node,"cs_B1_robotname",configuration.cs_B1_robotname);
-        sas::get_ros_parameter(node,"cs_Z1_robotname",configuration.cs_Z1_robotname);
+        sas::get_ros_parameter(node,"robot_model_frame_name", configuration.robot_model_frame_name);
+        sas::get_ros_parameter(node,"desired_frame_name", configuration.desired_frame_name);
+        sas::get_ros_parameter(node,"robot_marker_frame_name", configuration.robot_marker_frame_name);
         sas::get_ros_parameter(node,"B1_topic_prefix",configuration.B1_topic_prefix);
         sas::get_ros_parameter(node,"Z1_topic_prefix",configuration.Z1_topic_prefix);
         sas::get_ros_parameter(node,"thread_sampling_time_sec",configuration.thread_sampling_time_sec);
