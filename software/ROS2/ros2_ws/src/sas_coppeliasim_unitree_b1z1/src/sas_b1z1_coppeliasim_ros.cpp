@@ -116,7 +116,7 @@ void B1Z1CoppeliaSimROS::_set_robot_pose_on_coppeliasim(const DQ &pose)
     try
     {
         if (is_unit(pose)) 
-            cs_->set_object_pose(b1_name_, pose);
+            cs_->set_object_pose(configuration_.cs_B1_robotname, pose);
         if (is_unit(x_fkm_))
             cs_->set_object_pose(configuration_.robot_model_frame_name, x_fkm_);
         if (is_unit(robot_marker_))
@@ -124,8 +124,7 @@ void B1Z1CoppeliaSimROS::_set_robot_pose_on_coppeliasim(const DQ &pose)
     }
     catch (const std::exception& e)
     {
-        RCLCPP_ERROR_STREAM_ONCE(node_->get_logger(), std::string("::Exception::") + e.what());
-        std::cerr << std::string("::Exception::") << e.what();
+        RCLCPP_ERROR_STREAM_ONCE(node_->get_logger(), std::string(__FUNCTION__)+std::string("::")+ e.what());
     }
 
 }
@@ -175,6 +174,7 @@ void B1Z1CoppeliaSimROS::control_loop()
 
         for (int i=0;i<5;i++)
         {
+            RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::setting initial configurations...");
             rclcpp::spin_some(node_);
             clock_.update_and_sleep();
             rclcpp::spin_some(node_);
@@ -200,7 +200,7 @@ void B1Z1CoppeliaSimROS::control_loop()
     }
     catch(const std::exception& e)
     {
-        std::cerr<<"::Exception caught::" << e.what() <<std::endl;
+        RCLCPP_ERROR_STREAM_ONCE(node_->get_logger(), std::string(__FUNCTION__)+std::string("::")+ e.what());
     }
 }
 
