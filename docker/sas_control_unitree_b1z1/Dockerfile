@@ -18,7 +18,8 @@ RUN cp -r ~/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/sas_control_u
  ~/ros2_ws/src/ \
 && /bin/bash -c "source /opt/ros/jazzy/setup.bash; cd ~/ros2_ws/; colcon build && source install/setup.bash" 
 
-RUN echo "alias launch_sas_control='cdros2 && source install/setup.bash && ros2 launch sas_control_unitree_b1z1 sas_control_unitree_b1z1_white_launch.py ' " >> /etc/bash_env
+RUN echo "alias launch_sas_white_control='cdros2 && source install/setup.bash && ros2 launch sas_control_unitree_b1z1 sas_control_unitree_b1z1_white_launch.py ' " >> /etc/bash_env
+RUN echo "alias launch_sas_black_control='cdros2 && source install/setup.bash && ros2 launch sas_control_unitree_b1z1 sas_control_unitree_b1z1_black_launch.py ' " >> /etc/bash_env
 RUN echo "source /etc/bash_env" >> ~/.bashrc
 
 
