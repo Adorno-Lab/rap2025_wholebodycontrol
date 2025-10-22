@@ -41,7 +41,12 @@ Enter the B1 computer
 ```shell
 ssh unitree@192.168.8.170
 ```
-
+Load the image
 ```shell
 docker load --input sas_unitree_b1z1_rap_control_template.tar.gz
+```
+
+Run the image
+```shell
+docker run -it --name="sas_unitree_b1z1_rap_control_template" --rm --privileged --network=host sas_unitree_b1z1_rap_control_template /bin/bash
 ```
