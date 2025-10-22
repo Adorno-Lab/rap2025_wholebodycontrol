@@ -39,3 +39,4 @@ RUN echo "export ROS_DOMAIN_ID=77" >> /etc/bash_env
 RUN echo "source /etc/bash_env" >> ~/.bashrc
 
 
+#ros2 launch sas_unitree_b1z1_control_template real_b1z1_white_robot_ekf_echo_launch.py 

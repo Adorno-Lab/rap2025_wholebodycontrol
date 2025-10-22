@@ -35,7 +35,9 @@ services:
       source /opt/ros/jazzy/setup.bash;
       export ROS_DOMAIN_ID=77;
       cd ~/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/sas_coppeliasim_unitree_b1z1/scripts
-      && chmod +x launch_scene_and_ROS2_drivers.sh
+      && chmod +x launch_scene_and_ROS2_drivers.sh 
+      && chmod +x launch_ROS2_drivers.sh
+      && chmod +x launch_scene.sh
       && . ./launch_scene_and_ROS2_drivers.sh "
 
 #  sas_control_unitree_b1z1:
