@@ -32,11 +32,11 @@ RUN echo "source /etc/bash_env" >> ~/.bashrc
 
 # Build the ROS2 packages
 RUN bash -c "source /opt/ros/jazzy/setup.bash; cd ~/ros2_ws/; colcon build && source install/setup.bash" 
-RUN echo "alias launch_echo_ROS2_drivers='cdros2 && source install/setup.bash && ros2 launch sas_unitree_b1z1_control_template real_b1z1_robot_ekf_echo_launch.py ' " >> /etc/bash_env
-RUN echo "alias launch_ROS2_drivers='cdros2 && source install/setup.bash && ros2 launch sas_unitree_b1z1_control_template real_b1z1_robot_ekf_launch.py ' " >> /etc/bash_env
-RUN echo "alias launch_kinematic_control='cdros2 && source install/setup.bash && ros2 launch sas_unitree_b1z1_control_template real_b1z1_robot_ekf_control_launch.py ' " >> /etc/bash_env
+RUN echo "alias launch_echo_white='cdros2 && source install/setup.bash && ros2 launch sas_unitree_b1z1_control_template real_b1z1_white_robot_ekf_echo_launch.py ' " >> /etc/bash_env
+RUN echo "alias launch_demo_white='cdros2 && source install/setup.bash && ros2 launch sas_unitree_b1z1_control_template real_b1z1_white_robot_ekf_control_launch.py ' " >> /etc/bash_env
 RUN echo "export ROS_DOMAIN_ID=77" >> /etc/bash_env
 RUN echo "source /etc/bash_env" >> ~/.bashrc
 
 
 #ros2 launch sas_unitree_b1z1_control_template real_b1z1_white_robot_ekf_echo_launch.py                  #working
+#ros2 launch sas_unitree_b1z1_control_template real_b1z1_white_robot_ekf_control_launch.py
