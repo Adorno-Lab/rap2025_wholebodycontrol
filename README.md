@@ -35,3 +35,13 @@ For this case, we send the image to the  B1Z1-white unit (192.168.8.170)
 scp -r sas_unitree_b1z1_rap_control_template.tar.gz unitree@192.168.8.170:/home/unitree/
 ```
 
+## From the B1 computer, load the Docker image
+
+Enter the B1 computer
+```shell
+ssh unitree@192.168.8.170
+```
+
+```shell
+docker load --input sas_unitree_b1z1_rap_control_template.tar.gz
+```
