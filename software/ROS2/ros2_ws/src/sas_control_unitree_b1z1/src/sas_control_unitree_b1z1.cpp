@@ -60,7 +60,7 @@ B1Z1WholeBodyControl::B1Z1WholeBodyControl(std::shared_ptr<Node> &node,
 
 
     publisher_target_arm_positions_ = node_->create_publisher<std_msgs::msg::Float64MultiArray>(
-        configuration_.B1_topic_prefix + "/set/target_joint_positions", 1);
+        configuration_.Z1_topic_prefix + "/set/target_joint_positions", 1);
 
     publisher_target_holonomic_velocities_ = node_->create_publisher<std_msgs::msg::Float64MultiArray>(
         configuration_.B1_topic_prefix + "/set/holonomic_target_velocities", 1);
