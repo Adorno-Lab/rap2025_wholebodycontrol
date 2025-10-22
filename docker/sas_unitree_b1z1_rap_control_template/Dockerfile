@@ -5,14 +5,12 @@ ENV BASH_ENV="/etc/bash_env"
 
 
 
-# Clone sas_unitree_z1_control_template
-RUN cd ~/ros2_ws/src && git clone https://github.com/Adorno-Lab/sas_unitree_b1z1_control_template.git --recursive
-
 # Clone the rap2025_wholebodycontrol.
 RUN mkdir -p ~/git
 RUN cd ~/git && git clone https://github.com/Adorno-Lab/rap2025_wholebodycontrol.git --recursive
 RUN cp -r ~/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/sas_extended_kalman_filter_unitree_b1 ~/ros2_ws/src
 RUN cp -r ~/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/sas_control_unitree_b1z1 ~/ros2_ws/src
+RUN cp -r ~/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/sas_unitree_b1z1_rap_control_template ~/ros2_ws/src
 
 
 RUN chmod +x ~/git/rap2025_wholebodycontrol/dependencies/install_sas_drivers_b1z1.sh
@@ -32,11 +30,11 @@ RUN echo "source /etc/bash_env" >> ~/.bashrc
 
 # Build the ROS2 packages
 RUN bash -c "source /opt/ros/jazzy/setup.bash; cd ~/ros2_ws/; colcon build && source install/setup.bash" 
-RUN echo "alias launch_echo_white='cdros2 && source install/setup.bash && ros2 launch sas_unitree_b1z1_control_template real_b1z1_white_robot_ekf_echo_launch.py ' " >> /etc/bash_env
-RUN echo "alias launch_demo_white='cdros2 && source install/setup.bash && ros2 launch sas_unitree_b1z1_control_template real_b1z1_white_robot_ekf_control_launch.py ' " >> /etc/bash_env
+RUN echo "alias launch_echo_white='cdros2 && source install/setup.bash && ros2 launch sas_unitree_b1z1_rap_control_template real_b1z1_white_robot_ekf_echo_launch.py ' " >> /etc/bash_env
+RUN echo "alias launch_demo_white='cdros2 && source install/setup.bash && ros2 launch sas_unitree_b1z1_rap_control_template real_b1z1_white_robot_ekf_control_launch.py ' " >> /etc/bash_env
 RUN echo "export ROS_DOMAIN_ID=77" >> /etc/bash_env
 RUN echo "source /etc/bash_env" >> ~/.bashrc
 
 
-#ros2 launch sas_unitree_b1z1_control_template real_b1z1_white_robot_ekf_echo_launch.py                  #working
-#ros2 launch sas_unitree_b1z1_control_template real_b1z1_white_robot_ekf_control_launch.py
+#ros2 launch sas_unitree_b1z1_rap_control_template real_b1z1_white_robot_ekf_echo_launch.py                  #working
+#ros2 launch sas_unitree_b1z1_rap_control_template real_b1z1_white_robot_ekf_control_launch.py
