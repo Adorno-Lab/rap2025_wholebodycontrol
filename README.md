@@ -28,7 +28,7 @@ docker build -t sas_unitree_b1z1_rap_control_template docker/sas_unitree_b1z1_ra
 docker save -o sas_unitree_b1z1_rap_control_template.tar.gz sas_unitree_b1z1_rap_control_template:latest
 ```
 
-## Send the images to the B1 computer 
+## Send the image to the B1 computer 
 
 For this case, we send the image to the  B1Z1-white unit (192.168.8.170)
 ```shell
