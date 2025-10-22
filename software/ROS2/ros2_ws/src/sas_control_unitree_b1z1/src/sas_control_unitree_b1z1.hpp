@@ -51,6 +51,7 @@ struct ControllerConfiguration
     int cs_TIMEOUT_IN_MILISECONDS;
     std::string cs_B1_robotname;
     std::string cs_Z1_robotname;
+    std::string cs_desired_frame;
     std::string B1_topic_prefix;
     std::string Z1_topic_prefix;
     double thread_sampling_time_sec;
@@ -66,15 +67,19 @@ struct ControllerConfiguration
 class B1Z1WholeBodyControl
 {
 protected:
-    std::string cs_host_;
-    int cs_port_;
-    int cs_TIMEOUT_IN_MILISECONDS_;
-    std::string cs_Z1_robotname_;
-    std::string cs_B1_robotname_;
+
+
+    ControllerConfiguration configuration_;
+
+    //std::string cs_host_;
+    //int cs_port_;
+    //int cs_TIMEOUT_IN_MILISECONDS_;
+    //std::string cs_Z1_robotname_;
+    //std::string cs_B1_robotname_;
 
     std::atomic_bool* st_break_loops_;
-    std::string topic_prefix_b1_;
-    std::string topic_prefix_z1_;
+    //std::string topic_prefix_b1_;
+    //std::string topic_prefix_z1_;
 
 
     std::shared_ptr<rclcpp::Node> node_;
@@ -83,17 +88,17 @@ protected:
     double target_gripper_position_{0};
     std::vector<std::string> z1_jointnames_;
 
-    std::string vfi_file_;
-    bool debug_wait_for_topics_;
-    bool controller_enable_parking_break_when_gripper_is_open_;
+    //std::string vfi_file_;
+    //bool debug_wait_for_topics_;
+    //bool controller_enable_parking_break_when_gripper_is_open_;
 
     bool update_handbreak_{true};
     bool update_handbreak_released_{true};
 
-    double controller_proportional_gain_;//{8};
-    double controller_damping_;//{0.05};
-    double controller_target_region_size_;
-    double controller_target_exit_size_;
+    //double controller_proportional_gain_;//{8};
+    //double controller_damping_;//{0.05};
+    //double controller_target_region_size_;
+    //double controller_target_exit_size_;
     bool robot_reached_region_;
 
 

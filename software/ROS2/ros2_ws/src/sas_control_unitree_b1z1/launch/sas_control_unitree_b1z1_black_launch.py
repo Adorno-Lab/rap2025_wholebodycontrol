@@ -28,6 +28,7 @@ def generate_launch_description():
                 "cs_TIMEOUT_IN_MILISECONDS": 5000,
                 "cs_B1_robotname": "UnitreeB1_2",
                 "cs_Z1_robotname": "UnitreeZ1",
+                "cs_desired_frame": "xd2",
                 "vfi_file":"/root/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/sas_control_unitree_b1z1/cfg/rcm_vfi_constraints.yaml", # for Docker files
                 #"vfi_file":"/home/clerice/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/sas_control_unitree_b1z1/cfg/rcm_vfi_constraints.yaml", # for local development
                 "B1_topic_prefix": "sas_b1/b1_2",

@@ -62,6 +62,7 @@ int main(int argc, char** argv)
         sas::get_ros_parameter(node,"cs_TIMEOUT_IN_MILISECONDS",configuration.cs_TIMEOUT_IN_MILISECONDS);
         sas::get_ros_parameter(node,"cs_B1_robotname",configuration.cs_B1_robotname);
         sas::get_ros_parameter(node,"cs_Z1_robotname",configuration.cs_Z1_robotname);
+        sas::get_ros_parameter(node, "cs_desired_frame", configuration.cs_desired_frame);
         sas::get_ros_parameter(node,"vfi_file", configuration.vfi_file);
         sas::get_ros_parameter(node,"B1_topic_prefix",configuration.B1_topic_prefix);
         sas::get_ros_parameter(node,"Z1_topic_prefix",configuration.Z1_topic_prefix);

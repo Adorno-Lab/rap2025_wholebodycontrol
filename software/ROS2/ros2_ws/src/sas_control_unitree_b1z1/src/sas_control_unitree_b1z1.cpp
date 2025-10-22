@@ -47,22 +47,9 @@ public:
 B1Z1WholeBodyControl::B1Z1WholeBodyControl(std::shared_ptr<Node> &node,
                                            const ControllerConfiguration &configuration,
                                            std::atomic_bool *break_loops)
-    :cs_host_{configuration.cs_host},
-    cs_port_{configuration.cs_port},
-    cs_TIMEOUT_IN_MILISECONDS_{configuration.cs_TIMEOUT_IN_MILISECONDS},
-    cs_Z1_robotname_{configuration.cs_Z1_robotname},
-    cs_B1_robotname_{configuration.cs_B1_robotname},
+    :configuration_{configuration},
     st_break_loops_{break_loops},
-    topic_prefix_b1_{configuration.B1_topic_prefix},
-    topic_prefix_z1_{configuration.Z1_topic_prefix},
     node_{node},
-    vfi_file_{configuration.vfi_file},
-    debug_wait_for_topics_{configuration.debug_wait_for_topics},
-    controller_enable_parking_break_when_gripper_is_open_{configuration.controller_enable_parking_break_when_gripper_is_open},
-    controller_proportional_gain_{configuration.controller_proportional_gain},
-    controller_damping_{configuration.controller_damping},
-    controller_target_region_size_{configuration.controller_target_region_size},
-    controller_target_exit_size_{configuration.controller_target_exit_size},
     robot_reached_region_{false},
     T_{configuration.thread_sampling_time_sec},
     clock_{configuration.thread_sampling_time_sec}
@@ -73,28 +60,28 @@ B1Z1WholeBodyControl::B1Z1WholeBodyControl(std::shared_ptr<Node> &node,
 
 
     publisher_target_arm_positions_ = node_->create_publisher<std_msgs::msg::Float64MultiArray>(
-        topic_prefix_z1_ + "/set/target_joint_positions", 1);
+        configuration_.B1_topic_prefix + "/set/target_joint_positions", 1);
 
     publisher_target_holonomic_velocities_ = node_->create_publisher<std_msgs::msg::Float64MultiArray>(
-        topic_prefix_b1_ + "/set/holonomic_target_velocities", 1);
+        configuration_.B1_topic_prefix + "/set/holonomic_target_velocities", 1);
 
     subscriber_pose_state_ = node_->create_subscription<geometry_msgs::msg::PoseStamped>(
-        topic_prefix_b1_ + "/get/ekf/robot_pose", 1, std::bind(&B1Z1WholeBodyControl::_callback_pose_state,
+        configuration_.B1_topic_prefix + "/get/ekf/robot_pose", 1, std::bind(&B1Z1WholeBodyControl::_callback_pose_state,
                   this, std::placeholders::_1)
         );
 
 
     subscriber_Z1_joint_states_ = node_->create_subscription<sensor_msgs::msg::JointState>(
-        topic_prefix_z1_ + "/get/joint_states", 1, std::bind(&B1Z1WholeBodyControl::_callback_Z1_joint_states,
+        configuration_.Z1_topic_prefix+ "/get/joint_states", 1, std::bind(&B1Z1WholeBodyControl::_callback_Z1_joint_states,
                   this, std::placeholders::_1)
         );
 
     publisher_coppeliasim_frame_x_ = node_->create_publisher<geometry_msgs::msg::PoseStamped>(
-        topic_prefix_b1_ + "/set/coppeliasim_frame_x", 1);
+        configuration_.B1_topic_prefix + "/set/coppeliasim_frame_x", 1);
 
 
     subscriber_xd_ = node_->create_subscription<geometry_msgs::msg::PoseStamped>(
-        topic_prefix_b1_ + "/get/coppeliasim_frame_xd", 1, std::bind(&B1Z1WholeBodyControl::_callback_xd_state,
+        configuration_.B1_topic_prefix + "/get/coppeliasim_frame_xd", 1, std::bind(&B1Z1WholeBodyControl::_callback_xd_state,
                   this, std::placeholders::_1)
         );
 
@@ -113,9 +100,9 @@ B1Z1WholeBodyControl::B1Z1WholeBodyControl(std::shared_ptr<Node> &node,
 
 void B1Z1WholeBodyControl::_connect()
 {
-    impl_->cs_->connect(cs_host_, cs_port_, cs_TIMEOUT_IN_MILISECONDS_);
-    z1_jointnames_  = impl_->cs_->get_jointnames_from_object(cs_Z1_robotname_);
-    impl_->robot_cs_ = std::make_shared<UnitreeB1Z1CoppeliaSimZMQRobot>(cs_B1_robotname_, impl_->cs_);
+    impl_->cs_->connect(configuration_.cs_host, configuration_.cs_port, configuration_.cs_TIMEOUT_IN_MILISECONDS);
+    z1_jointnames_  = impl_->cs_->get_jointnames_from_object(configuration_.cs_Z1_robotname);
+    impl_->robot_cs_ = std::make_shared<UnitreeB1Z1CoppeliaSimZMQRobot>(configuration_.cs_B1_robotname, impl_->cs_);
     rclcpp::spin_some(node_);
 }
 
@@ -127,7 +114,7 @@ void B1Z1WholeBodyControl::_update_kinematic_model()
     DQ X_J1_OFFSET;
     VectorXd q;
     // wait for the topics
-    if (debug_wait_for_topics_)
+    if (configuration_.debug_wait_for_topics)
     {
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Waiting for robot state from ROS2...");
         while (q_arm_.size() == 0 or not is_unit(robot_pose_)){
@@ -150,7 +137,7 @@ void B1Z1WholeBodyControl::_update_kinematic_model()
         try
         {
             X_J1 = impl_->cs_->get_object_pose(z1_jointnames_.at(0));
-            X_IMU = impl_->cs_->get_object_pose(cs_B1_robotname_+"/trunk_respondable");
+            X_IMU = impl_->cs_->get_object_pose(configuration_.cs_B1_robotname+"/trunk_respondable");
             q = DQ_robotics_extensions::Numpy::vstack(_get_mobile_platform_configuration_from_pose(robot_pose_), q_arm_);
             RCLCPP_INFO_STREAM(node_->get_logger(), "::Reading info from CoppeliaSim: "+std::to_string(i)+"/"+std::to_string(iter1));
             X_J1_OFFSET = X_IMU.conj()*X_J1;
@@ -172,7 +159,7 @@ void B1Z1WholeBodyControl::_update_kinematic_model()
         impl_->kin_mobile_manipulator_->update_base_height_from_IMU(X_IMU);
         impl_->robot_model_ = std::shared_ptr<DQ_Kinematics>(impl_->kin_mobile_manipulator_);
         DQ x = impl_->robot_model_->fkm(q);
-        impl_->cs_->set_object_pose("xd", x);
+        impl_->cs_->set_object_pose(configuration_.cs_desired_frame, x);
     }
 
 }
@@ -266,7 +253,7 @@ void B1Z1WholeBodyControl::control_loop()
         impl_->robot_constraint_manager_ = std::make_shared<DQ_robotics_extensions::RobotConstraintManager>(impl_->cs_,
                                                                                                             impl_->robot_cs_,
                                                                                                             impl_->kin_mobile_manipulator_,
-                                                                                                            vfi_file_,
+                                                                                                            configuration_.vfi_file,
                                                                                                             true);
         auto  const [q_min, q_max]    = impl_->robot_constraint_manager_->get_configuration_limits();
         auto const [q_dot_min, q_dot_max]= impl_->robot_constraint_manager_->get_configuration_velocity_limits();
@@ -298,11 +285,11 @@ void B1Z1WholeBodyControl::control_loop()
 
         DQ_ClassicQPController controller(impl_->kin_mobile_manipulator_, impl_->qpoases_solver_);
         controller.set_control_objective(ControlObjective::Translation);
-        controller.set_gain(controller_proportional_gain_);
-        controller.set_damping(controller_damping_);
+        controller.set_gain(configuration_.controller_proportional_gain);
+        controller.set_damping( configuration_.controller_damping);
 
-        double region_size = controller_target_region_size_;
-        double region_exit_size = controller_target_exit_size_;
+        double region_size =  configuration_.controller_target_region_size;
+        double region_exit_size =  configuration_.controller_target_exit_size;
 
         while(!_should_shutdown())
         {
@@ -342,7 +329,7 @@ void B1Z1WholeBodyControl::control_loop()
                     // Otherwise, I compute the control inputs to reduce the task error.
 
                     // If the parking break is eanble
-                    if (controller_enable_parking_break_when_gripper_is_open_)
+                    if (configuration_.controller_enable_parking_break_when_gripper_is_open)
                     {
                             // if the gripper is open (more than 30 degrees)
                             if (std::abs(target_gripper_position_) > 0.5) // 30 degrees
@@ -361,8 +348,8 @@ void B1Z1WholeBodyControl::control_loop()
 
                                 }
                             }else{ // The gripper is closed. No parking break constraints here.
-                                region_size = controller_target_region_size_;
-                                region_exit_size = controller_target_exit_size_;
+                                region_size =  configuration_.controller_target_region_size;
+                                region_exit_size =  configuration_.controller_target_exit_size;
                                 impl_->robot_constraint_manager_->set_configuration_velocity_limits({q_dot_min, q_dot_max});
                                 if(update_handbreak_released_)
                                 {
