@@ -2,6 +2,11 @@
 
 # rap2025_wholebodycontrol
 
+```shell
+mkdir -p ~/git/
+git clone https://github.com/Adorno-Lab/rap2025_wholebodycontrol.git --recursive
+```
+
 
 Custom network configuration used for this repository
 
@@ -10,4 +15,12 @@ Custom network configuration used for this repository
 | Desktop  | CoppeliaSim scene  | 192.168.8.100 |
 | B1Z1-white  | kinematic control  | 192.168.8.170 |
 | B1Z1-black  | kinematic control  | 192.168.8.226 |
+
+
+## Build the Docker image
+
+```shell
+d ~/git/rap2025_wholebodycontrol/
+docker build -t sas_unitree_b1z1_rap_control_template docker/sas_unitree_b1z1_rap_control_template/
+```
 
