@@ -251,6 +251,7 @@ void ExtendedKalmanFilter::control_loop()
             _publish_pose_stamped(publisher_pose_debug_, "/world", vicon_pose_rear_*x_rear_to_front_);
 
 
+
             if (save_data_with_datalogger_)
             {
                 VectorXd vicon_pose_vec = vicon_pose_.vec8();
@@ -359,21 +360,25 @@ void ExtendedKalmanFilter::_try_update_vicon_markers()
     };
     //--------------------------------------------------------------------------------------------------------------------
     // If only the rear marker is available, the vicon pose marker is set
-    if (new_vicon_data_available_rear_ && !new_vicon_data_available_front_)
+    if (new_vicon_data_available_rear_)// && !new_vicon_data_available_front_)
     {
         vicon_pose_ = vicon_pose_rear_;
         //updated the height
         _set_height_from_marker(vicon_pose_);
+        RCLCPP_INFO_STREAM(node_->get_logger(), "rear only");
     }
-
+    /*
     // If both are available, we compute the average
+
     if (new_vicon_data_available_rear_ && new_vicon_data_available_front_)
     {
         const DQ& x1 = vicon_pose_rear_;
         const DQ& x2 = vicon_pose_front_*x_rear_to_front_.conj();
         vicon_pose_  = x1*DQ_robotics::pow(x1.conj()*x2, 0.5);
         _set_height_from_marker(vicon_pose_);
+        RCLCPP_INFO_STREAM(node_->get_logger(), "both");
     }
+    */
 
     // If the rear marker is lost, we compute its pose using the from marker and its corresponding offset.
     if (!new_vicon_data_available_rear_ && new_vicon_data_available_front_)
@@ -381,6 +386,7 @@ void ExtendedKalmanFilter::_try_update_vicon_markers()
         vicon_pose_ = vicon_pose_front_*x_rear_to_front_.conj();
         //updated the height
         _set_height_from_marker(vicon_pose_);
+        RCLCPP_INFO_STREAM(node_->get_logger(), "front");
     }
 }
 
@@ -536,8 +542,17 @@ void ExtendedKalmanFilter::_update_step()
  */
 double ExtendedKalmanFilter::normalize_angle(double angle) {
     // Normalize angle to [-pi, pi]
-    while (angle > M_PI) angle -= 2.0 * M_PI;
-    while (angle < -M_PI) angle += 2.0 * M_PI;
+    //while (angle > M_PI) angle -= 2.0 * M_PI;
+    //while (angle < -M_PI) angle += 2.0 * M_PI;
+
+    while (angle >= 2.0*M_PI) angle -= 2.0 * M_PI;
+    while (angle < 0) angle += 2.0 * M_PI;
+
+    //angle = fmod(angle, 2*M_PI);
+    //if (angle < 0)
+   // {
+   //     angle += 2*M_PI;
+   // }
     return angle;
 }
 
@@ -554,7 +569,7 @@ VectorXd ExtendedKalmanFilter::_get_mobile_platform_configuration_from_pose(cons
     if (axis(3)<0)
         x = -x;
     auto p = x.translation().vec3();
-    auto rangle = x.P().rotation_angle();
+    double rangle = x.P().rotation_angle();
     return (VectorXd(3)<< p(0), p(1), rangle).finished();
 }
 

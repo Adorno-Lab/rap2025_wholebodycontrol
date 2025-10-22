@@ -55,21 +55,41 @@ struct RobotDriverB1Z1CoppeliaSimConfiguration
     int cs_port;
     int cs_TIMEOUT_IN_MILISECONDS;
     std::string cs_B1_robotname;
-    std::string cs_Z1_robotname;
+    //std::string cs_Z1_robotname;
     std::string B1_topic_prefix;
     std::string Z1_topic_prefix;
     double thread_sampling_time_sec;
+    std::string robot_model_frame_name;
+    std::string desired_frame_name;
+    std::string robot_marker_frame_name;
+
 };
 
 class B1Z1CoppeliaSimROS
 {
-protected:
+private:
     std::atomic_bool* st_break_loops_;
-    std::string topic_prefix_b1_;
-    std::string topic_prefix_z1_;
-    //RobotDriverB1Z1CoppeliaSimConfiguration  configuration_;
+    //std::string topic_prefix_b1_;
+    //std::string topic_prefix_z1_;
+
+    RobotDriverB1Z1CoppeliaSimConfiguration  configuration_;
     std::shared_ptr<rclcpp::Node> node_;
     std::shared_ptr<DQ_CoppeliaSimInterfaceZMQ> cs_;
+    std::vector<std::string> arm_jointnames_;
+    std::string b1_name_;
+    std::string z1_name_;
+    std::string gripper_joint_name_;
+
+    std::vector<std::string> FR_jointnames_;
+    std::vector<std::string> FL_jointnames_;
+    std::vector<std::string> RR_jointnames_;
+    std::vector<std::string> RL_jointnames_;
+
+    std::string FR_hip_rotor_;
+    std::string FL_hip_rotor_;
+    std::string RR_hip_rotor_;
+    std::string RL_hip_rotor_;
+
 
 private:
     int print_count_;
@@ -138,11 +158,9 @@ private:
     Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_coppeliasim_frame_xd_;
     Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr publisher_gripper_position_from_coppeliasim_;
 
-    //Implementation details that depend on FRI source files.
-    class Impl;
-    std::unique_ptr<Impl> impl_;
 
-protected:
+
+private:
 
     void _set_joint_states_on_coppeliasim();
     void _set_robot_pose_on_coppeliasim(const DQ& pose);
@@ -153,6 +171,8 @@ protected:
 
 
     void _publish_gripper_position();
+
+    void _connect();
 
 
 public:
