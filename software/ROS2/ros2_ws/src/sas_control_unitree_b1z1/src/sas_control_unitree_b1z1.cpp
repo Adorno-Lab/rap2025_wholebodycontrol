@@ -249,7 +249,7 @@ void B1Z1WholeBodyControl::control_loop()
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::custom arm configuration set!");
         */
 
-
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Starting the Robot Constraint Manager...");
         impl_->robot_constraint_manager_ = std::make_shared<DQ_robotics_extensions::RobotConstraintManager>(impl_->cs_,
                                                                                                             impl_->robot_cs_,
                                                                                                             impl_->kin_mobile_manipulator_,
