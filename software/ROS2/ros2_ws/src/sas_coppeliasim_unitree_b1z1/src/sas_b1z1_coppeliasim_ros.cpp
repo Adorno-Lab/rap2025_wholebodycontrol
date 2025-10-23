@@ -108,7 +108,7 @@ void B1Z1CoppeliaSimROS::_set_joint_states_on_coppeliasim()
         cs_->set_joint_positions(RL_jointnames_, qRL_cmd_);
     }
     if (q_arm_cmd_.size() != 0 )
-        cs_->set_joint_positions(arm_jointnames_, q_arm_cmd_);
+        cs_->set_joint_positions(arm_jointnames_, q_arm_cmd_.head(6));
 }
 
 void B1Z1CoppeliaSimROS::_set_robot_pose_on_coppeliasim(const DQ &pose)
