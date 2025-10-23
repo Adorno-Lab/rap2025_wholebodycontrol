@@ -29,12 +29,12 @@ def generate_launch_description():
                 "cs_B1_robotname": "UnitreeB1_1",
                 "cs_Z1_robotname": "UnitreeZ1",
                 "cs_desired_frame": "xd1",
-                "vfi_file":"/root/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/sas_control_unitree_b1z1/cfg/rcm_vfi_constraints.yaml", # for Docker files
+                "vfi_file":"/root/ros2_ws/src/sas_control_unitree_b1z1/cfg/rcm_vfi_constraints.yaml", # for Docker files
                 #"vfi_file":"/home/clerice/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/sas_control_unitree_b1z1/cfg/rcm_vfi_constraints.yaml", # for local development
                 "B1_topic_prefix": "sas_b1/b1_1",
                 "Z1_topic_prefix": "sas_z1/z1_1",
                 "thread_sampling_time_sec": 0.002,
-                "controller_proportional_gain": 8.0,
+                "controller_proportional_gain": 12.0,
                 "controller_damping": 0.05,
                 "controller_target_region_size": 0.1,
                 "controller_target_exit_size": 0.26,

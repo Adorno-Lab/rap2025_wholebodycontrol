@@ -4,14 +4,14 @@
        q_min: [-10000, -10000, -10000, -30,  45,  -90, -80, -45, -160]
        q_max: [ 10000,  10000,  10000,  30, 165,    0,  80,  45,  160]
        unit: DEG
-       vfi_gain: 8.0
+       vfi_gain: 12.0
 
 
 - Description: Configuration velocity limits
   Parameters:
      - vfi_mode: CONFIGURATION_VELOCITY_LIMITS
-       q_dot_min: [-0.1, -0.1, -0.3, -1.57, -1.57, -1.57, -1.57, -1.57, -1.57]
-       q_dot_max: [ 0.1,  0.1,  0.3,  1.57,  1.57,  1.57,  1.57,  1.57,  1.57]
+       q_dot_min: [-0.15, -0.15, -0.3, -1.57, -1.57, -1.57, -1.57, -1.57, -1.57]
+       q_dot_max: [ 0.15,  0.15,  0.3,  1.57,  1.57,  1.57,  1.57,  1.57,  1.57]
        unit: RAD
 
 
