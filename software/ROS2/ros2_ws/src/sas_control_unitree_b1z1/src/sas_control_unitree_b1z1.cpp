@@ -291,6 +291,11 @@ void B1Z1WholeBodyControl::control_loop()
         double region_size =  configuration_.controller_target_region_size;
         double region_exit_size =  configuration_.controller_target_exit_size;
 
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Controller gain: ");
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(),  configuration_.controller_proportional_gain);
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Controller damping: ");
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(),  configuration_.controller_damping);
+
         while(!_should_shutdown())
         {
             rclcpp::spin_some(node_);
