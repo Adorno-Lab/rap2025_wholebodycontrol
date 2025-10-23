@@ -50,7 +50,7 @@ B1Z1CoppeliaSimROS::B1Z1CoppeliaSimROS(std::shared_ptr<Node> &node,
         );
 
     subscriber_Z1_joint_states_ = node_->create_subscription<sensor_msgs::msg::JointState>(
-        configuration_.B1_topic_prefix + "/get/joint_states", 1, std::bind(&B1Z1CoppeliaSimROS::_callback_Z1_joint_states, this, std::placeholders::_1)
+        configuration_.Z1_topic_prefix + "/get/joint_states", 1, std::bind(&B1Z1CoppeliaSimROS::_callback_Z1_joint_states, this, std::placeholders::_1)
         );
 
     subscriber_x_fkm_ = node_->create_subscription<geometry_msgs::msg::PoseStamped>(
