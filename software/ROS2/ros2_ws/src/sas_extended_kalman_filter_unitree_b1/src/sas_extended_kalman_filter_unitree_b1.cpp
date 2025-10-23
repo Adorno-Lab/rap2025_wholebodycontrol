@@ -365,7 +365,7 @@ void ExtendedKalmanFilter::_try_update_vicon_markers()
         vicon_pose_ = vicon_pose_rear_;
         //updated the height
         _set_height_from_marker(vicon_pose_);
-        RCLCPP_INFO_STREAM(node_->get_logger(), "rear only");
+        //RCLCPP_INFO_STREAM(node_->get_logger(), "rear only");
     }
     /*
     // If both are available, we compute the average
@@ -386,7 +386,7 @@ void ExtendedKalmanFilter::_try_update_vicon_markers()
         vicon_pose_ = vicon_pose_front_*x_rear_to_front_.conj();
         //updated the height
         _set_height_from_marker(vicon_pose_);
-        RCLCPP_INFO_STREAM(node_->get_logger(), "front");
+        //RCLCPP_INFO_STREAM(node_->get_logger(), "front");
     }
 }
 
