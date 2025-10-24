@@ -70,17 +70,7 @@ protected:
 
 
     ControllerConfiguration configuration_;
-
-    //std::string cs_host_;
-    //int cs_port_;
-    //int cs_TIMEOUT_IN_MILISECONDS_;
-    //std::string cs_Z1_robotname_;
-    //std::string cs_B1_robotname_;
-
     std::atomic_bool* st_break_loops_;
-    //std::string topic_prefix_b1_;
-    //std::string topic_prefix_z1_;
-
 
     std::shared_ptr<rclcpp::Node> node_;
     DQ robot_pose_; // pose of the B1 robot;
@@ -88,17 +78,8 @@ protected:
     double target_gripper_position_{0};
     std::vector<std::string> z1_jointnames_;
 
-    //std::string vfi_file_;
-    //bool debug_wait_for_topics_;
-    //bool controller_enable_parking_break_when_gripper_is_open_;
-
     bool update_handbreak_{true};
     bool update_handbreak_released_{true};
-
-    //double controller_proportional_gain_;//{8};
-    //double controller_damping_;//{0.05};
-    //double controller_target_region_size_;
-    //double controller_target_exit_size_;
     bool robot_reached_region_;
 
 
@@ -125,7 +106,7 @@ private:
     void _callback_pose_state(const geometry_msgs::msg::PoseStamped& msg);
 
     Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr publisher_target_holonomic_velocities_;
-    Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr publisher_target_arm_positions_;
+    //Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr publisher_target_arm_positions_;
 
 
     Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr subscriber_gripper_position_from_coppeliasim_;
@@ -152,7 +133,6 @@ protected:
     bool _should_shutdown() const;
 
     void _publish_target_B1_commands(const VectorXd& u_base_vel);
-    void _publish_target_Z1_commands(const VectorXd& u_arm_positions, const double& gripper_position);
     void _publish_coppeliasim_frame_x(const DQ& pose);
     void _connect();
     void _update_kinematic_model();

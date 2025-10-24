@@ -45,7 +45,12 @@ public:
     std::shared_ptr<sas::RobotDriverClient> rdi_;
 };
 
-
+/**
+ * @brief B1Z1WholeBodyControl::B1Z1WholeBodyControl ctor of the class
+ * @param node
+ * @param configuration
+ * @param break_loops
+ */
 B1Z1WholeBodyControl::B1Z1WholeBodyControl(std::shared_ptr<Node> &node,
                                            const ControllerConfiguration &configuration,
                                            std::atomic_bool *break_loops)
@@ -62,8 +67,8 @@ B1Z1WholeBodyControl::B1Z1WholeBodyControl(std::shared_ptr<Node> &node,
     impl_->rdi_ = std::make_shared<sas::RobotDriverClient>(node_, configuration_.Z1_topic_prefix );
 
 
-    publisher_target_arm_positions_ = node_->create_publisher<std_msgs::msg::Float64MultiArray>(
-        configuration_.Z1_topic_prefix + "/set/target_joint_positions", 1);
+    //publisher_target_arm_positions_ = node_->create_publisher<std_msgs::msg::Float64MultiArray>(
+    //    configuration_.Z1_topic_prefix + "/set/target_joint_positions", 1);
 
     publisher_target_holonomic_velocities_ = node_->create_publisher<std_msgs::msg::Float64MultiArray>(
         configuration_.B1_topic_prefix + "/set/holonomic_target_velocities", 1);
@@ -178,6 +183,11 @@ VectorXd B1Z1WholeBodyControl::_get_mobile_platform_configuration_from_pose(cons
     return (VectorXd(3)<< p(0), p(1), rangle).finished();
 }
 
+/**
+ * @brief B1Z1WholeBodyControl::_get_planar_joint_velocities_at_body_frame
+ * @param planar_joint_velocities_at_inertial_frame
+ * @return
+ */
 VectorXd B1Z1WholeBodyControl::_get_planar_joint_velocities_at_body_frame(const VectorXd &planar_joint_velocities_at_inertial_frame) const
 {
     // Alias
@@ -192,7 +202,9 @@ VectorXd B1Z1WholeBodyControl::_get_planar_joint_velocities_at_body_frame(const 
     return DQ_robotics_extensions::CVectorXd({twist_b_vec(3), twist_b_vec(4), twist_b_vec(2)});
 }
 
-
+/**
+ * @brief B1Z1WholeBodyControl::control_loop starts the main control loop
+ */
 void B1Z1WholeBodyControl::control_loop()
 {
     try {
@@ -238,30 +250,6 @@ void B1Z1WholeBodyControl::control_loop()
             RCLCPP_INFO_STREAM(node_->get_logger(), "::Reading topics: "+std::to_string(i)+"/100");
         }
 
-        /*
-        VectorXd qarm_target = q_arm_;
-        qarm_target(5) = -M_PI/2;
-        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Setting custom arm configuration...");
-
-        const int size = 500;
-        auto qarm_inter = DQ_robotics_extensions::Numpy::linspace(q_arm_, qarm_target, size);
-        for (int i=0;i<size;i++)
-        {
-            clock_.update_and_sleep();
-            rclcpp::spin_some(node_);
-            _publish_target_Z1_commands(qarm_inter.col(i), target_gripper_position_);
-            RCLCPP_INFO_STREAM(node_->get_logger(), "::Setting custom arm configuration: "+std::to_string(i)+"/"+std::to_string(size));
-        }
-
-
-        for (int i=0;i<100;i++)
-        {
-            clock_.update_and_sleep();
-            rclcpp::spin_some(node_);
-            _publish_target_Z1_commands(qarm_target, target_gripper_position_);
-        }
-        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::custom arm configuration set!");
-        */
 
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Starting the Robot Constraint Manager...");
         impl_->robot_constraint_manager_ = std::make_shared<DQ_robotics_extensions::RobotConstraintManager>(impl_->cs_,
@@ -472,14 +460,7 @@ void B1Z1WholeBodyControl::_publish_target_B1_commands(const VectorXd &u_base_ve
     publisher_target_holonomic_velocities_->publish(ros_msg_u_base);
 }
 
-void B1Z1WholeBodyControl::_publish_target_Z1_commands(const VectorXd &u_arm_positions, const double &gripper_position)
-{
-    std_msgs::msg::Float64MultiArray ros_msg_u_arm_commands;
-    VectorXd commands = DQ_robotics_extensions::Numpy::vstack(u_arm_positions,
-                                                              DQ_robotics_extensions::CVectorXd({gripper_position}));
-    ros_msg_u_arm_commands.data = sas::vectorxd_to_std_vector_double(commands);
-    publisher_target_arm_positions_->publish(ros_msg_u_arm_commands);
-}
+
 
 void B1Z1WholeBodyControl::_publish_coppeliasim_frame_x(const DQ &pose)
 {
