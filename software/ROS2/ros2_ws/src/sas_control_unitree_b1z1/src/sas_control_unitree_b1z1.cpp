@@ -28,6 +28,7 @@
 #include <dqrobotics/interfaces/coppeliasim/robots/FrankaEmikaPandaCoppeliaSimZMQRobot.h>
 #include <sas_core/eigen3_std_conversions.hpp>
 #include <dqrobotics/robot_control/DQ_ClassicQPController.h>
+#include <sas_robot_driver/sas_robot_driver_client.hpp>
 
 namespace sas
 {
@@ -41,6 +42,7 @@ public:
     std::shared_ptr<DQ_Kinematics> robot_model_;
     std::shared_ptr<UnitreeB1Z1MobileRobot> kin_mobile_manipulator_;
     std::shared_ptr<UnitreeB1Z1CoppeliaSimZMQRobot> robot_cs_;
+    std::shared_ptr<sas::RobotDriverClient> rdi_;
 };
 
 
@@ -57,6 +59,7 @@ B1Z1WholeBodyControl::B1Z1WholeBodyControl(std::shared_ptr<Node> &node,
     impl_ = std::make_unique<B1Z1WholeBodyControl::Impl>();
     impl_->cs_ = std::make_shared<DQ_CoppeliaSimInterfaceZMQ>();
     impl_->qpoases_solver_ = std::make_shared<DQ_QPOASESSolver>();
+    impl_->rdi_ = std::make_shared<sas::RobotDriverClient>(node_, configuration_.Z1_topic_prefix );
 
 
     publisher_target_arm_positions_ = node_->create_publisher<std_msgs::msg::Float64MultiArray>(
@@ -202,6 +205,7 @@ void B1Z1WholeBodyControl::control_loop()
             clock_.update_and_sleep();
             rclcpp::spin_some(node_);
             RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Waiting for ekf robot pose data");
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
 
         while (!new_coppeliasim_xd_data_available_ && !_should_shutdown())
@@ -210,6 +214,16 @@ void B1Z1WholeBodyControl::control_loop()
             clock_.update_and_sleep();
             rclcpp::spin_some(node_);
             RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Waiting for desired pose from CoppeliaSim ");
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+
+        while(!impl_->rdi_->is_enabled() && !_should_shutdown())
+        {
+            rclcpp::spin_some(node_);
+            clock_.update_and_sleep();
+            rclcpp::spin_some(node_);
+            RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Waiting for RobotDriverClient to be enabled");
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
 
 
@@ -298,6 +312,7 @@ void B1Z1WholeBodyControl::control_loop()
 
         while(!_should_shutdown())
         {
+            RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Running kinematic control loop! ");
             rclcpp::spin_some(node_);
             clock_.update_and_sleep();
             rclcpp::spin_some(node_);
@@ -385,7 +400,11 @@ void B1Z1WholeBodyControl::control_loop()
             qi_arm = qi_arm + T_*u.tail(6);
 
             // publish the commands on the respective topics
-            _publish_target_Z1_commands(qi_arm, target_gripper_position_);
+            //_publish_target_Z1_commands(qi_arm, target_gripper_position_);
+            using DQ_robotics_extensions::Numpy;
+            using DQ_robotics_extensions::CVectorXd;
+            impl_->rdi_->send_target_joint_positions(Numpy::vstack(qi_arm, CVectorXd({target_gripper_position_})));
+            impl_->rdi_->send_target_joint_velocities(Numpy::vstack(u.tail(6), CVectorXd({0.0})));
 
             // The u.head(3) command velocities for the B1 robot are given with respect to the inertial frame.
             // However, we need to send the velocities with respect to the B1 frame.
