@@ -39,10 +39,10 @@ target_link_libraries(${PROJECT_NAME}
     robot_constraint_manager
     Eigen3::Eigen
     qpOASES
-    sas_robot_driver
+
 )
 ament_target_dependencies(${PROJECT_NAME}
-rclcpp geometry_msgs std_msgs sensor_msgs sas_common sas_core sas_conversions sas_datalogger Eigen3 tf2 tf2_ros
+rclcpp geometry_msgs std_msgs sensor_msgs sas_common sas_core sas_conversions sas_datalogger Eigen3 tf2 tf2_ros sas_robot_driver
 )
 
 target_include_directories(${PROJECT_NAME}
