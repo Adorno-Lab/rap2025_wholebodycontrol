@@ -19,6 +19,7 @@ find_package(Eigen3 REQUIRED)
 find_package(sas_datalogger REQUIRED)
 find_package(sas_core REQUIRED)
 find_package(sas_common REQUIRED)
+find_package(sas_robot_driver REQUIRED)
 find_package(sas_conversions REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
@@ -38,6 +39,7 @@ target_link_libraries(${PROJECT_NAME}
     robot_constraint_manager
     Eigen3::Eigen
     qpOASES
+    sas_robot_driver
 )
 ament_target_dependencies(${PROJECT_NAME}
 rclcpp geometry_msgs std_msgs sensor_msgs sas_common sas_core sas_conversions sas_datalogger Eigen3 tf2 tf2_ros
