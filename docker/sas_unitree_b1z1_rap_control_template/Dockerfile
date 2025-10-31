@@ -19,6 +19,17 @@ ENV BASH_ENV="/etc/bash_env"
 #RUN chmod +x ~/git/rap2025_wholebodycontrol/dependencies/install_robot_constraint_manager.sh
 #RUN bash -c '~/git/rap2025_wholebodycontrol/dependencies/install_robot_constraint_manager.sh' 
 
+# Uninstall SAS
+RUN apt-get remove ros-jazzy-sas-* -y
+RUN mkdir -p ~/ros2_ws/src/SAS
+RUN cd ~/ros2_ws/src/SAS && git clone https://github.com/SmartArmStack/sas_common.git -b jazzy
+RUN cd ~/ros2_ws/src/SAS && git clone https://github.com/SmartArmStack/sas_datalogger.git -b jazzy
+RUN cd ~/ros2_ws/src/SAS && git clone https://github.com/SmartArmStack/sas_conversions.git -b jazzy
+RUN cd ~/ros2_ws/src/SAS && git clone https://github.com/SmartArmStack/sas_msgs.git -b jazzy
+RUN cd ~/ros2_ws/src/SAS && git clone https://github.com/juanjqo/sas_robot_driver.git -b hotfix   # custom
+RUN cd ~/ros2_ws/src/SAS && git clone https://github.com/juanjqo/sas_core.git -b jazzy
+RUN bash -c "source /opt/ros/jazzy/setup.bash; cd ~/ros2_ws/; colcon build && source install/setup.bash" 
+
 
 WORKDIR /app
 
