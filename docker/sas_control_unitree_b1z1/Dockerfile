@@ -3,6 +3,9 @@ ENV BASH_ENV="/etc/bash_env"
 
 
 
+# Update SAS
+RUN apt update && apt-get install ros-jazzy-sas-* -y
+
 # Clone this rep
 RUN mkdir -p ~/git/
 RUN cd ~/git/ && git clone https://github.com/Adorno-Lab/rap2025_wholebodycontrol --recursive 

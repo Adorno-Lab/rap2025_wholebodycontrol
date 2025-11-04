@@ -11,6 +11,9 @@ ENV UBUNTU_VERSION=$UBUNTU_VERSION
 ARG COPPELIASIM_FILE="CoppeliaSim_Edu_${COPPELIASIM_RELEASE}_${UBUNTU_VERSION}.tar.xz"
 ENV COPPELIASIM_FILE=$COPPELIASIM_FILE
 
+# Update SAS
+RUN apt update && apt-get install ros-jazzy-sas-* -y
+
 # Install CoppeliaSim. # This is temporal: && git reset --hard origin/main && git pull 
 RUN cd ~/git/docker_recipes && git reset --hard origin/main && git pull 
 RUN chmod +x ~/git/docker_recipes/dependencies/install_coppeliasim.sh

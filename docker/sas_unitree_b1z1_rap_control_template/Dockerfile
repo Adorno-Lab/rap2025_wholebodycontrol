@@ -19,6 +19,8 @@ ENV BASH_ENV="/etc/bash_env"
 #RUN chmod +x ~/git/rap2025_wholebodycontrol/dependencies/install_robot_constraint_manager.sh
 #RUN bash -c '~/git/rap2025_wholebodycontrol/dependencies/install_robot_constraint_manager.sh' 
 
+# Update SAS
+RUN apt update && apt-get install ros-jazzy-sas-* -y
 
 WORKDIR /app
 
