@@ -392,7 +392,7 @@ void B1Z1WholeBodyControl::control_loop()
             using DQ_robotics_extensions::Numpy;
             using DQ_robotics_extensions::CVectorXd;
             impl_->rdi_->send_target_joint_positions(Numpy::vstack(qi_arm, CVectorXd({target_gripper_position_})));
-            impl_->rdi_->send_target_joint_velocities(Numpy::vstack(u.tail(6), CVectorXd({0.0})));
+            //impl_->rdi_->send_target_joint_velocities(Numpy::vstack(u.tail(6), CVectorXd({0.0}))); // this is not working well.
 
             // The u.head(3) command velocities for the B1 robot are given with respect to the inertial frame.
             // However, we need to send the velocities with respect to the B1 frame.
