@@ -3,6 +3,8 @@ SHELL ["/bin/bash", "-c"]
 ENV BASH_ENV="/etc/bash_env"
 
 
+# Update SAS
+RUN apt update && apt-get install ros-jazzy-sas-* -y
 
 # Clone this rep
 RUN mkdir -p ~/git/
