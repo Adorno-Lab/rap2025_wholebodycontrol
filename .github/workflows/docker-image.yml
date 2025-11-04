@@ -57,4 +57,11 @@ jobs:
               push: true
               tags: ${{ env.REGISTRY }}/${{ env.NAMESPACE}}/sas_control_unitree_b1z1:latest    
 
+          - name: Build and push sas_unitree_b1z1_rap_control_template Docker image
+            uses: docker/build-push-action@v6
+            with:
+              file: docker/sas_unitree_b1z1_rap_control_template/Dockerfile
+              push: true
+              tags: ${{ env.REGISTRY }}/${{ env.NAMESPACE}}/sas_unitree_b1z1_rap_control_template:latest      
+
          
