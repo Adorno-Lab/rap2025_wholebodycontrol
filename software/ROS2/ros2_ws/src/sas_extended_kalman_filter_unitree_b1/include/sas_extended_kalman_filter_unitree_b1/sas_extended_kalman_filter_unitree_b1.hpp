@@ -116,6 +116,7 @@ private:
     DQ vicon_pose_rear_{1};
     DQ vicon_pose_front_{1};
     DQ vicon_pose_{1};
+    bool show_status_{true};
 
 
     //-------------------------

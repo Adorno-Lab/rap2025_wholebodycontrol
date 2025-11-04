@@ -237,13 +237,25 @@ void ExtendedKalmanFilter::control_loop()
             if (new_vicon_data_available_rear_ || new_vicon_data_available_front_)
             {
                 _update_step();
-                RCLCPP_INFO_ONCE(node_->get_logger(), "::VICON DATA OK");
-            }else{
-                if (!new_vicon_data_available_rear_ )
-                    RCLCPP_INFO_ONCE(node_->get_logger(), "::REAR MARKER LOST!!!");
-                if (!new_vicon_data_available_front_)
-                    RCLCPP_INFO_ONCE(node_->get_logger(), "::FRONT MARKER LOST!!!");
+                if (show_status_)
+                {
+                    if (new_vicon_data_available_rear_ && !new_vicon_data_available_front_)
+                        RCLCPP_INFO_ONCE(node_->get_logger(), "::VICON DATA OK. Rear marker available");
+                    if (!new_vicon_data_available_rear_ && new_vicon_data_available_front_)
+                        RCLCPP_INFO_ONCE(node_->get_logger(), "::VICON DATA OK. Front marker available");
+
+                    if (new_vicon_data_available_rear_ && new_vicon_data_available_front_)
+                        RCLCPP_INFO_ONCE(node_->get_logger(), "::VICON DATA OK. Both marker available");
+
+                    if (!new_vicon_data_available_rear_ && !new_vicon_data_available_front_)
+                    {
+                        show_status_ = true;
+                        RCLCPP_INFO_STREAM(node_->get_logger(), "::BOTH MARKER LOST!!!");
+                    }
+                    show_status_ = false;
+                }
             }
+
 
 
             _publish_pose_stamped(publisher_estimated_robot_marker_pose_, "/world", estimated_robot_pose_);
@@ -367,18 +379,28 @@ void ExtendedKalmanFilter::_try_update_vicon_markers()
         _set_height_from_marker(vicon_pose_);
         //RCLCPP_INFO_STREAM(node_->get_logger(), "rear only");
     }
-    /*
+
     // If both are available, we compute the average
 
     if (new_vicon_data_available_rear_ && new_vicon_data_available_front_)
     {
-        const DQ& x1 = vicon_pose_rear_;
-        const DQ& x2 = vicon_pose_front_*x_rear_to_front_.conj();
+        DQ x1 = vicon_pose_rear_;
+        DQ x2 = vicon_pose_front_*x_rear_to_front_.conj();
+        // To prevent issues with the Unwinding
+        VectorXd error_1 =  vec8( x1.conj()*x2 - 1 );
+        VectorXd error_2 =  vec8( x1.conj()*x2 + 1 );
+
+        double norm_1 = error_1.norm();
+        double norm_2 = error_2.norm();
+
+        if (norm_1 > norm_2){
+            x2 = -x2;
+        }
         vicon_pose_  = x1*DQ_robotics::pow(x1.conj()*x2, 0.5);
         _set_height_from_marker(vicon_pose_);
-        RCLCPP_INFO_STREAM(node_->get_logger(), "both");
+        //RCLCPP_INFO_STREAM(node_->get_logger(), "both");
     }
-    */
+
 
     // If the rear marker is lost, we compute its pose using the from marker and its corresponding offset.
     if (!new_vicon_data_available_rear_ && new_vicon_data_available_front_)
@@ -595,7 +617,7 @@ MatrixXd ExtendedKalmanFilter::jacobian_matrix(const double &v, const double &ph
  */
 ExtendedKalmanFilter::~ExtendedKalmanFilter()
 {
-
+    *st_break_loops_ = true;
 }
 
 }
