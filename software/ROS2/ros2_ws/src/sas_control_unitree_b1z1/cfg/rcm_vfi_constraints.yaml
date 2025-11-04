@@ -576,3 +576,48 @@
        entity_robot_attached_direction: k_
        entity_environment_attached_direction: k_
        tag: C37
+
+- Description: Front bumper robot Cylinder_obstacle-------------------------------
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: Cylinder_obstacle
+       cs_entity_robot: B1_vfi_sphere_front_bumper
+       entity_environment_primitive_type: LINE
+       entity_robot_primitive_type: POINT
+       joint_index: 3
+       safe_distance: 0.56
+       vfi_gain: 0.4
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C38
+
+- Description: Center bumper robot Cylinder_obstacle-------------------------------
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: Cylinder_obstacle
+       cs_entity_robot: B1_vfi_sphere_center_bumper
+       entity_environment_primitive_type: LINE
+       entity_robot_primitive_type: POINT
+       joint_index: 3
+       safe_distance: 0.56
+       vfi_gain: 0.4
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C39
+
+- Description: Rear bumper robot Cylinder_obstacle-------------------------------
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: Cylinder_obstacle
+       cs_entity_robot: B1_vfi_sphere_rear_bumper
+       entity_environment_primitive_type: LINE
+       entity_robot_primitive_type: POINT
+       joint_index: 3
+       safe_distance: 0.56
+       vfi_gain: 0.4
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C40      
