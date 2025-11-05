@@ -39,7 +39,8 @@
 #include <sas_conversions/DQ_geometry_msgs_conversions.hpp>
 
 #include <dqrobotics/interfaces/coppeliasim/DQ_CoppeliaSimInterfaceZMQ.h>
-
+#include <tf2_ros/transform_listener.h>
+#include <tf2_ros/buffer.h>
 
 
 //using namespace Eigen;
@@ -157,6 +158,13 @@ private:
 
     Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_coppeliasim_frame_xd_;
     Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr publisher_gripper_position_from_coppeliasim_;
+
+
+
+    std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
+    std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
+    std::vector<std::string> vicon_markers_ = {"B1Z1_Frame_0", "B1Z1_Frame_1", "B1Z1_Frame_2", "B1Z1_Frame_3"};
+    std::tuple<bool, DQ> _try_get_vicon_marker(const std::string& marker_name);
 
 
 

@@ -66,6 +66,11 @@ B1Z1CoppeliaSimROS::B1Z1CoppeliaSimROS(std::shared_ptr<Node> &node,
         "coppeliasim/get/gripper_position", 1);
 
 
+
+    tf_buffer_ = std::make_unique<tf2_ros::Buffer>(node_->get_clock());
+    tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
+
+
 }
 
 void B1Z1CoppeliaSimROS::_connect()
@@ -195,6 +200,15 @@ void B1Z1CoppeliaSimROS::control_loop()
             _set_robot_pose_on_coppeliasim(robot_pose_);
             _read_xd_and_publish();
             _publish_gripper_position();
+
+            for (auto& marker : vicon_markers_)
+            {
+                auto [marker_detected, marker_pose] = _try_get_vicon_marker(marker);
+                if (marker_detected)
+                    cs_->set_object_pose(marker, marker_pose);
+
+            }
+
             rclcpp::spin_some(node_);
         }
     }
@@ -271,6 +285,35 @@ void B1Z1CoppeliaSimROS::_publish_gripper_position()
     std::vector<double> gripper_position = {gripper_position_};
     ros_msg.data = gripper_position;
     publisher_gripper_position_from_coppeliasim_->publish(ros_msg);
+}
+
+std::tuple<bool, DQ> B1Z1CoppeliaSimROS::_try_get_vicon_marker(const std::string &marker_name)
+{
+    bool status = false;
+    DQ marker_pose = DQ(1);
+    try {
+        geometry_msgs::msg::TransformStamped msg = tf_buffer_->lookupTransform("world",
+                                                                               marker_name,
+                                                                                 tf2::TimePointZero);
+        status = true;
+        const  DQ r  = DQ(msg.transform.rotation.w,
+                        msg.transform.rotation.x,
+                        msg.transform.rotation.y,
+                        msg.transform.rotation.z);
+        const  DQ nr = normalize(r);
+
+        const DQ t(
+            0,
+            msg.transform.translation.x,
+            msg.transform.translation.y,
+            msg.transform.translation.z);
+        marker_pose = (nr + 0.5*E_*t*nr).normalize();
+        return {status, marker_pose};
+
+    } catch (const tf2::TransformException & ex) {
+        return {status, marker_pose};
+    };
+
 }
 
 
