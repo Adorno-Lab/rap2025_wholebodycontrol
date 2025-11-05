@@ -638,7 +638,7 @@
        direction: KEEP_ROBOT_OUTSIDE
        entity_robot_attached_direction: k_
        entity_environment_attached_direction: k_
-       tag: C39
+       tag: C41
 
 - Description: Center bumper robot Cylinder_obstacle_2-------------------------------
   Parameters:
@@ -653,7 +653,7 @@
        direction: KEEP_ROBOT_OUTSIDE
        entity_robot_attached_direction: k_
        entity_environment_attached_direction: k_
-       tag: C40
+       tag: C42
 
 - Description: Rear bumper robot Cylinder_obstacle_2-------------------------------
   Parameters:
@@ -668,4 +668,4 @@
        direction: KEEP_ROBOT_OUTSIDE
        entity_robot_attached_direction: k_
        entity_environment_attached_direction: k_
-       tag: C41
+       tag: C43
