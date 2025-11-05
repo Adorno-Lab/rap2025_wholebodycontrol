@@ -168,6 +168,22 @@ void B1Z1CoppeliaSimROS::control_loop()
         clock_.init();
         _connect();
 
+        for (int i=0;i<100;i++)
+        {
+            rclcpp::spin_some(node_);
+            clock_.update_and_sleep();
+            rclcpp::spin_some(node_);
+            RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Updating markers");
+            for (auto& marker : vicon_markers_)
+            {
+                auto [marker_detected, marker_pose] = _try_get_vicon_marker(marker);
+                if (marker_detected)
+                    cs_->set_object_pose(marker, marker_pose);
+            }
+
+            rclcpp::spin_some(node_);
+        }
+
         while (!new_robot_pose_data_available_ && !_should_shutdown())
         {
             rclcpp::spin_some(node_);
