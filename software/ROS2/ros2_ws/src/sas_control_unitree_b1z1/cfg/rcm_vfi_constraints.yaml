@@ -669,3 +669,35 @@
        entity_robot_attached_direction: k_
        entity_environment_attached_direction: k_
        tag: C43
+
+
+- Description: End-effector vs Cylinder_obstacle_2 ------------------------------------------
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: Cylinder_obstacle_2
+       cs_entity_robot: Sphere_effector
+       entity_environment_primitive_type: LINE
+       entity_robot_primitive_type: POINT
+       joint_index: 9
+       safe_distance: 0.31
+       vfi_gain: 5.0
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C44
+
+
+- Description: End-effector vs Cylinder_obstacle_0 ------------------------------------------
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: Cylinder_obstacle_0
+       cs_entity_robot: Sphere_effector
+       entity_environment_primitive_type: LINE
+       entity_robot_primitive_type: POINT
+       joint_index: 9
+       safe_distance: 0.31
+       vfi_gain: 5.0
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C45
