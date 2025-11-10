@@ -245,12 +245,12 @@ void ExtendedKalmanFilter::control_loop()
                         RCLCPP_INFO_ONCE(node_->get_logger(), "::VICON DATA OK. Front marker available");
 
                     if (new_vicon_data_available_rear_ && new_vicon_data_available_front_)
-                        RCLCPP_INFO_ONCE(node_->get_logger(), "::VICON DATA OK. Both marker available");
+                        RCLCPP_INFO_ONCE(node_->get_logger(), "::VICON DATA OK. Both markers available");
 
                     if (!new_vicon_data_available_rear_ && !new_vicon_data_available_front_)
                     {
                         show_status_ = true;
-                        RCLCPP_INFO_STREAM(node_->get_logger(), "::BOTH MARKER LOST!!!");
+                        RCLCPP_INFO_STREAM(node_->get_logger(), "::BOTH MARKERS LOST!!!");
                     }
                     show_status_ = false;
                 }
