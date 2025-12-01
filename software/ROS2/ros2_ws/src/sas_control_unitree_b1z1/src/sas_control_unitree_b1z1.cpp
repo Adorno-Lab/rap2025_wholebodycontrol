@@ -64,7 +64,10 @@ B1Z1WholeBodyControl::B1Z1WholeBodyControl(std::shared_ptr<Node> &node,
     impl_ = std::make_unique<B1Z1WholeBodyControl::Impl>();
     impl_->cs_ = std::make_shared<DQ_CoppeliaSimInterfaceZMQ>();
     impl_->qpoases_solver_ = std::make_shared<DQ_QPOASESSolver>();
-    impl_->rdi_ = std::make_shared<sas::RobotDriverClient>(node_, configuration_.Z1_topic_prefix );
+
+    using MODE_BLACKLIST_FLAG = sas::RobotDriverClient::MODE_BLACKLIST_FLAG;
+    std::vector<MODE_BLACKLIST_FLAG> blacklist_mode = {MODE_BLACKLIST_FLAG::WATCHDOG_CONTROL};
+    impl_->rdi_ = std::make_shared<sas::RobotDriverClient>(node_, configuration_.Z1_topic_prefix, blacklist_mode);
 
 
     //publisher_target_arm_positions_ = node_->create_publisher<std_msgs::msg::Float64MultiArray>(
