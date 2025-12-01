@@ -382,7 +382,7 @@ void B1Z1WholeBodyControl::control_loop()
                 RCLCPP_INFO_STREAM(node_->get_logger(), "::QP not solved!");
                 RCLCPP_INFO_STREAM(node_->get_logger(), e.what());
                 u = VectorXd::Zero(9);
-                break;
+                //break;
             }
             // Numerical integration for to command the arm at joint position level
             qi_arm = qi_arm + T_*u.tail(6);
