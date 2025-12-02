@@ -30,7 +30,7 @@ def generate_launch_description():
             output="screen",
             parameters=[{
                 "topic_prefix": "/sas_b1/b1_2",
-                "thread_sampling_time_sec": 0.001,
+                "thread_sampling_time_sec": 0.002,
                 "robot_vicon_marker_rear": "B1Z1_Frame_robot_black_rear",
                 "robot_vicon_marker_front": "B1Z1_Frame_robot_black_front"
             }]
