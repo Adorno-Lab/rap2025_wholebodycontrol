@@ -205,6 +205,15 @@ VectorXd B1Z1WholeBodyControl::_get_planar_joint_velocities_at_body_frame(const 
     return DQ_robotics_extensions::CVectorXd({twist_b_vec(3), twist_b_vec(4), twist_b_vec(2)});
 }
 
+VectorXd B1Z1WholeBodyControl::_get_planar_joint_saturation_constaints_at_inertial_frame(const VectorXd &planar_joint_saturation_constaints_at_body_frame)
+{
+    const DQ& r = robot_pose_.conj();
+    const VectorXd& vel_b = planar_joint_saturation_constaints_at_body_frame;
+    DQ p_dot_b = vel_b(0)*i_ + vel_b(1)*j_ + vel_b(2)*k_;
+    DQ p_dot_a = Ad(r, p_dot_b);
+    return p_dot_a.vec3();
+}
+
 /**
  * @brief B1Z1WholeBodyControl::control_loop starts the main control loop
  */
@@ -262,6 +271,9 @@ void B1Z1WholeBodyControl::control_loop()
                                                                                                             true);
         auto  const [q_min, q_max]    = impl_->robot_constraint_manager_->get_configuration_limits();
         auto const [q_dot_min, q_dot_max]= impl_->robot_constraint_manager_->get_configuration_velocity_limits();
+        VectorXd q_dot_min_inertial = q_dot_min;
+        VectorXd q_dot_max_inertial = q_dot_max;
+
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Number of VFI constraints: "+ std::to_string(impl_->robot_constraint_manager_->get_number_of_vfi_constraints()));
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::q_min: ");
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(),  q_min.transpose());
@@ -301,6 +313,8 @@ void B1Z1WholeBodyControl::control_loop()
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Controller damping: ");
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(),  configuration_.controller_damping);
 
+
+
         while(!_should_shutdown())
         {
             RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Running kinematic control loop! ");
@@ -311,6 +325,12 @@ void B1Z1WholeBodyControl::control_loop()
             DQ x = impl_->robot_model_->fkm(q);
             DQ xd = x;
             _publish_coppeliasim_frame_x(x);
+
+
+            VectorXd q_dot_min_base_inertial = _get_planar_joint_saturation_constaints_at_inertial_frame(q_dot_min.head(3));
+            VectorXd q_dot_max_base_inertial = _get_planar_joint_saturation_constaints_at_inertial_frame(q_dot_max.head(3));
+            q_dot_min_inertial << q_dot_min_base_inertial, q_dot_min.tail(6);
+            q_dot_max_inertial << q_dot_max_base_inertial, q_dot_max.tail(6);
 
 
 
@@ -370,7 +390,7 @@ void B1Z1WholeBodyControl::control_loop()
                                 }
                             }
                     }
-
+                    impl_->robot_constraint_manager_->set_configuration_velocity_limits({q_dot_min_inertial, q_dot_max_inertial});
                     auto ineq_constraints = impl_->robot_constraint_manager_->get_inequality_constraints(q);
                     auto [A,b] = impl_->robot_constraint_manager_->get_inequality_constraints(q);
                     controller.set_inequality_constraint(A,b);

@@ -140,6 +140,7 @@ protected:
     VectorXd _get_mobile_platform_configuration_from_pose(const DQ& pose) const;
 
     VectorXd _get_planar_joint_velocities_at_body_frame(const VectorXd& planar_joint_velocities_at_inertial_frame) const;
+    VectorXd _get_planar_joint_saturation_constaints_at_inertial_frame(const VectorXd& planar_joint_saturation_constaints_at_body_frame);
 
 public:
 
