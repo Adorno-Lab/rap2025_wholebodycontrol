@@ -329,8 +329,17 @@ void B1Z1WholeBodyControl::control_loop()
 
             VectorXd q_dot_min_base_inertial = _get_planar_joint_saturation_constaints_at_inertial_frame(q_dot_min.head(3));
             VectorXd q_dot_max_base_inertial = _get_planar_joint_saturation_constaints_at_inertial_frame(q_dot_max.head(3));
-            q_dot_min_inertial << q_dot_min_base_inertial, q_dot_min.tail(6);
-            q_dot_max_inertial << q_dot_max_base_inertial, q_dot_max.tail(6);
+
+            for (int j=0;j<1;j++)
+                q_dot_min_inertial(j) = std::min(q_dot_min_base_inertial(j), q_dot_max_base_inertial(j));
+
+             q_dot_min_inertial.tail(6) = q_dot_min.tail(6);
+
+            for (int j=0;j<1;j++)
+                q_dot_max_inertial(j) = std::max(q_dot_min_base_inertial(j), q_dot_max_base_inertial(j));
+
+            q_dot_max_inertial.tail(6) = q_dot_max.tail(6);
+
 
 
 
@@ -360,6 +369,7 @@ void B1Z1WholeBodyControl::control_loop()
                     // Otherwise, I compute the control inputs to reduce the task error.
 
                     // If the parking break is eanble
+                    /*
                     if (configuration_.controller_enable_parking_break_when_gripper_is_open)
                     {
                             // if the gripper is open (more than 30 degrees)
@@ -390,6 +400,11 @@ void B1Z1WholeBodyControl::control_loop()
                                 }
                             }
                     }
+*/
+                  RCLCPP_INFO_STREAM(node_->get_logger(), "::----------");
+                    RCLCPP_INFO_STREAM(node_->get_logger(), q_dot_min_inertial.transpose());
+                    RCLCPP_INFO_STREAM(node_->get_logger(), q_dot_max_inertial.transpose());
+                    RCLCPP_INFO_STREAM(node_->get_logger(), "::----------");
                     impl_->robot_constraint_manager_->set_configuration_velocity_limits({q_dot_min_inertial, q_dot_max_inertial});
                     auto ineq_constraints = impl_->robot_constraint_manager_->get_inequality_constraints(q);
                     auto [A,b] = impl_->robot_constraint_manager_->get_inequality_constraints(q);
@@ -407,6 +422,8 @@ void B1Z1WholeBodyControl::control_loop()
                 u = VectorXd::Zero(9);
                 //break;
             }
+
+            RCLCPP_INFO_STREAM(node_->get_logger(), u.transpose());
             // Numerical integration for to command the arm at joint position level
             qi_arm = qi_arm + T_*u.tail(6);
 
@@ -422,6 +439,7 @@ void B1Z1WholeBodyControl::control_loop()
             VectorXd ub = _get_planar_joint_velocities_at_body_frame(u.head(3));
 
             // publish the commands on the respective topics
+            RCLCPP_INFO_STREAM(node_->get_logger(), "::ub: " << ub.transpose());
             _publish_target_B1_commands(ub);
 
         }
