@@ -59,12 +59,17 @@ B1Z1WholeBodyControl::B1Z1WholeBodyControl(std::shared_ptr<Node> &node,
     node_{node},
     robot_reached_region_{false},
     T_{configuration.thread_sampling_time_sec},
-    clock_{configuration.thread_sampling_time_sec}
+    clock_{configuration.thread_sampling_time_sec},
+    datalogger_client_{node},
+    save_data_with_datalogger_{true}
 {
     impl_ = std::make_unique<B1Z1WholeBodyControl::Impl>();
     impl_->cs_ = std::make_shared<DQ_CoppeliaSimInterfaceZMQ>();
     impl_->qpoases_solver_ = std::make_shared<DQ_QPOASESSolver>();
-    impl_->rdi_ = std::make_shared<sas::RobotDriverClient>(node_, configuration_.Z1_topic_prefix );
+
+    using MODE_BLACKLIST_FLAG = sas::RobotDriverClient::MODE_BLACKLIST_FLAG;
+    std::vector<MODE_BLACKLIST_FLAG> blacklist_mode = {MODE_BLACKLIST_FLAG::WATCHDOG_CONTROL};
+    impl_->rdi_ = std::make_shared<sas::RobotDriverClient>(node_, configuration_.Z1_topic_prefix, blacklist_mode);
 
 
     //publisher_target_arm_positions_ = node_->create_publisher<std_msgs::msg::Float64MultiArray>(
@@ -298,6 +303,22 @@ void B1Z1WholeBodyControl::control_loop()
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Controller damping: ");
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(),  configuration_.controller_damping);
 
+
+        if (save_data_with_datalogger_)
+        {
+
+            RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "Waiting for a connection with sas_datalogger...");
+            while( (!datalogger_client_.is_enabled()) && (!_should_shutdown()))
+            {
+                std::this_thread::sleep_for(std::chrono::microseconds(100));
+                rclcpp::spin_some(node_);
+            }
+            RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "Connected to sas_datalogger!");
+        }else{
+            RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "sas_datalogger is disabled.");
+        }
+
+
         while(!_should_shutdown())
         {
             RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Running kinematic control loop! ");
@@ -315,7 +336,6 @@ void B1Z1WholeBodyControl::control_loop()
             {
                 // There is new data, then we update the desired pose;
                 xd = xd_;
-                new_coppeliasim_xd_data_available_ = false;
             }else{
                 // There is no new data about xd, then the desired pose is the same
                 // as the current pose. Consequently, the error is zero and robot stops.
@@ -368,7 +388,6 @@ void B1Z1WholeBodyControl::control_loop()
                             }
                     }
 
-                    auto ineq_constraints = impl_->robot_constraint_manager_->get_inequality_constraints(q);
                     auto [A,b] = impl_->robot_constraint_manager_->get_inequality_constraints(q);
                     controller.set_inequality_constraint(A,b);
                     u = controller.compute_setpoint_control_signal(q, xd.translation().vec4());
@@ -400,6 +419,26 @@ void B1Z1WholeBodyControl::control_loop()
 
             // publish the commands on the respective topics
             _publish_target_B1_commands(ub);
+
+
+
+            // Log data
+            if (save_data_with_datalogger_)
+            {
+                datalogger_client_.log("u", u);
+                datalogger_client_.log("ub", ub);
+                VectorXd vec_x = x.vec8();
+                VectorXd vec_xd = xd_.vec8();
+                datalogger_client_.log("x", vec_x);
+                datalogger_client_.log("xd", vec_xd);
+                datalogger_client_.log("q", q);
+                datalogger_client_.log("q_dot_min", q_dot_min);
+                datalogger_client_.log("q_dot_max", q_dot_max);
+                //datalogger_client_.log("q_dot_min_inertial", q_dot_min_inertial);
+                //datalogger_client_.log("q_dot_max_inertial", q_dot_max_inertial);
+                datalogger_client_.log("robot_reached_region", robot_reached_region_);
+                //datalogger_client_.log("J", J);
+            }
 
         }
 

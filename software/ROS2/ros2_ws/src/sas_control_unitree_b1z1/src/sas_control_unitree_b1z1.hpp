@@ -92,6 +92,8 @@ private:
 
 
     sas::Clock clock_;
+    sas::DataloggerClient datalogger_client_;
+    bool save_data_with_datalogger_;
 
 
     //also equivalent to rclcpp::TimerBase::SharedPtr
