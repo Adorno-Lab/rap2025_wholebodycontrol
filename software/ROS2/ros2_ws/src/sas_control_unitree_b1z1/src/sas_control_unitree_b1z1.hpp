@@ -92,6 +92,8 @@ private:
 
 
     sas::Clock clock_;
+    sas::DataloggerClient datalogger_client_;
+    bool save_data_with_datalogger_;
 
 
     //also equivalent to rclcpp::TimerBase::SharedPtr
@@ -141,6 +143,7 @@ protected:
 
     VectorXd _get_planar_joint_velocities_at_body_frame(const VectorXd& planar_joint_velocities_at_inertial_frame) const;
     VectorXd _get_planar_joint_saturation_constaints_at_inertial_frame(const VectorXd& planar_joint_saturation_constaints_at_body_frame);
+    VectorXd _get_planar_joint_saturation_constaints_at_body_frame(const VectorXd& planar_joint_saturation_constaints_at_inertial_frame);
 public:
 
     B1Z1WholeBodyControl(const B1Z1WholeBodyControl&)=delete;

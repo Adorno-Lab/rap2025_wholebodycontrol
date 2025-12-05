@@ -59,7 +59,9 @@ B1Z1WholeBodyControl::B1Z1WholeBodyControl(std::shared_ptr<Node> &node,
     node_{node},
     robot_reached_region_{false},
     T_{configuration.thread_sampling_time_sec},
-    clock_{configuration.thread_sampling_time_sec}
+    clock_{configuration.thread_sampling_time_sec},
+    datalogger_client_{node},
+    save_data_with_datalogger_{true}
 {
     impl_ = std::make_unique<B1Z1WholeBodyControl::Impl>();
     impl_->cs_ = std::make_shared<DQ_CoppeliaSimInterfaceZMQ>();
@@ -208,11 +210,20 @@ VectorXd B1Z1WholeBodyControl::_get_planar_joint_velocities_at_body_frame(const 
 
 VectorXd B1Z1WholeBodyControl::_get_planar_joint_saturation_constaints_at_inertial_frame(const VectorXd &planar_joint_saturation_constaints_at_body_frame)
 {
-    const DQ& r = robot_pose_.conj();
+    const DQ& r = robot_pose_.P();
     const VectorXd& vel_b = planar_joint_saturation_constaints_at_body_frame;
     DQ p_dot_b = vel_b(0)*i_ + vel_b(1)*j_ + vel_b(2)*k_;
     DQ p_dot_a = Ad(r, p_dot_b);
     return p_dot_a.vec3();
+}
+
+VectorXd B1Z1WholeBodyControl::_get_planar_joint_saturation_constaints_at_body_frame(const VectorXd &planar_joint_saturation_constaints_at_inertial_frame)
+{
+    const DQ& r = robot_pose_.P();
+    const VectorXd& vel_a = planar_joint_saturation_constaints_at_inertial_frame;
+    DQ p_dot_a = vel_a(0)*i_ + vel_a(1)*j_ + vel_a(2)*k_;
+    DQ p_dot_b = Ad(r.conj(), p_dot_a);
+    return p_dot_b.vec3();
 }
 
 /**
@@ -298,13 +309,13 @@ void B1Z1WholeBodyControl::control_loop()
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Starting control loop...");
 
         VectorXd qi_arm = q_arm_;  // For numerical integration
-        VectorXd u;
+        VectorXd u = VectorXd::Zero(9);
 
 
         DQ_ClassicQPController controller(impl_->kin_mobile_manipulator_, impl_->qpoases_solver_);
         controller.set_control_objective(ControlObjective::Translation);
         controller.set_gain(configuration_.controller_proportional_gain);
-        controller.set_damping( configuration_.controller_damping);
+        controller.set_damping(configuration_.controller_damping);
 
         double region_size =  configuration_.controller_target_region_size;
         double region_exit_size =  configuration_.controller_target_exit_size;
@@ -313,6 +324,22 @@ void B1Z1WholeBodyControl::control_loop()
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(),  configuration_.controller_proportional_gain);
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Controller damping: ");
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(),  configuration_.controller_damping);
+
+
+
+        if (save_data_with_datalogger_)
+        {
+
+            RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "Waiting for a connection with sas_datalogger...");
+            while( (!datalogger_client_.is_enabled()) && (!_should_shutdown()))
+            {
+                std::this_thread::sleep_for(std::chrono::microseconds(100));
+                rclcpp::spin_some(node_);
+            }
+            RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "Connected to sas_datalogger!");
+        }else{
+            RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "sas_datalogger is disabled.");
+        }
 
         while(!_should_shutdown())
         {
@@ -350,28 +377,31 @@ void B1Z1WholeBodyControl::control_loop()
             {
                 // There is new data, then we update the desired pose;
                 xd = xd_;
-                new_coppeliasim_xd_data_available_ = false;
-            }else{
-                // There is no new data about xd, then the desired pose is the same
-                // as the current pose. Consequently, the error is zero and robot stops.
+                //new_coppeliasim_xd_data_available_ = false;
+            }else
+            {
                 xd = x;
             }
 
+
             try {
+
                 //Compute the distance between the end-effector and desired points
                 double distance = (x.translation()-xd_.translation()).vec3().norm();
 
                 // If the distance between them is below a threshold and the robot did not reach the target region
                 // I stop the robot.
+
                 if (distance < region_size && !robot_reached_region_)
                 {
-                    //RCLCPP_INFO_STREAM(node_->get_logger(), "::Reached target zone!");
-                    u = VectorXd::Zero(9);
+                    RCLCPP_INFO_STREAM(node_->get_logger(), "::Reached target zone!");
+                    robot_reached_region_ = true;
+                    u << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
                 }else
                 {
                     // Otherwise, I compute the control inputs to reduce the task error.
 
-                    // If the parking break is eanble
+                    // If the parking break is enable
                     if (configuration_.controller_enable_parking_break_when_gripper_is_open)
                     {
                             // if the gripper is open (more than 30 degrees)
@@ -402,12 +432,12 @@ void B1Z1WholeBodyControl::control_loop()
                                     update_handbreak_ = true;
                                 }
                             }
+
+                            auto [A,b] = impl_->robot_constraint_manager_->get_inequality_constraints(q);
+                            controller.set_inequality_constraint(A,b);
+                            u = controller.compute_setpoint_control_signal(q, xd.translation().vec4());
                     }
 
-                    auto ineq_constraints = impl_->robot_constraint_manager_->get_inequality_constraints(q);
-                    auto [A,b] = impl_->robot_constraint_manager_->get_inequality_constraints(q);
-                    controller.set_inequality_constraint(A,b);
-                    u = controller.compute_setpoint_control_signal(q, xd.translation().vec4());
                 }
 
                 if (distance > region_exit_size)
@@ -436,6 +466,24 @@ void B1Z1WholeBodyControl::control_loop()
 
             // publish the commands on the respective topics
             _publish_target_B1_commands(ub);
+
+
+            if (save_data_with_datalogger_)
+            {
+                datalogger_client_.log("u", u);
+                datalogger_client_.log("ub", ub);
+                VectorXd vec_x = x.vec8();
+                VectorXd vec_xd = xd_.vec8();
+                datalogger_client_.log("x", vec_x);
+                datalogger_client_.log("xd", vec_xd);
+                datalogger_client_.log("q", q);
+                datalogger_client_.log("q_dot_min", q_dot_min);
+                datalogger_client_.log("q_dot_max", q_dot_max);
+                datalogger_client_.log("q_dot_min_inertial", q_dot_min_inertial);
+                datalogger_client_.log("q_dot_max_inertial", q_dot_max_inertial);
+                datalogger_client_.log("robot_reached_region", robot_reached_region_);
+                //datalogger_client_.log("J", J);
+            }
 
         }
 

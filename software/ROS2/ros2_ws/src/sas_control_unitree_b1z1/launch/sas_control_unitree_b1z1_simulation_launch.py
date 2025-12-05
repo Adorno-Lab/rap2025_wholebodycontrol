@@ -33,8 +33,8 @@ def generate_launch_description():
                 "vfi_file":"/home/s55322jq/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/sas_control_unitree_b1z1/cfg/rcm_vfi_constraints.yaml", # for local development
                 "B1_topic_prefix": "sas_b1/b1_1",
                 "Z1_topic_prefix": "sas_z1/z1_1",
-                "thread_sampling_time_sec": 0.002,
-                "controller_proportional_gain": 8.0,
+                "thread_sampling_time_sec": 0.005,
+                "controller_proportional_gain": 0.5,
                 "controller_damping": 0.1,
                 "controller_target_region_size": 0.1,
                 "controller_target_exit_size": 0.26,
