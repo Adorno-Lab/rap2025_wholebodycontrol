@@ -336,7 +336,6 @@ void B1Z1WholeBodyControl::control_loop()
             {
                 // There is new data, then we update the desired pose;
                 xd = xd_;
-                new_coppeliasim_xd_data_available_ = false;
             }else{
                 // There is no new data about xd, then the desired pose is the same
                 // as the current pose. Consequently, the error is zero and robot stops.
