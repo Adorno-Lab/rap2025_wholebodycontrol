@@ -389,7 +389,6 @@ void B1Z1WholeBodyControl::control_loop()
                             }
                     }
 
-                    auto ineq_constraints = impl_->robot_constraint_manager_->get_inequality_constraints(q);
                     auto [A,b] = impl_->robot_constraint_manager_->get_inequality_constraints(q);
                     controller.set_inequality_constraint(A,b);
                     u = controller.compute_setpoint_control_signal(q, xd.translation().vec4());
