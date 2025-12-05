@@ -34,7 +34,7 @@ def generate_launch_description():
                 "B1_topic_prefix": "sas_b1/b1_1",
                 "Z1_topic_prefix": "sas_z1/z1_1",
                 "thread_sampling_time_sec": 0.002,
-                "controller_proportional_gain": 30.0,
+                "controller_proportional_gain": 8.0,
                 "controller_damping": 0.1,
                 "controller_target_region_size": 0.1,
                 "controller_target_exit_size": 0.26,
