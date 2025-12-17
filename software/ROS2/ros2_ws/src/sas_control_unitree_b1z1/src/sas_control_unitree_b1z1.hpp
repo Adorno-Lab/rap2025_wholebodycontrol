@@ -124,7 +124,9 @@ private:
     void _callback_xd_state(const geometry_msgs::msg::PoseStamped& msg);
 
 
+    VectorXd _get_raw_saturation_limits_at_inertial_frame(const VectorXd& planar_joint_saturation_limits_at_body_frame);
 
+    std::tuple<VectorXd, VectorXd> _get_saturation_limits_at_inertial_frame(const std::tuple<VectorXd, VectorXd> & saturation_limits_at_body_frame);
 
     //Implementation details that depend on FRI source files.
     class Impl;

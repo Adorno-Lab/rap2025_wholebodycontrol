@@ -275,6 +275,10 @@ void B1Z1WholeBodyControl::control_loop()
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::q_dot_max: ");
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(),  q_dot_max.transpose());
 
+
+        VectorXd q_dot_min_inertial = q_dot_min;
+        VectorXd q_dot_max_inertial = q_dot_max;
+
         //-----------------------For parking break----------------------------------
         const VectorXd q_break_dot_min = DQ_robotics_extensions::Numpy::vstack(DQ_robotics_extensions::CVectorXd({0,0,0}), -q_dot_max.tail(6));
         const VectorXd q_break_dot_max = DQ_robotics_extensions::Numpy::vstack(DQ_robotics_extensions::CVectorXd({0,0,0}),  q_dot_max.tail(6));
@@ -329,6 +333,8 @@ void B1Z1WholeBodyControl::control_loop()
             DQ x = impl_->robot_model_->fkm(q);
             DQ xd = x;
             _publish_coppeliasim_frame_x(x);
+
+
 
 
 
@@ -476,6 +482,62 @@ void B1Z1WholeBodyControl::_callback_xd_state(const geometry_msgs::msg::PoseStam
         new_coppeliasim_xd_data_available_ = false;
     }
     new_coppeliasim_xd_data_available_ = true;
+}
+
+VectorXd B1Z1WholeBodyControl::_get_raw_saturation_limits_at_inertial_frame(const VectorXd &saturation_limits_at_body_frame)
+{
+    VectorXd saturation_limits_at_inertial_frame = saturation_limits_at_body_frame;
+
+    const VectorXd& vel_b = saturation_limits_at_body_frame.head(3);
+    const DQ v_b = vel_b(0)*i_ + vel_b(1)*j_ + vel_b(2)*k_;
+
+    const DQ& r = robot_pose_.P();
+    const VectorXd v_a = Ad(r, v_b).vec3();
+    saturation_limits_at_inertial_frame.head(3) = v_a;
+
+    return saturation_limits_at_inertial_frame;
+}
+
+std::tuple<VectorXd, VectorXd> B1Z1WholeBodyControl::_get_saturation_limits_at_inertial_frame(const std::tuple<VectorXd, VectorXd> &saturation_limits_at_body_frame)
+{
+    auto [q_dot_min, q_dot_max] = saturation_limits_at_body_frame;
+
+    const double Vx_min_b = q_dot_min(0);
+    const double Vx_max_b = q_dot_max(0);
+    const double Vy_min_b = q_dot_min(1);
+    const double Vy_max_b = q_dot_max(1);
+
+    DQ v1_b = Vx_max_b*i_ + Vy_max_b*j_;
+    DQ v2_b = Vx_min_b*i_ + Vy_max_b*j_;
+    DQ v3_b = Vx_min_b*i_ + Vy_min_b*j_;
+    DQ v4_b = Vx_max_b*i_ + Vy_min_b*j_;
+
+    //std::vector<DQ> v_b = {v1_b, v2_b, v3_b, v4_b};
+
+
+
+    const DQ& r = robot_pose_.P();
+    VectorXd v1_a = Ad(r, v1_b).vec3();
+    VectorXd v2_a = Ad(r, v2_b).vec3();
+    VectorXd v3_a = Ad(r, v3_b).vec3();
+    VectorXd v4_a = Ad(r, v4_b).vec3();
+
+    VectorXd vx_w = (VectorXd(4)<< v1_a(0), v2_a(0), v3_a(0), v4_a(0) ).finished();
+    VectorXd vy_w = (VectorXd(4)<< v1_a(1), v2_a(1), v3_a(1), v4_a(1) ).finished();
+
+    double Vx_min_w = vx_w.minCoeff();
+    double Vx_max_w = vx_w.maxCoeff();
+    double Vy_min_w = vy_w.minCoeff();
+    double Vy_max_w = vy_w.maxCoeff();
+
+
+    VectorXd q_dot_min_inertial = q_dot_min;
+    q_dot_min_inertial << Vx_min_w, Vy_min_w, q_dot_min.tail(7);
+
+    VectorXd q_dot_max_inertial = q_dot_max;
+    q_dot_max_inertial << Vx_max_w, Vy_max_w, q_dot_max.tail(7);
+
+    return {q_dot_min_inertial, q_dot_max_inertial};
 }
 
 bool B1Z1WholeBodyControl::_should_shutdown() const
