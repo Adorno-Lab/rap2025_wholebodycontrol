@@ -276,8 +276,8 @@ void B1Z1WholeBodyControl::control_loop()
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(),  q_dot_max.transpose());
 
 
-        VectorXd q_dot_min_inertial = q_dot_min;
-        VectorXd q_dot_max_inertial = q_dot_max;
+        VectorXd q_dot_min_inertial;
+        VectorXd q_dot_max_inertial;
 
         //-----------------------For parking break----------------------------------
         const VectorXd q_break_dot_min = DQ_robotics_extensions::Numpy::vstack(DQ_robotics_extensions::CVectorXd({0,0,0}), -q_dot_max.tail(6));
@@ -335,7 +335,9 @@ void B1Z1WholeBodyControl::control_loop()
             _publish_coppeliasim_frame_x(x);
 
 
-
+            auto q_dot_lims_world = _get_saturation_limits_at_inertial_frame({q_dot_min, q_dot_max});
+            q_dot_min_inertial = std::get<0>(q_dot_lims_world);
+            q_dot_max_inertial = std::get<1>(q_dot_lims_world);
 
 
             if (new_coppeliasim_xd_data_available_)
@@ -440,8 +442,8 @@ void B1Z1WholeBodyControl::control_loop()
                 datalogger_client_.log("q", q);
                 datalogger_client_.log("q_dot_min", q_dot_min);
                 datalogger_client_.log("q_dot_max", q_dot_max);
-                //datalogger_client_.log("q_dot_min_inertial", q_dot_min_inertial);
-                //datalogger_client_.log("q_dot_max_inertial", q_dot_max_inertial);
+                datalogger_client_.log("q_dot_min_inertial", q_dot_min_inertial);
+                datalogger_client_.log("q_dot_max_inertial", q_dot_max_inertial);
                 datalogger_client_.log("robot_reached_region", robot_reached_region_);
                 //datalogger_client_.log("J", J);
             }
@@ -484,6 +486,7 @@ void B1Z1WholeBodyControl::_callback_xd_state(const geometry_msgs::msg::PoseStam
     new_coppeliasim_xd_data_available_ = true;
 }
 
+/*
 VectorXd B1Z1WholeBodyControl::_get_raw_saturation_limits_at_inertial_frame(const VectorXd &saturation_limits_at_body_frame)
 {
     VectorXd saturation_limits_at_inertial_frame = saturation_limits_at_body_frame;
@@ -497,6 +500,8 @@ VectorXd B1Z1WholeBodyControl::_get_raw_saturation_limits_at_inertial_frame(cons
 
     return saturation_limits_at_inertial_frame;
 }
+*/
+
 
 std::tuple<VectorXd, VectorXd> B1Z1WholeBodyControl::_get_saturation_limits_at_inertial_frame(const std::tuple<VectorXd, VectorXd> &saturation_limits_at_body_frame)
 {
