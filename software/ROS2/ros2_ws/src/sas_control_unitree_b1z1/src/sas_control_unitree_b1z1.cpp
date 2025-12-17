@@ -354,62 +354,67 @@ void B1Z1WholeBodyControl::control_loop()
                 //Compute the distance between the end-effector and desired points
                 double distance = (x.translation()-xd_.translation()).vec3().norm();
 
-                // If the distance between them is below a threshold and the robot did not reach the target region
-                // I stop the robot.
-                if (distance < region_size && !robot_reached_region_)
-                {
-                    //RCLCPP_INFO_STREAM(node_->get_logger(), "::Reached target zone!");
-                    u = VectorXd::Zero(9);
-                }else
-                {
-                    // Otherwise, I compute the control inputs to reduce the task error.
 
-                    // If the parking break is eanble
-                    if (configuration_.controller_enable_parking_break_when_gripper_is_open)
+
+            // If the parking break is eanbled
+            if (configuration_.controller_enable_parking_break_when_gripper_is_open)
+            {
+                // if the gripper is open (more than 30 degrees)
+                if (std::abs(target_gripper_position_) > 0.5) // 30 degrees
+                {
+                    //When the gripper is open, the target region size and exit size are lower.
+                    // This improve the teleoperation accuracy of the arm (Z1 robot).
+                    region_size = 0.01;
+                    region_exit_size = 0.03;
+                    // set the control input constraints to enforce zero velocities in the base (B1 robot).
+                    impl_->robot_constraint_manager_->set_configuration_velocity_limits({q_break_dot_min, q_break_dot_max});
+                    if (update_handbreak_)
                     {
-                            // if the gripper is open (more than 30 degrees)
-                            if (std::abs(target_gripper_position_) > 0.5) // 30 degrees
-                            {
-                                //When the gripper is open, the target region size and exit size are lower.
-                                // This improve the teleoperation accuracy of the arm (Z1 robot).
-                                region_size = 0.01;
-                                region_exit_size = 0.03;
-                                // set the control input constraints to enforce zero velocities in the base (B1 robot).
-                                impl_->robot_constraint_manager_->set_configuration_velocity_limits({q_break_dot_min, q_break_dot_max});
-                                if (update_handbreak_)
-                                {
-                                    RCLCPP_INFO_STREAM(node_->get_logger(), "::Parking break enabled!");
-                                    update_handbreak_ = false;
-                                    update_handbreak_released_ = true;
+                        RCLCPP_INFO_STREAM(node_->get_logger(), "::Parking break enabled!");
+                        update_handbreak_ = false;
+                        update_handbreak_released_ = true;
 
-                                }
-                            }else{ // The gripper is closed. No parking break constraints here.
-                                region_size =  configuration_.controller_target_region_size;
-                                region_exit_size =  configuration_.controller_target_exit_size;
-                                impl_->robot_constraint_manager_->set_configuration_velocity_limits({q_dot_min_inertial, q_dot_max_inertial});
-                                if(update_handbreak_released_)
-                                {
-                                    RCLCPP_INFO_STREAM(node_->get_logger(), "::Parking break disabled!");
-                                    update_handbreak_released_ = false;
-                                    update_handbreak_ = true;
-                                }
-                            }
                     }
-
-                    auto [A,b] = impl_->robot_constraint_manager_->get_inequality_constraints(q);
-                    controller.set_inequality_constraint(A,b);
-                    u = controller.compute_setpoint_control_signal(q, xd.translation().vec4());
+                }else{ // The gripper is closed. No parking break constraints here.
+                    region_size =  configuration_.controller_target_region_size;
+                    region_exit_size =  configuration_.controller_target_exit_size;
+                    impl_->robot_constraint_manager_->set_configuration_velocity_limits({q_dot_min_inertial, q_dot_max_inertial});
+                    if(update_handbreak_released_)
+                    {
+                        RCLCPP_INFO_STREAM(node_->get_logger(), "::Parking break disabled!");
+                        update_handbreak_released_ = false;
+                        update_handbreak_ = true;
+                    }
                 }
+            }else{
+               impl_->robot_constraint_manager_->set_configuration_velocity_limits({q_dot_min_inertial, q_dot_max_inertial});
+            }
 
-                if (distance > region_exit_size)
-                    robot_reached_region_ = false;
+            auto [A,b] = impl_->robot_constraint_manager_->get_inequality_constraints(q);
+            controller.set_inequality_constraint(A,b);
+            u = controller.compute_setpoint_control_signal(q, xd.translation().vec4());
+
+            // If the distance between them is below a threshold and the robot did not reach the target region
+            // I stop the robot.
+
+            if (distance < region_size)
+            {
+                //RCLCPP_INFO_STREAM(node_->get_logger(), "::Reached target zone!");
+                robot_reached_region_ = true;
+            }
+
+            if (distance > region_exit_size)
+                robot_reached_region_ = false;
+
+            if (robot_reached_region_)
+                u = VectorXd::Zero(9);
 
             } catch (const std::exception& e) {
                 _publish_target_B1_commands(VectorXd::Zero(3));
                 RCLCPP_INFO_STREAM(node_->get_logger(), "::QP not solved!");
                 RCLCPP_INFO_STREAM(node_->get_logger(), e.what());
                 u = VectorXd::Zero(9);
-                break;
+                //break;
             }
             // Numerical integration for to command the arm at joint position level
             qi_arm = qi_arm + T_*u.tail(6);
