@@ -386,7 +386,7 @@ void B1Z1WholeBodyControl::control_loop()
                             }else{ // The gripper is closed. No parking break constraints here.
                                 region_size =  configuration_.controller_target_region_size;
                                 region_exit_size =  configuration_.controller_target_exit_size;
-                                impl_->robot_constraint_manager_->set_configuration_velocity_limits({q_dot_min, q_dot_max});
+                                impl_->robot_constraint_manager_->set_configuration_velocity_limits({q_dot_min_inertial, q_dot_max_inertial});
                                 if(update_handbreak_released_)
                                 {
                                     RCLCPP_INFO_STREAM(node_->get_logger(), "::Parking break disabled!");
