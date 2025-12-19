@@ -4,7 +4,7 @@ clear all
 close all
 clc
 
-load("sas_log_2025_12_17_16_02_48.mat")
+load("sas_log_2025_12_19_13_54_20.mat")
 %load("/home/s55322jq/sas_log_2025_12_04_13_45_13.mat")
 
 
@@ -35,6 +35,8 @@ set(h1, 'Renderer', 'Painters');
 fontsize = 20;
 
 
+
+
 for i=1:3
 
     subplot(3,1,i)
@@ -50,6 +52,7 @@ for i=1:3
     plot(q_dot_max_body_frame(i,:), "--r", 'LineWidth', 2)
     hold on
     plot(ub_cmd(i,:),"r", 'LineWidth', 2) 
+    title(['u_',num2str(i)])
     
     % 
     % 
@@ -62,7 +65,7 @@ for i=1:3
     fig = gcf;
     fig.Color = [1 1 1];
     box('off');
-    %legend({'U','vmin_w', 'vmax_w', 'vmin_b', 'vmax_b'},'Location','northeast')
+    legend({'u_{wf}','lb_{wf}', 'ub_{wf}', 'lb_{bf}', 'ub_{bf}', 'u_{bf}'},'Location','northeast')
 
 end
 

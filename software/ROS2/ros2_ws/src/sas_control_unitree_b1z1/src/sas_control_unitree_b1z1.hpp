@@ -128,6 +128,7 @@ private:
 
     std::tuple<VectorXd, VectorXd> _get_saturation_limits_at_inertial_frame(const std::tuple<VectorXd, VectorXd> & saturation_limits_at_body_frame);
 
+    std::tuple<VectorXd, VectorXd> _get_saturation_limits_at_inertial_frame_experimental(const std::tuple<VectorXd, VectorXd> & saturation_limits_at_body_frame);
     //Implementation details that depend on FRI source files.
     class Impl;
     std::unique_ptr<Impl> impl_;

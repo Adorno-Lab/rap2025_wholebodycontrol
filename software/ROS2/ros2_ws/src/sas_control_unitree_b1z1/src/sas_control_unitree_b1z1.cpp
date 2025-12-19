@@ -550,6 +550,38 @@ std::tuple<VectorXd, VectorXd> B1Z1WholeBodyControl::_get_saturation_limits_at_i
     return {q_dot_min_inertial, q_dot_max_inertial};
 }
 
+std::tuple<VectorXd, VectorXd> B1Z1WholeBodyControl::_get_saturation_limits_at_inertial_frame_experimental(const std::tuple<VectorXd, VectorXd> &saturation_limits_at_body_frame)
+{
+    auto [q_dot_min, q_dot_max] = saturation_limits_at_body_frame;
+    VectorXd q_dot_min_inertial = q_dot_min;
+    VectorXd q_dot_max_inertial = q_dot_max;
+
+    const VectorXd& ub_max = q_dot_max.head(3);
+    DQ v_max = ub_max(0)*i_ + ub_max(1)*j_;
+    DQ w_max = ub_max(2)*k_;
+    DQ twist_b_max = w_max + E_*v_max;
+
+    // Twist_a expressed in the body frame is given as
+    DQ twist_a_max = Ad(robot_pose_, twist_b_max) - cross(robot_pose_.translation(),w_max);
+    VectorXd twist_a_max_vec = twist_a_max.vec6(); // [0 0 wb xb_dot yb_dot 0]
+    q_dot_max_inertial << twist_a_max_vec(3), twist_a_max_vec(4), twist_a_max_vec(2), q_dot_max.tail(6);
+
+
+    const VectorXd& ub_min = q_dot_min.head(3);
+    DQ v_min = ub_min(0)*i_ + ub_min(1)*j_;
+    DQ w_min = ub_min(2)*k_;
+    DQ twist_b_min = w_min + E_*v_min;
+
+    // Twist_a expressed in the body frame is given as
+    DQ twist_a_min = Ad(robot_pose_, twist_b_min) - cross(robot_pose_.translation(),w_min);
+    VectorXd twist_a_min_vec = twist_a_min.vec6(); // [0 0 wb xb_dot yb_dot 0]
+    q_dot_min_inertial << twist_a_min_vec(3), twist_a_min_vec(4), twist_a_min_vec(2), q_dot_min.tail(6);
+    return {q_dot_min_inertial, q_dot_max_inertial};
+
+
+
+}
+
 bool B1Z1WholeBodyControl::_should_shutdown() const
 {
     return (*st_break_loops_);
