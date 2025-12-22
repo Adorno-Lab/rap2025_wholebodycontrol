@@ -27,18 +27,31 @@ q_dot_min_body_frame_computed = zeros(2, length(phi_deg));
 q_dot_max_body_frame_computed = zeros(2, length(phi_deg));
 
 for i=1:length(phi_deg)
-   [q_dot_min_body_frame_computed(:,i), q_dot_max_body_frame_computed(:,i)] = convert_to_body_frame(q_dot_min_inertial_frame, q_dot_max_inertial_frame, r);
+   [q_dot_min_body_frame_computed(:,i), q_dot_max_body_frame_computed(:,i)] = convert_to_body_frame(q_dot_min_inertial_frame(:,i), q_dot_max_inertial_frame(:,i), conj(r));
 end
 
+q_dot_min_inertial_frame_new = zeros(2, length(q_dot_min_inertial_frame));
+q_dot_max_inertial_frame_new = zeros(2, length(q_dot_max_inertial_frame));
 
+
+for i=1:length(q_dot_max_inertial_frame)
+    phi = deg2rad(phi_deg(i));
+
+    R = [cos(phi) sin(phi);
+        -sin(phi) cos(phi)];
+    q_dot_min_inertial_frame_new(:,i) =  R*q_dot_min_body_frame';
+    q_dot_max_inertial_frame_new(:,i) =  R*q_dot_max_body_frame';
+
+
+end
 
 h1 = figure;
 
 subplot(2,1,1)
 
-plot(phi_deg, q_dot_min_inertial_frame(1, :), "b",'LineWidth', 2);
+plot(phi_deg, q_dot_min_inertial_frame(1, :), "--b",'LineWidth', 2);
 hold on
-plot(phi_deg, q_dot_max_inertial_frame(1, :), "b",'LineWidth', 2) ;
+plot(phi_deg, q_dot_max_inertial_frame(1, :), "--b",'LineWidth', 2) ;
 hold on
 plot(phi_deg, q_dot_min_body_frame_computed(1,:), "m", 'LineWidth', 1) 
 hold on
@@ -47,6 +60,15 @@ hold on
 plot(phi_deg, q_dot_min_body_frame(1)*ones(length(q_dot_min_inertial_frame(1, :))), "--r", 'LineWidth', 3) 
 hold on
 plot(phi_deg, q_dot_max_body_frame(1)*ones(length(q_dot_min_inertial_frame(1, :))), "--r", 'LineWidth', 3) 
+
+hold on
+plot(phi_deg, q_dot_min_inertial_frame_new(1,:), "--g", 'LineWidth', 1) 
+hold on
+plot(phi_deg, q_dot_max_inertial_frame_new(1,:), "g", 'LineWidth', 1) 
+
+
+
+
 
 
 legend({'lb_{wf}', 'ub_{wf}','lbproj_{bf}', 'ubproj_{bf}','lb_{bf}', 'ub_{bf}'},'Location','northeast')
@@ -62,9 +84,9 @@ box('off');
 
 
 subplot(2,1,2)
-plot(phi_deg, q_dot_min_inertial_frame(2, :),"b",'LineWidth', 2) ;
+plot(phi_deg, q_dot_min_inertial_frame(2, :),"--b",'LineWidth', 2) ;
 hold on
-plot(phi_deg, q_dot_max_inertial_frame(2, :),"b",'LineWidth', 2);
+plot(phi_deg, q_dot_max_inertial_frame(2, :),"--b",'LineWidth', 2);
 hold on
 hold on
 plot(phi_deg, q_dot_min_body_frame_computed(2,:), "m", 'LineWidth', 1) 
@@ -75,6 +97,10 @@ plot(phi_deg, q_dot_min_body_frame(2)*ones(length(q_dot_min_inertial_frame(1, :)
 hold on
 plot(phi_deg, q_dot_max_body_frame(2)*ones(length(q_dot_min_inertial_frame(1, :))),"--r", 'LineWidth', 3) 
 
+hold on
+plot(phi_deg, q_dot_min_inertial_frame_new(2,:), "--g", 'LineWidth', 1) 
+hold on
+plot(phi_deg, q_dot_max_inertial_frame_new(2,:), "g", 'LineWidth', 1) 
 
 set(gca, 'FontSize', 20);
 fig = gcf;

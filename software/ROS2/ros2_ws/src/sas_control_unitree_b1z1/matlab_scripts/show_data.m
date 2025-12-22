@@ -4,7 +4,7 @@ clear all
 close all
 clc
 
-load("sas_log_2025_12_19_13_54_20.mat")
+load("result2.mat")
 %load("/home/s55322jq/sas_log_2025_12_04_13_45_13.mat")
 
 
@@ -17,6 +17,9 @@ q_dot_max_body_frame = q_dot_max';
 
 q_dot_min_inertial_frame = q_dot_min_inertial';
 q_dot_max_inertial_frame = q_dot_max_inertial';
+
+robot_pose = x';
+configuration = q';
 
 
 h1 = figure;
@@ -35,6 +38,31 @@ set(h1, 'Renderer', 'Painters');
 fontsize = 20;
 
 
+q_dot_min_body_frame_computed = zeros(2, length(q_dot_min_inertial_frame));
+q_dot_max_body_frame_computed = zeros(2, length(q_dot_max_inertial_frame));
+for i=1:length(q_dot_max_inertial_frame)
+    phi = configuration(3,i);
+    r = cos(phi/2)+DQ.k*sin(phi/2);
+   [q_dot_min_body_frame_computed(:,i), q_dot_max_body_frame_computed(:,i)] = convert_to_body_frame(q_dot_min_inertial_frame(:,i), q_dot_max_inertial_frame(:,i), conj(r));
+end
+
+
+q_dot_min_inertial_frame_new = zeros(2, length(q_dot_min_inertial_frame));
+q_dot_max_inertial_frame_new = zeros(2, length(q_dot_max_inertial_frame));
+
+
+for i=1:length(q_dot_max_inertial_frame)
+    phi = configuration(3,i);
+    r = cos(phi/2)+DQ.k*sin(phi/2);
+
+    R = [cos(phi) sin(phi);
+        -sin(phi) cos(phi)];
+    q_dot_min_inertial_frame_new(:,i) =  R*q_dot_min_body_frame(1:2,i);
+    q_dot_max_inertial_frame_new(:,i) =  R*q_dot_max_body_frame(1:2,i);
+
+
+end
+
 
 
 for i=1:3
@@ -52,6 +80,18 @@ for i=1:3
     plot(q_dot_max_body_frame(i,:), "--r", 'LineWidth', 2)
     hold on
     plot(ub_cmd(i,:),"r", 'LineWidth', 2) 
+    hold on
+
+    if i < 3
+        plot(q_dot_min_body_frame_computed(i,:), "m", 'LineWidth', 1) 
+        hold on
+        plot(q_dot_max_body_frame_computed(i,:), "m", 'LineWidth', 1) 
+
+        hold on
+        plot(q_dot_min_inertial_frame_new(i,:), "g", 'LineWidth', 1) 
+        hold on
+        plot(q_dot_max_inertial_frame_new(i,:), "g", 'LineWidth', 1) 
+    end
     title(['u_',num2str(i)])
     
     % 

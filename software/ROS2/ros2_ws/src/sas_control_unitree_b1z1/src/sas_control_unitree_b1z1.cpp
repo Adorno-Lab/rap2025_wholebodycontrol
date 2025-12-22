@@ -389,8 +389,16 @@ void B1Z1WholeBodyControl::control_loop()
             }else{
                impl_->robot_constraint_manager_->set_configuration_velocity_limits({q_dot_min_inertial, q_dot_max_inertial});
             }
+            /*
+            double phi = q(2);
+            MatrixXd R_B_W = ( MatrixXd(2,9) << cos(phi), sin(phi), 0, 0,0,0,0,0,0,
+                                               -sin(phi), cos(phi), 0, 0,0,0,0,0,0
+                                                  ).finished();
+            constraint_manager_->add_inequality_constraint(-I_, -q_dot_min_);
+            constraint_manager_->add_inequality_constraint( I_,  q_dot_max_);
+            */
 
-            auto [A,b] = impl_->robot_constraint_manager_->get_inequality_constraints(q);
+            auto [A,b] = impl_->robot_constraint_manager_->get_inequality_constraints(q, true, true);
             controller.set_inequality_constraint(A,b);
             u = controller.compute_setpoint_control_signal(q, xd.translation().vec4());
 
