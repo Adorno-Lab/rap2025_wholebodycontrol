@@ -43,6 +43,8 @@ public:
     std::shared_ptr<UnitreeB1Z1MobileRobot> kin_mobile_manipulator_;
     std::shared_ptr<UnitreeB1Z1CoppeliaSimZMQRobot> robot_cs_;
     std::shared_ptr<sas::RobotDriverClient> rdi_;
+
+
 };
 
 /**
@@ -66,6 +68,7 @@ B1Z1WholeBodyControl::B1Z1WholeBodyControl(std::shared_ptr<Node> &node,
     impl_ = std::make_unique<B1Z1WholeBodyControl::Impl>();
     impl_->cs_ = std::make_shared<DQ_CoppeliaSimInterfaceZMQ>();
     impl_->qpoases_solver_ = std::make_shared<DQ_QPOASESSolver>();
+
 
     using MODE_BLACKLIST_FLAG = sas::RobotDriverClient::MODE_BLACKLIST_FLAG;
     std::vector<MODE_BLACKLIST_FLAG> blacklist_mode = {MODE_BLACKLIST_FLAG::WATCHDOG_CONTROL};
@@ -103,6 +106,14 @@ B1Z1WholeBodyControl::B1Z1WholeBodyControl(std::shared_ptr<Node> &node,
         "/coppeliasim/get/gripper_position", 1, std::bind(&B1Z1WholeBodyControl::_callback_gripper_position_from_coppeliasim,
                   this, std::placeholders::_1)
         );
+
+
+    I8x6_ = MatrixXd::Zero(8,6);
+    for (auto i=0;i<3;i++){
+        I8x6_(i+1,i) = 1.0;
+        I8x6_(i+5,i+3) = 1.0;
+    }
+    I6x8_ = I8x6_.transpose();
 
 
 }
@@ -292,6 +303,7 @@ void B1Z1WholeBodyControl::control_loop()
 
         VectorXd qi_arm = q_arm_;  // For numerical integration
         VectorXd u;
+        VectorXd custom_twist;
 
 
         DQ_ClassicQPController controller(impl_->kin_mobile_manipulator_, impl_->qpoases_solver_);
@@ -389,6 +401,7 @@ void B1Z1WholeBodyControl::control_loop()
             }else{
                impl_->robot_constraint_manager_->set_configuration_velocity_limits({q_dot_min_inertial, q_dot_max_inertial});
             }
+
             /*
             double phi = q(2);
             MatrixXd R_B_W = ( MatrixXd(2,9) << cos(phi), sin(phi), 0, 0,0,0,0,0,0,
@@ -397,10 +410,67 @@ void B1Z1WholeBodyControl::control_loop()
             constraint_manager_->add_inequality_constraint(-I_, -q_dot_min_);
             constraint_manager_->add_inequality_constraint( I_,  q_dot_max_);
             */
+            MatrixXd Is = (MatrixXd(3,8) << 0,0,0,1, 0,0,0,0,
+                                            0,0,0,0, 0,1,0,0,
+                                            0,0,0,0, 0,0,1,0).finished();
 
-            auto [A,b] = impl_->robot_constraint_manager_->get_inequality_constraints(q, true, true);
+            MatrixXd Jhol =  impl_->kin_mobile_manipulator_->pose_jacobian(q,2);
+            MatrixXd Jtwist_b =  Is*2*hamiplus8(x.conj())*Jhol.block(0,0,8,3);
+
+            MatrixXd Ast = Jtwist_b;
+            MatrixXd zero_3x6 = MatrixXd::Zero(3,6);
+
+            MatrixXd zero_6x3 = MatrixXd::Zero(6,3);
+            MatrixXd I6x6 = MatrixXd::Identity(6,6);
+
+            std::cout<<""<<std::endl;
+
+            std::cout<<Jtwist_b<<std::endl;
+             std::cout<<""<<std::endl;
+
+            MatrixXd part1(3,9);
+            part1 << Ast, zero_3x6;
+
+            MatrixXd part2(3,9);
+            part2 << -Ast, zero_3x6;
+
+            MatrixXd part3(6,9);
+            part3 << zero_6x3, I6x6;
+
+            MatrixXd part4(6,9);
+            part4 << zero_6x3, -I6x6;
+
+
+
+            MatrixXd Alim(18,9);
+            Alim <<part1, part2, part3, part4;
+
+            VectorXd q_dot_max_base = q_dot_max.head(3);
+            VectorXd pb1(8);
+            pb1 << 0,0,0, q_dot_max_base(2), 0,q_dot_max_base(0),q_dot_max_base(1),0;
+
+            VectorXd q_dot_min_base = q_dot_min.head(3);
+            VectorXd pb2(8);
+            pb2 << 0,0,0, -q_dot_min_base(2), 0, -q_dot_min_base(0), -q_dot_min_base(1),0;
+
+            VectorXd blim(18);
+            blim << q_dot_max_base.head(3), -q_dot_min_base.head(3), q_dot_max.tail(6), -q_dot_min.tail(6);
+
+            std::cout<<""<<std::endl;
+
+            std::cout<<blim.transpose()<<std::endl;
+            std::cout<<""<<std::endl;
+
+
+
+
+            impl_->robot_constraint_manager_->add_inequality_constraint(Alim, blim);
+            auto [A,b] = impl_->robot_constraint_manager_->get_inequality_constraints(q, true, false);
             controller.set_inequality_constraint(A,b);
             u = controller.compute_setpoint_control_signal(q, xd.translation().vec4());
+
+
+            custom_twist = Ast *u.head(3);
 
             // If the distance between them is below a threshold and the robot did not reach the target region
             // I stop the robot.
@@ -453,6 +523,7 @@ void B1Z1WholeBodyControl::control_loop()
                 datalogger_client_.log("x", vec_x);
                 datalogger_client_.log("xd", vec_xd);
                 datalogger_client_.log("q", q);
+                datalogger_client_.log("ctwist", custom_twist);
                 datalogger_client_.log("q_dot_min", q_dot_min);
                 datalogger_client_.log("q_dot_max", q_dot_max);
                 datalogger_client_.log("q_dot_min_inertial", q_dot_min_inertial);

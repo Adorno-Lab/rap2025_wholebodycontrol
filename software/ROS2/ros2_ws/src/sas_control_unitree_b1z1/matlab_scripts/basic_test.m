@@ -61,10 +61,10 @@ plot(phi_deg, q_dot_min_body_frame(1)*ones(length(q_dot_min_inertial_frame(1, :)
 hold on
 plot(phi_deg, q_dot_max_body_frame(1)*ones(length(q_dot_min_inertial_frame(1, :))), "--r", 'LineWidth', 3) 
 
-hold on
-plot(phi_deg, q_dot_min_inertial_frame_new(1,:), "--g", 'LineWidth', 1) 
-hold on
-plot(phi_deg, q_dot_max_inertial_frame_new(1,:), "g", 'LineWidth', 1) 
+% hold on
+% plot(phi_deg, q_dot_min_inertial_frame_new(1,:), "--g", 'LineWidth', 1) 
+% hold on
+% plot(phi_deg, q_dot_max_inertial_frame_new(1,:), "g", 'LineWidth', 1) 
 
 
 
@@ -96,11 +96,11 @@ hold on
 plot(phi_deg, q_dot_min_body_frame(2)*ones(length(q_dot_min_inertial_frame(1, :))),"--r", 'LineWidth', 3) 
 hold on
 plot(phi_deg, q_dot_max_body_frame(2)*ones(length(q_dot_min_inertial_frame(1, :))),"--r", 'LineWidth', 3) 
-
-hold on
-plot(phi_deg, q_dot_min_inertial_frame_new(2,:), "--g", 'LineWidth', 1) 
-hold on
-plot(phi_deg, q_dot_max_inertial_frame_new(2,:), "g", 'LineWidth', 1) 
+% 
+% hold on
+% plot(phi_deg, q_dot_min_inertial_frame_new(2,:), "--g", 'LineWidth', 1) 
+% hold on
+% plot(phi_deg, q_dot_max_inertial_frame_new(2,:), "g", 'LineWidth', 1) 
 
 set(gca, 'FontSize', 20);
 fig = gcf;

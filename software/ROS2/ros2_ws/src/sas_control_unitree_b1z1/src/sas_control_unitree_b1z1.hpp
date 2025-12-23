@@ -83,6 +83,10 @@ protected:
     bool robot_reached_region_;
 
 
+    MatrixXd I8x6_;
+    MatrixXd I6x8_;
+
+
 
 private:
 

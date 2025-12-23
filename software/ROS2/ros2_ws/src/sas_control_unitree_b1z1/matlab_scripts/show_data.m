@@ -21,6 +21,8 @@ q_dot_max_inertial_frame = q_dot_max_inertial';
 robot_pose = x';
 configuration = q';
 
+% ctwist = ctwist';
+
 
 h1 = figure;
 set(h1, 'DefaultTextFontSize', 10);
@@ -78,19 +80,24 @@ for i=1:3
     plot(q_dot_min_body_frame(i,:), "--r", 'LineWidth', 2) 
     hold on
     plot(q_dot_max_body_frame(i,:), "--r", 'LineWidth', 2)
-    hold on
-    plot(ub_cmd(i,:),"r", 'LineWidth', 2) 
-    hold on
+
 
     if i < 3
+            hold on
+            plot(ub_cmd(i,:),"r", 'LineWidth', 2) 
+            hold on
         plot(q_dot_min_body_frame_computed(i,:), "m", 'LineWidth', 1) 
         hold on
         plot(q_dot_max_body_frame_computed(i,:), "m", 'LineWidth', 1) 
 
-        hold on
-        plot(q_dot_min_inertial_frame_new(i,:), "g", 'LineWidth', 1) 
-        hold on
-        plot(q_dot_max_inertial_frame_new(i,:), "g", 'LineWidth', 1) 
+        % hold on
+        % plot(q_dot_min_inertial_frame_new(i,:), "g", 'LineWidth', 1) 
+        % hold on
+        % plot(q_dot_max_inertial_frame_new(i,:), "g", 'LineWidth', 1) 
+
+            % hold on
+            % plot(ctwist(i,:),":k", 'LineWidth', 2) 
+            % hold on
     end
     title(['u_',num2str(i)])
     
