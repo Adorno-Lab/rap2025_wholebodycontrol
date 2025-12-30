@@ -388,7 +388,9 @@ void B1Z1WholeBodyControl::control_loop()
                             }
                     }
 
-                    auto [A,b] = impl_->robot_constraint_manager_->get_inequality_constraints(q);
+                    auto [Alim, blim] = impl_->kin_mobile_manipulator_->compute_saturation_constraints(q, {q_dot_min, q_dot_max});
+                    impl_->robot_constraint_manager_->add_inequality_constraint(Alim, blim);
+                    auto [A,b] = impl_->robot_constraint_manager_->get_inequality_constraints(q, true, false);
                     controller.set_inequality_constraint(A,b);
                     u = controller.compute_setpoint_control_signal(q, xd.translation().vec4());
                 }
