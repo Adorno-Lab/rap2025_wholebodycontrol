@@ -21,8 +21,8 @@
 # ################################################################
 */
 #include "sas_control_unitree_b1z1.hpp"
-#include "UnitreeB1Z1CoppeliaSimZMQRobot.hpp"
-#include "UnitreeB1Z1MobileRobot.hpp"
+#include "dqrobotics/interfaces/coppeliasim/robots/UnitreeB1Z1CoppeliaSimZMQRobot.h"
+#include "dqrobotics/robots/UnitreeB1Z1MobileRobot.h"
 #include <dqrobotics_extensions/robot_constraint_manager/robot_constraint_manager.hpp>
 #include <dqrobotics/solvers/DQ_QPOASESSolver.h>
 #include <dqrobotics/interfaces/coppeliasim/robots/FrankaEmikaPandaCoppeliaSimZMQRobot.h>
