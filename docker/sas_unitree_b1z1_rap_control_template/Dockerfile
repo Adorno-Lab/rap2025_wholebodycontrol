@@ -27,8 +27,11 @@ WORKDIR /app
 # Copy files from this repository to the image
 COPY ./dependencies /app/dependencies
 COPY ./software/ROS2/ros2_ws /app/software/ROS2/ros2_ws
+COPY ./software/submodules/unitree_kinematics /app/software/submodules/unitree_kinematics
 
 
+RUN mkdir -p /software && \
+    ln -sf /app/software/submodules /software/submodules
 RUN cp -r /app/software/ROS2/ros2_ws/src/sas_extended_kalman_filter_unitree_b1 ~/ros2_ws/src
 RUN cp -r /app/software/ROS2/ros2_ws/src/sas_control_unitree_b1z1 ~/ros2_ws/src
 RUN cp -r /app/software/ROS2/ros2_ws/src/sas_unitree_b1z1_rap_control_template ~/ros2_ws/src
