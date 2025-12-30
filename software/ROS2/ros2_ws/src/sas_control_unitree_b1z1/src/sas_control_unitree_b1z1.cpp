@@ -415,7 +415,7 @@ void B1Z1WholeBodyControl::control_loop()
                                             0,0,0,0, 0,0,1,0).finished();
 
             MatrixXd Jhol =  impl_->kin_mobile_manipulator_->pose_jacobian(q,2);
-            MatrixXd Jtwist_b =  Is*2*hamiplus8(x.conj())*Jhol.block(0,0,8,3);
+            MatrixXd Jtwist_b =  Is*2*hamiplus8(impl_->kin_mobile_manipulator_->fkm(q,2).conj())*Jhol.block(0,0,8,3);
 
             MatrixXd Ast = Jtwist_b;
             MatrixXd zero_3x6 = MatrixXd::Zero(3,6);
@@ -445,20 +445,17 @@ void B1Z1WholeBodyControl::control_loop()
             MatrixXd Alim(18,9);
             Alim <<part1, part2, part3, part4;
 
-            VectorXd q_dot_max_base = q_dot_max.head(3);
-            VectorXd pb1(8);
-            pb1 << 0,0,0, q_dot_max_base(2), 0,q_dot_max_base(0),q_dot_max_base(1),0;
 
-            VectorXd q_dot_min_base = q_dot_min.head(3);
-            VectorXd pb2(8);
-            pb2 << 0,0,0, -q_dot_min_base(2), 0, -q_dot_min_base(0), -q_dot_min_base(1),0;
 
             VectorXd blim(18);
-            blim << q_dot_max_base.head(3), -q_dot_min_base.head(3), q_dot_max.tail(6), -q_dot_min.tail(6);
+            blim << q_dot_max(2),  q_dot_max(0), q_dot_max(1),
+                   -q_dot_min(2), -q_dot_min(0), -q_dot_min(1),
+                    q_dot_max.tail(6),
+                   -q_dot_min.tail(6);
 
             std::cout<<""<<std::endl;
 
-            std::cout<<blim.transpose()<<std::endl;
+            std::cout<<Alim<<std::endl;
             std::cout<<""<<std::endl;
 
 

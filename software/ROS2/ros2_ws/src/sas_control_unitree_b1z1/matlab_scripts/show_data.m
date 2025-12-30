@@ -4,7 +4,7 @@ clear all
 close all
 clc
 
-load("result2.mat")
+load("sas_log_2025_12_30_18_27_47.mat")
 %load("/home/s55322jq/sas_log_2025_12_04_13_45_13.mat")
 
 
@@ -21,8 +21,10 @@ q_dot_max_inertial_frame = q_dot_max_inertial';
 robot_pose = x';
 configuration = q';
 
-% ctwist = ctwist';
-
+ctwist = ctwist';
+nctwist(1,:) = ctwist(2,:);
+nctwist(2,:) = ctwist(3,:);
+nctwist(3,:) = ctwist(1,:);
 
 h1 = figure;
 set(h1, 'DefaultTextFontSize', 10);
@@ -70,49 +72,36 @@ end
 for i=1:3
 
     subplot(3,1,i)
-    plot(u_cmd(i,:),"b",'LineWidth', 2) 
-    hold on
-    plot(q_dot_min_inertial_frame(i,:), "--b") 
-    hold on
-    plot(q_dot_max_inertial_frame(i,:), "--b")
-    % 
+    plot(u_cmd(i,:),"--b",'LineWidth', 2)  
     hold on
     plot(q_dot_min_body_frame(i,:), "--r", 'LineWidth', 2) 
     hold on
     plot(q_dot_max_body_frame(i,:), "--r", 'LineWidth', 2)
 
 
-    if i < 3
+    if i <= 3
             hold on
             plot(ub_cmd(i,:),"r", 'LineWidth', 2) 
-            hold on
-        plot(q_dot_min_body_frame_computed(i,:), "m", 'LineWidth', 1) 
-        hold on
-        plot(q_dot_max_body_frame_computed(i,:), "m", 'LineWidth', 1) 
-
-        % hold on
-        % plot(q_dot_min_inertial_frame_new(i,:), "g", 'LineWidth', 1) 
-        % hold on
-        % plot(q_dot_max_inertial_frame_new(i,:), "g", 'LineWidth', 1) 
-
-            % hold on
-            % plot(ctwist(i,:),":k", 'LineWidth', 2) 
-            % hold on
+            hold on 
     end
     title(['u_',num2str(i)])
+
+
+
+    % plot(nctwist(i,:),":k", 'LineWidth', 2) 
+    % hold on
     
     % 
     % 
     hold on
 
 
-    %plot(0.1*robot_reached_region, "g", 'LineWidth', 4)
 
     set(gca, 'FontSize', fontsize );
     fig = gcf;
     fig.Color = [1 1 1];
     box('off');
-    legend({'u_{wf}','lb_{wf}', 'ub_{wf}', 'lb_{bf}', 'ub_{bf}', 'u_{bf}'},'Location','northeast')
+    legend({'u_{wf}','lb_{wf}', 'ub_{wf}', 'u_{bf}'},'Location','northeast')
 
 end
 
