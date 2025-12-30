@@ -40,12 +40,12 @@ jobs:
           - name: Set up Docker Buildx
             uses: docker/setup-buildx-action@v3
           
-          - name: Build and push sas_robot_driver_unitree_b1z1 Docker image
-            uses: docker/build-push-action@v6
-            with:
-              file: docker/sas_robot_driver_unitree_b1z1/Dockerfile
-              push: false
-              tags: ${{ env.REGISTRY }}/${{ env.NAMESPACE}}/sas_robot_driver_unitree_b1z1:latest
+          #- name: Build and push sas_robot_driver_unitree_b1z1 Docker image
+          #  uses: docker/build-push-action@v6
+          #  with:
+          #    file: docker/sas_robot_driver_unitree_b1z1/Dockerfile
+          #    push: false
+          #    tags: ${{ env.REGISTRY }}/${{ env.NAMESPACE}}/sas_robot_driver_unitree_b1z1:latest
 
           - name: Build and push sas_coppeliasim_unitree_b1z1 Docker image
             uses: docker/build-push-action@v6
@@ -54,12 +54,12 @@ jobs:
               push: false
               tags: ${{ env.REGISTRY }}/${{ env.NAMESPACE}}/sas_coppeliasim_unitree_b1z1:latest 
 
-          - name: Build and push sas_control_unitree_b1z1 Docker image
-            uses: docker/build-push-action@v6
-            with:
-              file: docker/sas_control_unitree_b1z1/Dockerfile
-              push: false
-              tags: ${{ env.REGISTRY }}/${{ env.NAMESPACE}}/sas_control_unitree_b1z1:latest    
+          #- name: Build and push sas_control_unitree_b1z1 Docker image
+          #  uses: docker/build-push-action@v6
+          #  with:
+          #    file: docker/sas_control_unitree_b1z1/Dockerfile
+          #    push: false
+          #    tags: ${{ env.REGISTRY }}/${{ env.NAMESPACE}}/sas_control_unitree_b1z1:latest    
 
           - name: Build and push sas_unitree_b1z1_rap_control_template Docker image
             uses: docker/build-push-action@v6
