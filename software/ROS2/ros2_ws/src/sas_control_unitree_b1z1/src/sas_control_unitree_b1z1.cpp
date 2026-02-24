@@ -382,7 +382,7 @@ void B1Z1WholeBodyControl::control_loop()
                     robot_reached_region_ = false;
 
             } catch (const std::exception& e) {
-                _publish_target_B1_commands(VectorXd::Zero(3));
+                impl_->robot_client_->set_target_b1_planar_joint_velocities(VectorXd::Zero(3));
                 RCLCPP_INFO_STREAM(node_->get_logger(), "::QP not solved!");
                 RCLCPP_INFO_STREAM(node_->get_logger(), e.what());
                 u = VectorXd::Zero(9);
