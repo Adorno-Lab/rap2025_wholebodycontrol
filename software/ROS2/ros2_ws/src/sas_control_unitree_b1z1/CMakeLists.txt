@@ -27,7 +27,7 @@ find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 
 set(REPOSITORY_DIR ${CMAKE_SOURCE_DIR}/../../../../../)
-include_directories(${REPOSITORY_DIR}/software/submodules/unitree_kinematics/include/)
+#include_directories(${REPOSITORY_DIR}/software/submodules/unitree_kinematics/include/)
 
 add_library(${PROJECT_NAME} SHARED
     src/sas_control_unitree_b1z1.cpp
@@ -36,9 +36,9 @@ add_library(${PROJECT_NAME} SHARED
     #src/UnitreeB1Z1MobileRobot
 
 
-    ${REPOSITORY_DIR}/software/submodules/unitree_kinematics/src/robots/UnitreeB1Z1MobileRobot.cpp
-    ${REPOSITORY_DIR}/software/submodules/unitree_kinematics/src/robots/UnitreeZ1Robot.cpp
-    ${REPOSITORY_DIR}/software/submodules/unitree_kinematics/src/interfaces/coppeliasim/robots/UnitreeB1Z1CoppeliaSimZMQRobot.cpp
+    #${REPOSITORY_DIR}/software/submodules/unitree_kinematics/src/robots/UnitreeB1Z1MobileRobot.cpp
+    #${REPOSITORY_DIR}/software/submodules/unitree_kinematics/src/robots/UnitreeZ1Robot.cpp
+    #${REPOSITORY_DIR}/software/submodules/unitree_kinematics/src/interfaces/coppeliasim/robots/UnitreeB1Z1CoppeliaSimZMQRobot.cpp
     )
 
 target_link_libraries(${PROJECT_NAME}
@@ -47,6 +47,7 @@ target_link_libraries(${PROJECT_NAME}
     robot_constraint_manager
     Eigen3::Eigen
     qpOASES
+    unitree_kinematics
 
 )
 ament_target_dependencies(${PROJECT_NAME}

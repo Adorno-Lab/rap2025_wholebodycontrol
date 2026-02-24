@@ -28,7 +28,7 @@
 #include <dqrobotics/interfaces/coppeliasim/robots/FrankaEmikaPandaCoppeliaSimZMQRobot.h>
 #include <sas_core/eigen3_std_conversions.hpp>
 #include <dqrobotics/robot_control/DQ_ClassicQPController.h>
-#include <sas_robot_driver/sas_robot_driver_client.hpp>
+#include <sas_unitree_b1z1_robot_client/UnitreeB1Z1RobotClient.hpp>
 
 namespace sas
 {
@@ -42,7 +42,8 @@ public:
     std::shared_ptr<DQ_Kinematics> robot_model_;
     std::shared_ptr<UnitreeB1Z1MobileRobot> kin_mobile_manipulator_;
     std::shared_ptr<UnitreeB1Z1CoppeliaSimZMQRobot> robot_cs_;
-    std::shared_ptr<sas::RobotDriverClient> rdi_;
+    //std::shared_ptr<sas::RobotDriverClient> rdi_;
+
 };
 
 /**
