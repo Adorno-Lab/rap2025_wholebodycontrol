@@ -27,18 +27,11 @@ find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 
 set(REPOSITORY_DIR ${CMAKE_SOURCE_DIR}/../../../../../)
-#include_directories(${REPOSITORY_DIR}/software/submodules/unitree_kinematics/include/)
+include_directories(${REPOSITORY_DIR}/software/submodules/sas_unitree_b1z1_control_template/utils/)
 
 add_library(${PROJECT_NAME} SHARED
     src/sas_control_unitree_b1z1.cpp
-    #src/UnitreeB1Z1CoppeliaSimZMQRobot.cpp
-    #src/UnitreeZ1Robot.cpp
-    #src/UnitreeB1Z1MobileRobot
-
-
-    #${REPOSITORY_DIR}/software/submodules/unitree_kinematics/src/robots/UnitreeB1Z1MobileRobot.cpp
-    #${REPOSITORY_DIR}/software/submodules/unitree_kinematics/src/robots/UnitreeZ1Robot.cpp
-    #${REPOSITORY_DIR}/software/submodules/unitree_kinematics/src/interfaces/coppeliasim/robots/UnitreeB1Z1CoppeliaSimZMQRobot.cpp
+    ${REPOSITORY_DIR}/software/submodules/sas_unitree_b1z1_control_template/utils/sas_unitree_b1z1_robot_client/UnitreeB1Z1RobotClient.cpp
     )
 
 target_link_libraries(${PROJECT_NAME}
