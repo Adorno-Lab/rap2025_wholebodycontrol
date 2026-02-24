@@ -138,7 +138,7 @@ protected:
 
     bool _should_shutdown() const;
 
-    void _publish_target_B1_commands(const VectorXd& u_base_vel);
+    //void _publish_target_B1_commands(const VectorXd& u_base_vel);
     void _publish_coppeliasim_frame_x(const DQ& pose);
     void _connect();
     void _update_kinematic_model();
