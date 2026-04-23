@@ -19,6 +19,8 @@ RUN cd ~/git && git clone https://github.com/Adorno-Lab/robot_constraint_manager
 RUN cd ~/git/robot_constraint_manager && mkdir -p build && cd build && cmake .. && make && make install
 
 
+RUN cd ~/git && git clone https://github.com/Adorno-Lab/sas_unitree_b1z1_control_template
+RUN cp -r ~/git/sas_unitree_b1z1_control_template/ros2_ws/src/unitree_monitor /app/software/ROS2/ros2_ws/src/unitree_monitor
 
 
 WORKDIR /app
