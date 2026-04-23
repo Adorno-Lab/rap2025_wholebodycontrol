@@ -35,10 +35,6 @@ COPY ./software/submodules /app/software/submodules
 
 
 
-# Clone this rep
-RUN mkdir -p ~/git/
-RUN cd ~/git/ && git clone https://github.com/Adorno-Lab/rap2025_wholebodycontrol --recursive 
-RUN cd ~/git/rap2025_wholebodycontrol && git pull
 
 
 
@@ -48,6 +44,10 @@ RUN cd /app/software/ROS2/ros2_ws/\
 
 RUN echo "alias launch_sas_white_control='cdros2 && source install/setup.bash && ros2 launch sas_control_unitree_b1z1 sas_control_unitree_b1z1_white_launch.py ' " >> /etc/bash_env
 RUN echo "alias launch_sas_black_control='cdros2 && source install/setup.bash && ros2 launch sas_control_unitree_b1z1 sas_control_unitree_b1z1_black_launch.py ' " >> /etc/bash_env
+
+
+
+RUN ldconfig
 RUN echo "source /etc/bash_env" >> ~/.bashrc
 
 
