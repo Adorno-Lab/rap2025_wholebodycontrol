@@ -120,23 +120,17 @@ void B1Z1WholeBodyControl::_update_kinematic_model()
     DQ X_J1_OFFSET;
     VectorXd q;
     // wait for the topics
-    if (configuration_.debug_wait_for_topics)
+    while (!impl_->robot_client_->is_arm_data_available() ||  !is_unit(impl_->robot_client_->get_b1_pose()))
     {
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Waiting for robot state from ROS2...");
-        while (q_arm_.size() == 0 or not is_unit(robot_pose_)){
-            rclcpp::spin_some(node_);
-            if (_should_shutdown())
-                break;
-        };
-    }else{
-        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::[DEBUG MODE] No Waiting for topics!");
-        robot_pose_ = DQ{1};
-        q_arm_ = VectorXd::Zero(6);
         rclcpp::spin_some(node_);
-    }
+        if (_should_shutdown())
+            break;
+    };
 
     RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Robot state from ROS2 OK!");
     RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Reading info from CoppeliaSim...");
+
     const int iter1 = 5;
     for (int i=0; i<iter1;i++)
     {
@@ -144,7 +138,9 @@ void B1Z1WholeBodyControl::_update_kinematic_model()
         {
             X_J1 = impl_->cs_->get_object_pose(z1_jointnames_.at(0));
             X_IMU = impl_->cs_->get_object_pose(configuration_.cs_B1_robotname+"/trunk_respondable");
-            q = DQ_robotics_extensions::Numpy::vstack(_get_mobile_platform_configuration_from_pose(robot_pose_), q_arm_);
+            using DQ_robotics_extensions::Numpy;
+            using DQ_robotics_extensions::get_planar_joint_configuration_from_pose;
+            q = Numpy::vstack(get_planar_joint_configuration_from_pose(impl_->robot_client_->get_b1_pose()), impl_->robot_client_->get_arm_joint_states());
             RCLCPP_INFO_STREAM(node_->get_logger(), "::Reading info from CoppeliaSim: "+std::to_string(i)+"/"+std::to_string(iter1));
             X_J1_OFFSET = X_IMU.conj()*X_J1;
         }
@@ -164,8 +160,9 @@ void B1Z1WholeBodyControl::_update_kinematic_model()
         impl_->kin_mobile_manipulator_->update_base_offset(X_J1_OFFSET);
         impl_->kin_mobile_manipulator_->update_base_height_from_IMU(X_IMU);
         impl_->robot_model_ = std::shared_ptr<DQ_Kinematics>(impl_->kin_mobile_manipulator_);
-        DQ x = impl_->robot_model_->fkm(q);
-        impl_->cs_->set_object_pose(configuration_.cs_desired_frame, x);
+        //DQ x = impl_->robot_model_->fkm(q);
+        //impl_->cs_->set_object_pose(configuration_.cs_desired_frame, x);
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Model updated!");
     }
 
 }
@@ -267,7 +264,7 @@ void B1Z1WholeBodyControl::control_loop()
 
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Starting control loop...");
 
-        VectorXd qi_arm = q_arm_;  // For numerical integration
+        VectorXd qi_arm = impl_->robot_client_->get_arm_joint_states();  // For numerical integration
         VectorXd u;
 
 
@@ -308,7 +305,8 @@ void B1Z1WholeBodyControl::control_loop()
             rclcpp::spin_some(node_);
             clock_.update_and_sleep();
             rclcpp::spin_some(node_);
-            VectorXd q = DQ_robotics_extensions::Numpy::vstack(_get_mobile_platform_configuration_from_pose(robot_pose_), qi_arm);
+            VectorXd q = Numpy::vstack(DQ_robotics_extensions::get_planar_joint_configuration_from_pose(impl_->robot_client_->get_b1_pose()),
+                                       qi_arm);
             DQ x = impl_->robot_model_->fkm(q);
             DQ xd = x;
             _publish_coppeliasim_frame_x(x);
