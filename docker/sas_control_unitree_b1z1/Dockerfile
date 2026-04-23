@@ -5,7 +5,7 @@ ENV BASH_ENV="/etc/bash_env"
 RUN apt update && apt-get install ros-jazzy-sas-* -y
 
 # Install QT
-#RUN apt update && apt-get install qt6-base-dev qt6-tools-dev-tools -y
+RUN apt update && apt-get install qt6-base-dev qt6-tools-dev-tools -y
 
 
 # Install robot_constraint_editor

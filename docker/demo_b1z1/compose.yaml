@@ -40,6 +40,31 @@ services:
       && chmod +x launch_scene.sh
       && . ./launch_scene_and_ROS2_drivers.sh "
 
+
+  micro_ros_agent:
+    image: microros/micro-ros-agent:jazzy
+    network_mode: "host"  # Share host network for ROS2 communication
+    command: udp4 --port 8888 -v6
+    restart: unless-stopped  # Optional: auto-restart if it crashes    
+
+  unitree_monitor:
+    build:
+      context: ../..  
+      dockerfile: docker/sas_control_unitree_b1z1/Dockerfile
+    environment:
+      DISPLAY: $DISPLAY  # x server related
+      ROS_DOMAIN_ID: 77 # Set ROS domain ID for all ROS2 nodes
+    privileged: true # Needed for some gpu configurations.
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix # x server related
+      - ~/.Xauthority:/root/.Xauthority # x server related
+    network_mode: "host" 
+    ipc: "host"
+    command: /bin/bash -c "
+      source /opt/ros/jazzy/setup.bash;
+      cd /app/software/ROS2/ros2_ws/ && colcon build && source install/setup.bash ;
+      ros2 run unitree_monitor unitree_monitor"  
+
 #  sas_control_unitree_b1z1:
     #build: https://github.com/Adorno-Lab/rap2025_wholebodycontrol.git#main:docker/sas_control_unitree_b1z1
 #    image: juanjqo/sas_control_unitree_b1z1
