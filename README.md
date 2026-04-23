@@ -3,8 +3,17 @@
 # rap2025_wholebodycontrol
 
 ```shell
-mkdir -p ~/git/
+mkdir -p ~/git/ && cd /git/
 git clone https://github.com/Adorno-Lab/rap2025_wholebodycontrol.git --recursive
+```
+
+
+## Simulation test
+
+```shell
+cd ~/git/rap2025_wholebodycontrol/docker/demo_b1z1_simulation
+xhost +local:root
+docker compose up --build
 ```
 
 
