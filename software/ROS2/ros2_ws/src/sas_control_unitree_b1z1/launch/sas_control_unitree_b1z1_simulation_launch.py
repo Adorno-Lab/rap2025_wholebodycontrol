@@ -21,6 +21,8 @@ def generate_launch_description():
             package='sas_control_unitree_b1z1',
             executable='sas_control_unitree_b1z1_node',
             name='b1z1_1',
+            output='screen',  
+            emulate_tty=True,  
             namespace="",
             parameters=[{
                 "cs_host": "localhost",
