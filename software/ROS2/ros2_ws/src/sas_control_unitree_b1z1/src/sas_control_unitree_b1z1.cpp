@@ -28,7 +28,7 @@
 #include <dqrobotics/interfaces/coppeliasim/robots/FrankaEmikaPandaCoppeliaSimZMQRobot.h>
 #include <sas_core/eigen3_std_conversions.hpp>
 #include <dqrobotics/robot_control/DQ_ClassicQPController.h>
-#include <sas_robot_driver/sas_robot_driver_client.hpp>
+#include <sas_unitree_b1z1_robot_client/UnitreeB1Z1RobotClient.hpp>
 
 namespace sas
 {
@@ -42,7 +42,9 @@ public:
     std::shared_ptr<DQ_Kinematics> robot_model_;
     std::shared_ptr<UnitreeB1Z1MobileRobot> kin_mobile_manipulator_;
     std::shared_ptr<UnitreeB1Z1CoppeliaSimZMQRobot> robot_cs_;
-    std::shared_ptr<sas::RobotDriverClient> rdi_;
+    //std::shared_ptr<sas::RobotDriverClient> rdi_;
+    std::shared_ptr<UnitreeB1Z1RobotClient> robot_client_;
+
 };
 
 /**
@@ -67,27 +69,11 @@ B1Z1WholeBodyControl::B1Z1WholeBodyControl(std::shared_ptr<Node> &node,
     impl_->cs_ = std::make_shared<DQ_CoppeliaSimInterfaceZMQ>();
     impl_->qpoases_solver_ = std::make_shared<DQ_QPOASESSolver>();
 
-    using MODE_BLACKLIST_FLAG = sas::RobotDriverClient::MODE_BLACKLIST_FLAG;
-    std::vector<MODE_BLACKLIST_FLAG> blacklist_mode = {MODE_BLACKLIST_FLAG::WATCHDOG_CONTROL};
-    impl_->rdi_ = std::make_shared<sas::RobotDriverClient>(node_, configuration_.Z1_topic_prefix, blacklist_mode);
+    impl_->robot_client_ = std::make_shared<UnitreeB1Z1RobotClient>(node_,
+                                                                    configuration_.B1_topic_prefix,
+                                                                    configuration_.Z1_topic_prefix,
+                                                                    UnitreeB1Z1RobotClient::MODE::CONTROL);
 
-
-    //publisher_target_arm_positions_ = node_->create_publisher<std_msgs::msg::Float64MultiArray>(
-    //    configuration_.Z1_topic_prefix + "/set/target_joint_positions", 1);
-
-    publisher_target_holonomic_velocities_ = node_->create_publisher<std_msgs::msg::Float64MultiArray>(
-        configuration_.B1_topic_prefix + "/set/holonomic_target_velocities", 1);
-
-    subscriber_pose_state_ = node_->create_subscription<geometry_msgs::msg::PoseStamped>(
-        configuration_.B1_topic_prefix + "/get/ekf/robot_pose", 1, std::bind(&B1Z1WholeBodyControl::_callback_pose_state,
-                  this, std::placeholders::_1)
-        );
-
-
-    subscriber_Z1_joint_states_ = node_->create_subscription<sensor_msgs::msg::JointState>(
-        configuration_.Z1_topic_prefix+ "/get/joint_states", 1, std::bind(&B1Z1WholeBodyControl::_callback_Z1_joint_states,
-                  this, std::placeholders::_1)
-        );
 
     publisher_coppeliasim_frame_x_ = node_->create_publisher<geometry_msgs::msg::PoseStamped>(
         configuration_.B1_topic_prefix + "/set/coppeliasim_frame_x", 1);
@@ -108,7 +94,14 @@ B1Z1WholeBodyControl::B1Z1WholeBodyControl(std::shared_ptr<Node> &node,
 }
 
 
-
+void B1Z1WholeBodyControl::_spin_and_update(const std::string& msg)
+{
+    rclcpp::spin_some(node_);
+    clock_.update_and_sleep();
+    rclcpp::spin_some(node_);
+    RCLCPP_INFO_STREAM(node_->get_logger(), msg);
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+}
 
 
 void B1Z1WholeBodyControl::_connect()
@@ -216,14 +209,12 @@ void B1Z1WholeBodyControl::control_loop()
         clock_.init();
         rclcpp::spin_some(node_);
 
-        while (!new_robot_pose_data_available_ && !_should_shutdown())
+        // Wait for the robot drivers
+        while (!impl_->robot_client_->is_enabled() && !_should_shutdown())
         {
-            rclcpp::spin_some(node_);
-            clock_.update_and_sleep();
-            rclcpp::spin_some(node_);
-            RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Waiting for ekf robot pose data");
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            _spin_and_update(std::string("Waiting for robot data"));
         }
+        _spin_and_update(std::string("Robot is ready!"));
 
         while (!new_coppeliasim_xd_data_available_ && !_should_shutdown())
         {
@@ -233,16 +224,6 @@ void B1Z1WholeBodyControl::control_loop()
             RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Waiting for desired pose from CoppeliaSim ");
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
-
-        while(!impl_->rdi_->is_enabled() && !_should_shutdown())
-        {
-            rclcpp::spin_some(node_);
-            clock_.update_and_sleep();
-            rclcpp::spin_some(node_);
-            RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Waiting for RobotDriverClient to be enabled");
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        }
-
 
 
         _connect();
@@ -318,6 +299,8 @@ void B1Z1WholeBodyControl::control_loop()
             RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "sas_datalogger is disabled.");
         }
 
+        using DQ_robotics_extensions::Numpy;
+        using DQ_robotics_extensions::CVectorXd;
 
         while(!_should_shutdown())
         {
@@ -399,7 +382,7 @@ void B1Z1WholeBodyControl::control_loop()
                     robot_reached_region_ = false;
 
             } catch (const std::exception& e) {
-                _publish_target_B1_commands(VectorXd::Zero(3));
+                impl_->robot_client_->set_target_b1_planar_joint_velocities(VectorXd::Zero(3));
                 RCLCPP_INFO_STREAM(node_->get_logger(), "::QP not solved!");
                 RCLCPP_INFO_STREAM(node_->get_logger(), e.what());
                 u = VectorXd::Zero(9);
@@ -408,19 +391,12 @@ void B1Z1WholeBodyControl::control_loop()
             // Numerical integration for to command the arm at joint position level
             qi_arm = qi_arm + T_*u.tail(6);
 
-            // publish the commands on the respective topics
-            //_publish_target_Z1_commands(qi_arm, target_gripper_position_);
-            using DQ_robotics_extensions::Numpy;
-            using DQ_robotics_extensions::CVectorXd;
-            impl_->rdi_->send_target_joint_positions(Numpy::vstack(qi_arm, CVectorXd({target_gripper_position_})));
-            //impl_->rdi_->send_target_joint_velocities(Numpy::vstack(u.tail(6), CVectorXd({0.0}))); // this is not working well.
-
+            ///-----------------Command the robot------------------------------------------------
             // The u.head(3) command velocities for the B1 robot are given with respect to the inertial frame.
             // However, we need to send the velocities with respect to the B1 frame.
-            VectorXd ub = _get_planar_joint_velocities_at_body_frame(u.head(3));
-
-            // publish the commands on the respective topics
-            _publish_target_B1_commands(ub);
+            VectorXd ub = DQ_robotics_extensions::get_planar_joint_configuration_velocities_at_body_frame(impl_->robot_client_->get_b1_pose(), u.head(3));
+            impl_->robot_client_->set_target_b1_planar_joint_velocities(ub);
+            impl_->robot_client_->set_arm_joint_positions(Numpy::vstack(qi_arm, CVectorXd({target_gripper_position_})));
 
 
 
@@ -451,17 +427,7 @@ void B1Z1WholeBodyControl::control_loop()
     }
 }
 
-void B1Z1WholeBodyControl::_callback_Z1_joint_states(const sensor_msgs::msg::JointState &msg)
-{
-    VectorXd qarm = sas::std_vector_double_to_vectorxd(msg.position);
-    q_arm_ = qarm.head(6);
-}
 
-void B1Z1WholeBodyControl::_callback_pose_state(const geometry_msgs::msg::PoseStamped &msg)
-{
-    robot_pose_ =   sas::geometry_msgs_pose_stamped_to_dq(msg);
-    new_robot_pose_data_available_ = true;
-}
 
 void B1Z1WholeBodyControl::_callback_gripper_position_from_coppeliasim(const std_msgs::msg::Float64MultiArray &msg)
 {
@@ -485,38 +451,12 @@ bool B1Z1WholeBodyControl::_should_shutdown() const
     return (*st_break_loops_);
 }
 
-void B1Z1WholeBodyControl::_publish_target_B1_commands(const VectorXd &u_base_vel)
-{
-    VectorXd u_base = u_base_vel;
-    // The B1 robot does not move with velocities below 0.03, but the legs continue to move.
-    // Therefore, we enforce a deadband.
-    const double min_vel = 0.032;
-    for (int i=0;i<u_base.size();i++)
-    {
-        if (std::abs(u_base(i))<=min_vel)
-            u_base(i) = 0.0;
-    }
-    std_msgs::msg::Float64MultiArray ros_msg_u_base;
-    ros_msg_u_base.data = sas::vectorxd_to_std_vector_double(u_base_vel);
-    publisher_target_holonomic_velocities_->publish(ros_msg_u_base);
-}
 
 
 
 void B1Z1WholeBodyControl::_publish_coppeliasim_frame_x(const DQ &pose)
 {
-    geometry_msgs::msg::PoseStamped ros_msg_frame_x;
-    VectorXd position = pose.translation().vec3();
-    ros_msg_frame_x.pose.position.x = position(0);
-    ros_msg_frame_x.pose.position.y = position(1);
-    ros_msg_frame_x.pose.position.z = position(2);
-
-    VectorXd orientation = pose.rotation().vec4();
-    ros_msg_frame_x.pose.orientation.w = orientation(0);
-    ros_msg_frame_x.pose.orientation.x = orientation(1);
-    ros_msg_frame_x.pose.orientation.y = orientation(2);
-    ros_msg_frame_x.pose.orientation.z = orientation(3);
-
+    geometry_msgs::msg::PoseStamped ros_msg_frame_x = sas::dq_to_geometry_msgs_pose_stamped(pose);
     publisher_coppeliasim_frame_x_->publish(ros_msg_frame_x);
 }
 

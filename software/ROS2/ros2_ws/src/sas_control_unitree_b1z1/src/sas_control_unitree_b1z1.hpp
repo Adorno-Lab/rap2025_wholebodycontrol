@@ -100,14 +100,14 @@ private:
     std::shared_ptr<rclcpp::TimerBase> timer_;
 
 
-    Subscription <sensor_msgs::msg::JointState>::SharedPtr subscriber_Z1_joint_states_;
-    void _callback_Z1_joint_states(const sensor_msgs::msg::JointState& msg);
+    //Subscription <sensor_msgs::msg::JointState>::SharedPtr subscriber_Z1_joint_states_;
+    //void _callback_Z1_joint_states(const sensor_msgs::msg::JointState& msg);
 
-    bool new_robot_pose_data_available_;
-    Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr subscriber_pose_state_;
-    void _callback_pose_state(const geometry_msgs::msg::PoseStamped& msg);
+   // bool new_robot_pose_data_available_;
+   // Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr subscriber_pose_state_;
+   // void _callback_pose_state(const geometry_msgs::msg::PoseStamped& msg);
 
-    Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr publisher_target_holonomic_velocities_;
+    //Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr publisher_target_holonomic_velocities_;
     //Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr publisher_target_arm_positions_;
 
 
@@ -126,6 +126,10 @@ private:
 
 
 
+
+
+
+
     //Implementation details that depend on FRI source files.
     class Impl;
     std::unique_ptr<Impl> impl_;
@@ -134,10 +138,11 @@ protected:
 
     bool _should_shutdown() const;
 
-    void _publish_target_B1_commands(const VectorXd& u_base_vel);
+    //void _publish_target_B1_commands(const VectorXd& u_base_vel);
     void _publish_coppeliasim_frame_x(const DQ& pose);
     void _connect();
     void _update_kinematic_model();
+    void _spin_and_update(const std::string& msg);
 
     VectorXd _get_mobile_platform_configuration_from_pose(const DQ& pose) const;
 
