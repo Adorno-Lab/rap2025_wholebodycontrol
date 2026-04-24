@@ -31,7 +31,7 @@ Custom network configuration used for this repository
 
 ```shell
 cd ~/git/rap2025_wholebodycontrol/
-docker build -f docker/sas_control_unitree_b1z1/Dockerfile -t sas_unitree_b1z1_rap_control_template .
+docker build --no-cache -f docker/sas_control_unitree_b1z1/Dockerfile -t sas_unitree_b1z1_rap_control_template .
 ```
 
 ```shell
