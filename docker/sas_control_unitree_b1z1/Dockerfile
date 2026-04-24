@@ -44,8 +44,8 @@ COPY ./software/submodules /app/software/submodules
 RUN cd /app/software/ROS2/ros2_ws/\
 && /bin/bash -c "source /opt/ros/jazzy/setup.bash; colcon build && source install/setup.bash" 
 
-RUN echo "alias launch_sas_white_control='cdros2 && source install/setup.bash && ros2 launch sas_control_unitree_b1z1 sas_control_unitree_b1z1_white_full_drivers_launch.py ' " >> /etc/bash_env
-RUN echo "alias launch_sas_black_control='cdros2 && source install/setup.bash && ros2 launch sas_control_unitree_b1z1 sas_control_unitree_b1z1_black_full_drivers_launch.py ' " >> /etc/bash_env
+RUN echo "alias launch_sas_white_control='export ROS_DOMAIN_ID=77; cdros2 && source install/setup.bash && ros2 launch sas_control_unitree_b1z1 sas_control_unitree_b1z1_white_full_drivers_launch.py ' " >> /etc/bash_env
+RUN echo "alias launch_sas_black_control='export ROS_DOMAIN_ID=77; cdros2 && source install/setup.bash && ros2 launch sas_control_unitree_b1z1 sas_control_unitree_b1z1_black_full_drivers_launch.py ' " >> /etc/bash_env
 
 
 
