@@ -17,28 +17,44 @@ services:
       export ROS_DOMAIN_ID=77;
       ros2 launch motion_capture_tracking launch.py"
 
-  sas_coppeliasim_unitree_b1z1:
-    build: https://github.com/Adorno-Lab/rap2025_wholebodycontrol.git#main:docker/sas_coppeliasim_unitree_b1z1
-    #image: juanjqo/sas_coppeliasim_unitree_b1z1
-    #platform: linux/amd64
+  coppeliasim:
+    image: murilomarinho/coppeliasim:noble_470rev4
+    stop_signal: SIGINT
+    platform: linux/amd64
     environment:
       DISPLAY: $DISPLAY # x server related
+      ROS_DOMAIN_ID: 77
     privileged: true # Needed for some gpu configurations.
     volumes:
-      #- repo-data:/root/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/sas_coppeliasim_unitree_b1z1/
+      - ../../coppeliasim_scenes:/app/coppeliasim_scenes
       - /tmp/.X11-unix:/tmp/.X11-unix # x server related
       - ~/.Xauthority:/root/.Xauthority # x server related
     network_mode: "host" # x server related
     ipc: "host"
     command: /bin/bash -c "
+      sleep 3;
+      cd "$$COPPELIASIM_PATH"
+      && ./coppeliaSim.sh -s0 /app/coppeliasim_scenes/B1_with_Z1_showcase.ttt"    
+
+
+  sas_coppeliasim_unitree_b1z1: ####
+    build:
+      context: ../..  
+      dockerfile: docker/sas_control_unitree_b1z1/Dockerfile
+    environment:
+      DISPLAY: $DISPLAY  # x server related
+      ROS_DOMAIN_ID: 77 # Set ROS domain ID for all ROS2 nodes
+    privileged: true # Needed for some gpu configurations.
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix # x server related
+      - ~/.Xauthority:/root/.Xauthority # x server related
+    network_mode: "host" 
+    ipc: "host"
+    command: /bin/bash -c "
       sleep 3; 
       source /opt/ros/jazzy/setup.bash;
-      export ROS_DOMAIN_ID=77;
-      cd ~/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/sas_coppeliasim_unitree_b1z1/scripts
-      && chmod +x launch_scene_and_ROS2_drivers.sh 
-      && chmod +x launch_ROS2_drivers.sh
-      && chmod +x launch_scene.sh
-      && . ./launch_scene_and_ROS2_drivers.sh "
+      cd /app/software/ROS2/ros2_ws/ && colcon build && source install/setup.bash ;
+      ros2 launch sas_coppeliasim_unitree_b1z1 sas_coppeliasim_unitree_b1z1_white_launch.py"    
 
 
   micro_ros_agent:
@@ -65,30 +81,22 @@ services:
       cd /app/software/ROS2/ros2_ws/ && colcon build && source install/setup.bash ;
       ros2 run unitree_monitor unitree_monitor"  
 
-#  sas_control_unitree_b1z1:
-    #build: https://github.com/Adorno-Lab/rap2025_wholebodycontrol.git#main:docker/sas_control_unitree_b1z1
-#    image: juanjqo/sas_control_unitree_b1z1
-#    platform: linux/amd64
-#    environment:
-#      DISPLAY: $DISPLAY # x server related
-#    privileged: true # Needed for some gpu configurations.
-#    volumes:
-#      #- repo-data:/root/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/sas_control_unitree_b1z1/
-#      - /tmp/.X11-unix:/tmp/.X11-unix # x server related
-#      - ~/.Xauthority:/root/.Xauthority # x server related
-#    network_mode: "host" # x server related.
-#    ipc: "host"
-#    command: /bin/bash -c "
-#      source /opt/ros/jazzy/setup.bash;
-#      export ROS_DOMAIN_ID=77;
-#      cd ~/ros2_ws/ && colcon build;
-#      source ~/ros2_ws/install/setup.bash ;
-#      sleep 10;
-#      ros2 launch sas_control_unitree_b1z1 sas_control_unitree_b1z1_launch.py "
-
-
-#volumes:
-#  repo-data:      
+  sas_datalogger:
+    image: murilomarinho/sas:jazzy    
+    stop_signal: SIGINT
+    platform: linux/amd64
+    environment:
+      DISPLAY: $DISPLAY # x server related
+      ROS_DOMAIN_ID: 77
+    privileged: true # Needed for some gpu configurations.
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix # x server related
+      - ~/.Xauthority:/root/.Xauthority # x server related
+    network_mode: "host" # x server related
+    ipc: "host"
+    command: /bin/bash -c "
+      source /opt/ros/jazzy/setup.bash;
+      ros2 run sas_datalogger sas_datalogger_node.py "    
 
 
 
