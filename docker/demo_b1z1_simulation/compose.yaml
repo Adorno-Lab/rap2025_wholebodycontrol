@@ -23,7 +23,7 @@ services:
   whole_body_control:
     build:
       context: ../..  
-      dockerfile: docker/sas_control_unitree_b1z1/Dockerfile
+      dockerfile: docker/sas_unitree_b1z1_rap_control_template/Dockerfile
     environment:
       DISPLAY: $DISPLAY  # x server related
       ROS_DOMAIN_ID: 77 # Set ROS domain ID for all ROS2 nodes
