@@ -160,8 +160,7 @@ void B1Z1WholeBodyControl::_update_kinematic_model()
         impl_->kin_mobile_manipulator_->update_base_offset(X_J1_OFFSET);
         impl_->kin_mobile_manipulator_->update_base_height_from_IMU(X_IMU);
         impl_->robot_model_ = std::shared_ptr<DQ_Kinematics>(impl_->kin_mobile_manipulator_);
-        //DQ x = impl_->robot_model_->fkm(q);
-        //impl_->cs_->set_object_pose(configuration_.cs_desired_frame, x);
+        impl_->cs_->set_object_pose(configuration_.cs_desired_frame, impl_->robot_model_->fkm(q));
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Model updated!");
     }
 
