@@ -56,7 +56,19 @@ Load the image
 docker load --input sas_unitree_b1z1_rap_control_template.tar.gz
 ```
 
+## On your Desktop computer
+
+```shell
+cd ~/git/rap2025_wholebodycontrol/docker/demo_b1z1/
+xhost +local:root
+docker compose up --build
+```
+
+## On your B1 computer
+
 Run the image
 ```shell
 docker run -it --name="sas_unitree_b1z1_rap_control_template" --rm --privileged --network=host sas_unitree_b1z1_rap_control_template /bin/bash
 ```
+
+
