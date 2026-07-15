@@ -420,7 +420,7 @@ void ControlExample::control_loop()
 */
 
 
-    VectorXd qarm = q.tail(6);
+
 
     while(!_should_shutdown())
     {
@@ -431,7 +431,7 @@ void ControlExample::control_loop()
         //VectorXd q = DQ_robotics_extensions::Numpy::vstack(DQ_robotics_extensions::get_planar_joint_configuration_from_pose(impl_->robot_client_->get_b1_pose()),
         //                           qi_arm);
 
-        VectorXd q = DQ_robotics_extensions::Numpy::vstack(impl_->robot_client_->get_b1_pose().vec8(),qi_arm);
+        VectorXd q = DQ_robotics_extensions::Numpy::vstack(impl_->robot_client_->get_b1_pose().vec8(), qi_arm);
         DQ x = impl_->robot_model_->fkm(q);
         DQ xd = x;
         impl_->publish_coppeliasim_frame_x(x);
@@ -493,8 +493,8 @@ void ControlExample::control_loop()
 
         ///------------------
 
-        rcm->add_inequality_constraint(Aarm_config_min,  narm*(qarm-qarm_min)); //arm configuration
-        rcm->add_inequality_constraint(Aarm_config_max, -narm*(qarm-qarm_max)); //arm configuration
+        rcm->add_inequality_constraint(Aarm_config_min,  narm*(qi_arm-qarm_min)); //arm configuration
+        rcm->add_inequality_constraint(Aarm_config_max, -narm*(qi_arm-qarm_max)); //arm configuration
         rcm->add_inequality_constraint(A_sat,  b_sat); //arm configuration
 
         auto constraints = rcm->get_inequality_constraints(q,false, false);
@@ -510,13 +510,13 @@ void ControlExample::control_loop()
         VectorXd uarm = u.tail(6);
 
         //Numerical integration
-        qarm = qarm + T*uarm;
+        qi_arm = qi_arm + T*uarm;
 
 
 
 
     //    impl_->robot_client_->set_forced_stand_commands(rpy.x(),rpy.y(),rpy.z(), 0.0);
-        impl_->robot_client_->set_arm_joint_positions(DQ_robotics_extensions::Numpy::vstack(qarm, DQ_robotics_extensions::CVectorXd({0.0})));
+        impl_->robot_client_->set_arm_joint_positions(DQ_robotics_extensions::Numpy::vstack(qi_arm, DQ_robotics_extensions::CVectorXd({0.0})));
         //impl_->robot_client_->set_target_b1_twist(twist_u);
         VectorXd twist_u_vec = twist_u.vec6();
         VectorXd planar_vel = (VectorXd(3) << twist_u_vec(3), twist_u_vec(4), twist_u_vec(2)).finished();
