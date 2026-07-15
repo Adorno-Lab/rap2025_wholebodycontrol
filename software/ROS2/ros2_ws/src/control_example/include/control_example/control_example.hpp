@@ -49,6 +49,8 @@ struct ControlExampleConfiguration
     std::tuple<VectorXd, VectorXd> configuration_limits;
     std::tuple<VectorXd, VectorXd> configuration_velocity_limits;
     std::string vfi_file;
+    double controller_proportional_gain;
+    double controller_damping;
 };
 
 class ControlExample

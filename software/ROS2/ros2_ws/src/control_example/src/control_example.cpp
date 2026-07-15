@@ -41,6 +41,20 @@
 #include <sas_datalogger/sas_datalogger_client.hpp>
 
 
+VectorXd _get_rotation_error(const DQ &x, const DQ &xd)
+{
+    VectorXd error_1 =  vec4( x.rotation().conj()*xd.rotation() - 1 );
+    VectorXd error_2 =  vec4( x.rotation().conj()*xd.rotation() + 1 );
+
+    double norm_1 = error_1.norm();
+    double norm_2 = error_2.norm();
+
+    if (norm_1 < norm_2){
+        return error_1;
+    }else{
+        return error_2;
+    }
+}
 
 namespace sas
 {
@@ -325,8 +339,8 @@ void ControlExample::control_loop()
 
     //---------------------------------
     /// controller settings
-    double damping_ = 0.01;
-    double gain = 2.0;
+    const double& damping_ = configuration_.controller_damping;
+    const double& gain = configuration_.controller_proportional_gain;
     auto solver_ = std::make_shared<DQ_QPOASESSolver>();
     MatrixXd A;
     VectorXd b;
@@ -335,9 +349,11 @@ void ControlExample::control_loop()
 
     //---------------------Robot constraint Manager
 
-    VectorXd q_dot_min = (VectorXd(12) <<-0.1, -0.1, -0.1, -0.1, -0.1, -0.1,
-                          -1.57, -1.57, -1.57, -1.57, -1.57, -1.57).finished();
-    VectorXd q_dot_max = -q_dot_min;
+ //   VectorXd q_dot_min = (VectorXd(12) <<-0.1, -0.1, -0.1, -0.1, -0.1, -0.1,
+ //                         -1.57, -1.57, -1.57, -1.57, -1.57, -1.57).finished();
+  //  VectorXd q_dot_max = -q_dot_min;
+
+   auto [q_dot_min, q_dot_max] = configuration_.configuration_velocity_limits;
 
     VectorXd b_sat = VectorXd(24);
     b_sat << q_dot_max, -q_dot_min;
@@ -346,23 +362,28 @@ void ControlExample::control_loop()
     A_sat << MatrixXd::Identity(12,12), -MatrixXd::Identity(12,12);
 
 
-    VectorXd qarm_min = (VectorXd(6) << -30,  45,  -90, -80, -45, -160).finished();
-    qarm_min = qarm_min*M_PI/180;
+  //  VectorXd qarm_min = (VectorXd(6) << -30,  45,  -90, -80, -45, -160).finished();
+  //  qarm_min = qarm_min*M_PI/180;
 
-    VectorXd qarm_max = (VectorXd(6) << 30, 165,    0,  80,  45,  160).finished();
-    qarm_max = qarm_max*M_PI/180;
+   // VectorXd qarm_max = (VectorXd(6) << 30, 165,    0,  80,  45,  160).finished();
+   // qarm_max = qarm_max*M_PI/180;
 
-    VectorXd q_base_min = VectorXd(6);
-    q_base_min.fill(-std::numeric_limits<double>::infinity());
+    auto [q_min, q_max] = configuration_.configuration_limits;
 
-    VectorXd q_base_max = VectorXd(6);
-    q_base_max.fill(std::numeric_limits<double>::infinity());
+    VectorXd qarm_min = q_min.tail(6);
+    VectorXd qarm_max = q_max.tail(6);
 
-    VectorXd q_min = VectorXd(12);
-    q_min << q_base_min, qarm_min;
+    //VectorXd q_base_min = VectorXd(6);
+    //q_base_min.fill(-std::numeric_limits<double>::infinity());
 
-    VectorXd q_max = VectorXd(12);
-    q_max << q_base_max, qarm_max;
+  //  VectorXd q_base_max = VectorXd(6);
+  //  q_base_max.fill(std::numeric_limits<double>::infinity());
+
+  //  VectorXd q_min = VectorXd(12);
+  //  q_min << q_base_min, qarm_min;
+
+   // VectorXd q_max = VectorXd(12);
+   // q_max << q_base_max, qarm_max;
 
     MatrixXd Aarm_config_min = MatrixXd(6,12);
     Aarm_config_min << MatrixXd::Zero(6,6), -MatrixXd::Identity(6,6);
@@ -436,10 +457,41 @@ void ControlExample::control_loop()
         }
         DQ error = x-xd;
 
+        //------------------------
         MatrixXd J = impl_->robot_model_->pose_jacobian(q);
         MatrixXd H_aux = J.transpose()*J;
         MatrixXd H = H_aux + MatrixXd::Identity(H_aux.cols(), H_aux.cols())*damping_*damping_;
         VectorXd f = gain*2*J.transpose()*vec8(error);
+
+        //------------------------------------------
+
+        ///------------------
+        double alpha = 0.99;
+        VectorXd et = vec4(x.translation() - xd.translation());
+
+
+        VectorXd er = _get_rotation_error(x, xd);
+
+        const MatrixXd& Jx = J;
+        DQ rd = xd.rotation();
+        MatrixXd Jr = DQ_Kinematics::rotation_jacobian(Jx);
+        MatrixXd Nr = haminus4(rd)*C4()*Jr;
+        MatrixXd Jt = DQ_Kinematics::translation_jacobian(Jx, x);
+
+
+
+        MatrixXd Ht = Jt.transpose()*Jt;
+        VectorXd ft = gain*Jt.transpose()*et;
+
+        MatrixXd Hr = Nr.transpose()*Nr;
+        VectorXd fr = gain*Nr.transpose()*er;
+
+        MatrixXd Hd = MatrixXd::Identity(Ht.cols(), Ht.cols())*damping_*damping_;
+
+        MatrixXd H2 = alpha*Ht + (1.0 - alpha)*Hr + Hd;
+        VectorXd f2 = alpha*ft + (1.0 - alpha)*fr;
+
+        ///------------------
 
         rcm->add_inequality_constraint(Aarm_config_min,  narm*(qarm-qarm_min)); //arm configuration
         rcm->add_inequality_constraint(Aarm_config_max, -narm*(qarm-qarm_max)); //arm configuration
@@ -451,14 +503,7 @@ void ControlExample::control_loop()
 
 
 
-/*
-        std::string tag = "C4";
-        auto [distance, square_distance, distance_error, square_distance_error, line_to_line_angle_rad, vfi_type] = rcm->get_vfi_log_data(tag);
-        std::cout<<"Tag: "<<tag<<std::endl;
-        std::cout << "distance:\n" << distance << std::endl;
-*/
-
-        VectorXd u = solver_->solve_quadratic_program(H,f,A,b,Aeq,beq);
+        VectorXd u = solver_->solve_quadratic_program(H2,f2,A,b,Aeq,beq);
         std::cout<<"u: "<<u.transpose()<<std::endl;
 
         DQ twist_u = DQ(u.head(6));
@@ -476,8 +521,6 @@ void ControlExample::control_loop()
         VectorXd twist_u_vec = twist_u.vec6();
         VectorXd planar_vel = (VectorXd(3) << twist_u_vec(3), twist_u_vec(4), twist_u_vec(2)).finished();
         impl_->robot_client_->set_target_b1_planar_joint_velocities(planar_vel);
-
-        //impl_->robot_client_->set_forced_stand_commands(roll,pitch,yaw, 0.0);
 
         i++;
 

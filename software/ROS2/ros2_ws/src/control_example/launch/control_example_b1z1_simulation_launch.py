@@ -34,6 +34,9 @@ def generate_launch_description():
                 "B1_topic_prefix": "sas_b1/b1_1",
                 "Z1_topic_prefix": "sas_z1/z1_1",
                 "thread_sampling_time_sec": 0.002,
+                "controller_proportional_gain": 1.0,
+                "controller_damping": 0.1,
+
                 "vfi_file":"/home/juanjqo/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/control_example/cfg/vfi_config.yaml",
                 
                 "mobile_base_configuration_limits_min": [float('-inf'), float('-inf'), float('-inf'), float('-inf'), float('-inf'), float('-inf')],

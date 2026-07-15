@@ -43,6 +43,8 @@ int main(int argc, char** argv)
         sas::get_ros_parameter(node,"Z1_topic_prefix",configuration.Z1_topic_prefix);
         sas::get_ros_parameter(node, "cs_desired_frame", configuration.cs_desired_frame);
         sas::get_ros_parameter(node,"thread_sampling_time_sec",configuration.thread_sampling_time_sec);
+        sas::get_ros_parameter(node,"controller_proportional_gain",configuration.controller_proportional_gain);
+        sas::get_ros_parameter(node,"controller_damping",configuration.controller_damping);
         sas::get_ros_parameter(node,"vfi_file", configuration.vfi_file);
 
 
@@ -82,7 +84,8 @@ int main(int argc, char** argv)
 
         std::vector<double> arm_configuration_velocity_limits_min;
         std::vector<double> arm_configuration_velocity_limits_max;
-        sas::get_ros_parameter(node,"arm_configuration_velocity_limits_min", arm_configuration_velocity_limits_min);
+
+        sas::get_ros_parameter(node,"arm_configuration_velocity_limits_min",  arm_configuration_velocity_limits_min);
         sas::get_ros_parameter(node,"arm_configuration_velocity_limits_max", arm_configuration_velocity_limits_max);
 
         VectorXd q_dot_min_base = sas::std_vector_double_to_vectorxd(mobile_base_configuration_velocity_limits_min);
