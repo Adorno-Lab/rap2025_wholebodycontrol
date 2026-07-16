@@ -409,11 +409,11 @@ void ControlExample::control_loop()
     VectorXd qarm_max = q_max.tail(narm);
 
 
-    MatrixXd Aarm_config_min = MatrixXd(6,n);
-    Aarm_config_min << MatrixXd::Zero(6,6), -MatrixXd::Identity(narm,narm);
+    MatrixXd Aarm_config_min = MatrixXd(narm,n);
+    Aarm_config_min << MatrixXd::Zero(narm,6), -MatrixXd::Identity(narm,narm);
 
-    MatrixXd Aarm_config_max = MatrixXd(6,n);
-    Aarm_config_max << MatrixXd::Zero(6,6), MatrixXd::Identity(narm,narm);
+    MatrixXd Aarm_config_max = MatrixXd(narm,n);
+    Aarm_config_max << MatrixXd::Zero(narm,6), MatrixXd::Identity(narm,narm);
     double n_gain_arm = 5.0;
 
     auto vfi_config_yaml = std::make_shared<DQ_robotics_extensions::VFIConfigurationFileYaml>();
@@ -436,16 +436,17 @@ void ControlExample::control_loop()
 
     MatrixXd Ip = MatrixXd::Identity(p,p);
 
-    MatrixXd A = MatrixXd::Zero(p+4*n+12, n+p);
-    VectorXd b = VectorXd::Zero(3*p+4*n+2*narm);
+    MatrixXd A = MatrixXd::Zero(3*p + 2*n + 12, n+p);
+    VectorXd b = VectorXd::Zero(p + 2*n + 2*narm+  2*p);
 
     MatrixXd zero_2nxp = MatrixXd::Zero(2*n,p);
-    MatrixXd zero_6xp = MatrixXd::Zero(6,p);
-    MatrixXd zero_nxn = MatrixXd::Zero(n,n);
+    MatrixXd zero_narmxp = MatrixXd::Zero(narm,p);
+    MatrixXd zero_pxn = MatrixXd::Zero(p,n);
     VectorXd zero_p = VectorXd::Zero(p);
     VectorXd smax = VectorXd::Zero(p);
     MatrixXd Aeq_ex = MatrixXd(3, n+p);
     Aeq_ex << Aeq, MatrixXd::Zero(3,p);
+
 
     //rcm->set_configuration_limits({q_min, q_max});
     //rcm->set_configuration_velocity_limits({q_dot_min, q_dot_max});
@@ -537,19 +538,18 @@ void ControlExample::control_loop()
         try {
             ///-------------------------------------------------------------------
 
-            rcm->add_inequality_constraint(Aarm_config_min,  n_gain_arm*(qi_arm-qarm_min)); //arm configuration
-            rcm->add_inequality_constraint(Aarm_config_max, -n_gain_arm*(qi_arm-qarm_max)); //arm configuration
-            rcm->add_inequality_constraint(A_sat,  b_sat); //arm configuration
+          //  rcm->add_inequality_constraint(Aarm_config_min,  n_gain_arm*(qi_arm-qarm_min)); //arm configuration
+          //  rcm->add_inequality_constraint(Aarm_config_max, -n_gain_arm*(qi_arm-qarm_max)); //arm configuration
+          //  rcm->add_inequality_constraint(A_sat,  b_sat); //arm configuration
 
             auto [W, w] = rcm->get_inequality_constraints(q,false,false);
 
-
             A << W,                  -Ip,
                  A_sat,              zero_2nxp,
-                 Aarm_config_min,    zero_6xp,
-                Aarm_config_max,    zero_6xp,
-                zero_nxn, Ip,
-                zero_nxn, -Ip;
+                 Aarm_config_min,    zero_narmxp,
+                 Aarm_config_max,    zero_narmxp,
+                 zero_pxn, Ip,
+                 zero_pxn, -Ip;
 
             smax << (-w).array().max(0.0);
 
@@ -559,6 +559,7 @@ void ControlExample::control_loop()
                 -n_gain_arm*(qi_arm-qarm_max),
                 smax,
                 zero_p;
+
 
             const auto [H2,f2] = _compute_objective_funtion_components(J, vec8(error), p, gain, damping, 100);
 
@@ -606,16 +607,11 @@ void ControlExample::control_loop()
             }
         }
 
-
-
-
         DQ twist_u = DQ(u.head(6));
         VectorXd uarm = u.tail(6);
 
         //Numerical integration
         qi_arm = qi_arm + T*uarm;
-
-
 
 
     //    impl_->robot_client_->set_forced_stand_commands(rpy.x(),rpy.y(),rpy.z(), 0.0);
