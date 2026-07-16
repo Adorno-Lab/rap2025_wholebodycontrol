@@ -30,16 +30,17 @@
 #include <geometry_msgs/msg/pose_array.hpp>
 #include <sas_robot_driver/sas_robot_driver_client.hpp>
 #include <sas_unitree_b1z1_robot_client/UnitreeB1Z1RobotClient.hpp>
-//#include "dqrobotics/interfaces/coppeliasim/robots/UnitreeB1Z1CoppeliaSimZMQRobot.h"
+#include "dqrobotics/interfaces/coppeliasim/robots/UnitreeB1Z1CoppeliaSimZMQRobot.h"
 //#include "dqrobotics/robots/UnitreeB1Z1MobileRobot.h"
 #include <sas_conversions/DQ_geometry_msgs_conversions.hpp>
 #include <dqrobotics_extensions/robot_constraint_manager/robot_constraint_manager.hpp>
-#include "CFFZ1Robot.h"
-#include "CFFZ1CoppeliaSimZMQRobot.h"
 #include <dqrobotics/solvers/DQ_QPOASESSolver.h>
 #include <dqrobotics_extensions/robot_constraint_editor/vfi_configuration_file_yaml.hpp>
 #include <sas_datalogger/sas_datalogger_client.hpp>
 
+#include <dqrobotics/robots/CFFSerialRobot.h>
+#include <dqrobotics/robots/UnitreeZ1Robot.h>
+#include <dqrobotics/robot_control/DQ_ClassicQPController.h>
 
 VectorXd _get_rotation_error(const DQ &x, const DQ &xd)
 {
@@ -65,8 +66,8 @@ public:
 
     std::shared_ptr<DQ_CoppeliaSimInterfaceZMQ> cs_;
     std::shared_ptr<DQ_Kinematics> robot_model_;
-    std::shared_ptr<CFFZ1Robot> kin_mobile_manipulator_;
-    std::shared_ptr<CFFZ1CoppeliaSimZMQRobot> robot_cs_;
+    std::shared_ptr<CFFSerialRobot> kin_mobile_manipulator_;
+    std::shared_ptr<UnitreeB1Z1CoppeliaSimZMQRobot> robot_cs_;
     std::shared_ptr<UnitreeB1Z1RobotClient> robot_client_;
     std::shared_ptr<rclcpp::Node> node__;
 
@@ -129,7 +130,9 @@ public:
     {
         cs_->connect(host, port, TIMEOUT_IN_MILISECONDS);
         z1_jointnames_  = cs_->get_jointnames_from_object(Z1_robotname);
-        robot_cs_ = std::make_shared<CFFZ1CoppeliaSimZMQRobot>(B1_robotname+"/trunk_respondable", cs_);
+        robot_cs_ = std::make_shared<UnitreeB1Z1CoppeliaSimZMQRobot>(B1_robotname+"/trunk_respondable",
+                                                                     cs_,
+                                                                     UnitreeB1Z1CoppeliaSimZMQRobot::MODEL::CFF_MANIPULATOR);
         rclcpp::spin_some(node__);
     }
 
@@ -208,7 +211,9 @@ void ControlExample::_update_kinematic_model()
             auto jointnames = impl_->robot_cs_->get_jointnames();
             jointnames.pop_back();
 
-            q = impl_->robot_cs_->get_configuration();
+            //q = impl_->robot_cs_->get_configuration();
+            q = DQ_robotics_extensions::Numpy::vstack(impl_->robot_client_->get_b1_pose().vec8(),
+                                                      impl_->robot_client_->get_arm_joint_states());
             DQ xbase = DQ(q.head(8));
             VectorXd qarm = q.tail(6);
             offset = xbase.conj()*impl_->cs_->get_object_pose(jointnames.at(0));
@@ -229,12 +234,13 @@ void ControlExample::_update_kinematic_model()
         /*********************************************
          * ROBOT KINEMATIC MODEL
          * *******************************************/
-        impl_->kin_mobile_manipulator_ = std::make_shared<CFFZ1Robot>();
+        auto arm = std::make_shared<DQ_SerialManipulatorDH>(UnitreeZ1Robot::kinematics());
+        impl_->kin_mobile_manipulator_ = std::make_shared<CFFSerialRobot>(arm);
         impl_->kin_mobile_manipulator_->set_offset(offset);
         impl_->robot_model_ = std::shared_ptr<DQ_Kinematics>(impl_->kin_mobile_manipulator_);
 
 
-        auto [Aeq_wm, beq_wm] = impl_->kin_mobile_manipulator_->get_six_dof_constraints(CFFZ1Robot::SIX_DOF_CONSTRAINT_MODE::PLANAR_JOINT);
+        auto [Aeq_wm, beq_wm] = impl_->kin_mobile_manipulator_->get_six_dof_constraints(CFFSerialRobot::SIX_DOF_CONSTRAINT_MODE::PLANAR_JOINT);
         impl_->Aeq_wm_ = Aeq_wm;
         impl_->beq_wm_ = beq_wm;
 
@@ -339,14 +345,16 @@ void ControlExample::control_loop()
 
 
     VectorXd qi_arm = impl_->robot_client_->get_arm_joint_states();
-    unsigned int i = 0;
+    [[maybe_unused]] unsigned int i = 0;
     const double& T = configuration_.thread_sampling_time_sec;
 
-    VectorXd q = impl_->robot_cs_->get_configuration();
+    //VectorXd q = impl_->robot_cs_->get_configuration();
+    VectorXd q = DQ_robotics_extensions::Numpy::vstack(impl_->robot_client_->get_b1_pose().vec8(),
+                                                       impl_->robot_client_->get_arm_joint_states());
 
     //---------------------------------
     /// controller settings
-    const double& damping_ = configuration_.controller_damping;
+    const double& damping = configuration_.controller_damping;
     const double& gain = configuration_.controller_proportional_gain;
     auto solver_ = std::make_shared<DQ_QPOASESSolver>();
     MatrixXd A;
@@ -446,9 +454,8 @@ void ControlExample::control_loop()
         //------------------------
         MatrixXd J = impl_->robot_model_->pose_jacobian(q);
         MatrixXd H_aux = J.transpose()*J;
-        MatrixXd H = H_aux + MatrixXd::Identity(H_aux.cols(), H_aux.cols())*damping_*damping_;
+        MatrixXd H = H_aux + MatrixXd::Identity(H_aux.cols(), H_aux.cols())*damping*damping;
         VectorXd f = gain*2*J.transpose()*vec8(error);
-
         //------------------------------------------
 
         ///------------------
@@ -472,7 +479,7 @@ void ControlExample::control_loop()
         MatrixXd Hr = Nr.transpose()*Nr;
         VectorXd fr = gain*Nr.transpose()*er;
 
-        MatrixXd Hd = MatrixXd::Identity(Ht.cols(), Ht.cols())*damping_*damping_;
+        MatrixXd Hd = MatrixXd::Identity(Ht.cols(), Ht.cols())*damping*damping;
 
         MatrixXd H2 = alpha*Ht + (1.0 - alpha)*Hr + Hd;
         VectorXd f2 = alpha*ft + (1.0 - alpha)*fr;

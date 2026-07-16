@@ -27,19 +27,13 @@ find_package(sensor_msgs REQUIRED)
 
 
 set(REPOSITORY_DIR ${CMAKE_SOURCE_DIR}/../../../../../)
-#include_directories(${REPOSITORY_DIR}/submodules/unitree_kinematics/include/)
 include_directories(${REPOSITORY_DIR}/software/submodules/sas_unitree_b1z1_control_template/utils)
-include_directories(${REPOSITORY_DIR}/software/cpp_examples/numerical_test_cff_joint_b1z1/)
 ############################
 # CPP Binary Block [BEGIN] #
 # vvvvvvvvvvvvvvvvvvvvvvvv #
 add_library(${PROJECT_NAME} SHARED
     src/control_example.cpp
-
     ${REPOSITORY_DIR}/software/submodules/sas_unitree_b1z1_control_template/utils/sas_unitree_b1z1_robot_client/UnitreeB1Z1RobotClient.cpp
-
-    src/CFFZ1Robot.cpp
-    src/CFFZ1CoppeliaSimZMQRobot.cpp
     )
 
 target_link_libraries(${PROJECT_NAME}
