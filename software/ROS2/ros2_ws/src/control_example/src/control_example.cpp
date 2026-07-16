@@ -80,6 +80,8 @@ public:
     MatrixXd Aeq_wm_;
     VectorXd beq_wm_;
 
+    int dim_control_inputs_;
+
 
 
     std::vector<std::string> z1_jointnames_;
@@ -198,7 +200,7 @@ void ControlExample::_update_kinematic_model()
     RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Robot state from ROS2 OK!");
 
     RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Reading info from CoppeliaSim...");
-    const int iter1 = 10;
+    const int iter1 = 2;
     for (int i=0; i<iter1;i++)
     {
         try
@@ -219,7 +221,8 @@ void ControlExample::_update_kinematic_model()
             RCLCPP_ERROR_STREAM_ONCE(node_->get_logger(), std::string("::Exception::") + e.what());
             std::cerr << std::string("::Exception::") << e.what();
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Data from CoppeliaSim OK!");
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         if (_should_shutdown())
             break;
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Updating kinematic model...");
@@ -239,6 +242,8 @@ void ControlExample::_update_kinematic_model()
 
         DQ x = impl_->robot_model_->fkm(q);
         impl_->cs_->set_object_pose(configuration_.cs_desired_frame, x);
+
+        dim_control_inputs_ = 12;
 
 
 
@@ -318,7 +323,7 @@ void ControlExample::control_loop()
     //###########################################################################################################//
     //####################### Main Kinematic control loop running here ##########################################//
 
-    for (int i=0;i<2000;i++)
+    for (int i=0;i<2000;i++) //---------??????????????????????????????
     {
         rclcpp::spin_some(node_);
         impl_->clock_.update_and_sleep();
@@ -349,9 +354,6 @@ void ControlExample::control_loop()
 
     //---------------------Robot constraint Manager
 
- //   VectorXd q_dot_min = (VectorXd(12) <<-0.1, -0.1, -0.1, -0.1, -0.1, -0.1,
- //                         -1.57, -1.57, -1.57, -1.57, -1.57, -1.57).finished();
-  //  VectorXd q_dot_max = -q_dot_min;
 
    auto [q_dot_min, q_dot_max] = configuration_.configuration_velocity_limits;
 
@@ -361,29 +363,11 @@ void ControlExample::control_loop()
     MatrixXd A_sat = MatrixXd(24, 12);
     A_sat << MatrixXd::Identity(12,12), -MatrixXd::Identity(12,12);
 
-
-  //  VectorXd qarm_min = (VectorXd(6) << -30,  45,  -90, -80, -45, -160).finished();
-  //  qarm_min = qarm_min*M_PI/180;
-
-   // VectorXd qarm_max = (VectorXd(6) << 30, 165,    0,  80,  45,  160).finished();
-   // qarm_max = qarm_max*M_PI/180;
-
     auto [q_min, q_max] = configuration_.configuration_limits;
 
     VectorXd qarm_min = q_min.tail(6);
     VectorXd qarm_max = q_max.tail(6);
 
-    //VectorXd q_base_min = VectorXd(6);
-    //q_base_min.fill(-std::numeric_limits<double>::infinity());
-
-  //  VectorXd q_base_max = VectorXd(6);
-  //  q_base_max.fill(std::numeric_limits<double>::infinity());
-
-  //  VectorXd q_min = VectorXd(12);
-  //  q_min << q_base_min, qarm_min;
-
-   // VectorXd q_max = VectorXd(12);
-   // q_max << q_base_max, qarm_max;
 
     MatrixXd Aarm_config_min = MatrixXd(6,12);
     Aarm_config_min << MatrixXd::Zero(6,6), -MatrixXd::Identity(6,6);
@@ -419,7 +403,7 @@ void ControlExample::control_loop()
     RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "Connected to sas_datalogger!");
 */
 
-
+    VectorXd u;
 
 
     while(!_should_shutdown())
@@ -427,7 +411,7 @@ void ControlExample::control_loop()
         rclcpp::spin_some(node_);
         impl_->clock_.update_and_sleep();
         rclcpp::spin_some(node_);
-        RCLCPP_INFO_ONCE(node_->get_logger(), "Control loop!");
+        RCLCPP_INFO_ONCE(node_->get_logger(), "Control loop running!");
         //VectorXd q = DQ_robotics_extensions::Numpy::vstack(DQ_robotics_extensions::get_planar_joint_configuration_from_pose(impl_->robot_client_->get_b1_pose()),
         //                           qi_arm);
 
@@ -491,20 +475,61 @@ void ControlExample::control_loop()
         MatrixXd H2 = alpha*Ht + (1.0 - alpha)*Hr + Hd;
         VectorXd f2 = alpha*ft + (1.0 - alpha)*fr;
 
-        ///------------------
+        try {
+            ///-------------------------------------------------------------------
 
-        rcm->add_inequality_constraint(Aarm_config_min,  narm*(qi_arm-qarm_min)); //arm configuration
-        rcm->add_inequality_constraint(Aarm_config_max, -narm*(qi_arm-qarm_max)); //arm configuration
-        rcm->add_inequality_constraint(A_sat,  b_sat); //arm configuration
+            rcm->add_inequality_constraint(Aarm_config_min,  narm*(qi_arm-qarm_min)); //arm configuration
+            rcm->add_inequality_constraint(Aarm_config_max, -narm*(qi_arm-qarm_max)); //arm configuration
+            rcm->add_inequality_constraint(A_sat,  b_sat); //arm configuration
 
-        auto constraints = rcm->get_inequality_constraints(q,false, false);
-        A = std::get<0>(constraints);
-        b = std::get<1>(constraints);
+            auto constraints = rcm->get_inequality_constraints(q,false, false);
+            A = std::get<0>(constraints);
+            b = std::get<1>(constraints);
+
+            u = solver_->solve_quadratic_program(H,f,A,b,Aeq,beq);
+            // std::cout<<"u: "<<u.transpose()<<std::endl;
+            ///-------------------------------------------------------------------
+        } catch (const std::exception& e) {
+            RCLCPP_INFO_STREAM(node_->get_logger(), "::QP not solved!");
+            RCLCPP_INFO_STREAM(node_->get_logger(), e.what());
+            u = VectorXd::Zero(dim_control_inputs);
+        }
+
+        //Compute the distance between the end-effector and desired points
+        double distance = (x.translation()-xd.translation()).vec3().norm();
+
+
+        if (distance <= configuration_.controller_target_region_size)
+        {
+            robot_reached_region_ = true;
+        }
+        if (distance > configuration_.controller_target_exit_size)
+        {
+            robot_reached_region_ = false;
+        }
+
+        if (robot_reached_region_)
+        {
+            u = VectorXd::Zero(12);
+            if (show_controller_idle_status_)
+            {
+                RCLCPP_INFO_STREAM(node_->get_logger(), "::Reached target zone. No risk of collision. ZERO mode enabled!");
+                show_controller_idle_status_ = false;
+                show_controller_on_status_ = true;
+            }
+        }else
+        {
+            if (show_controller_on_status_)
+            {
+                if (!robot_reached_region_)
+                    RCLCPP_INFO_STREAM(node_->get_logger(), "::Robot left the target zone. Motion mode enabled!");
+                show_controller_on_status_ = false;
+                show_controller_idle_status_ = true;
+            }
+        }
 
 
 
-        VectorXd u = solver_->solve_quadratic_program(H2,f2,A,b,Aeq,beq);
-        std::cout<<"u: "<<u.transpose()<<std::endl;
 
         DQ twist_u = DQ(u.head(6));
         VectorXd uarm = u.tail(6);

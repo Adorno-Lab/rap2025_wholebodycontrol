@@ -23,7 +23,7 @@ vfi_array:
         entity_robot_primitive_type: "LINE_ANGLE"
         robot_index: 1
         joint_index: 12
-        safe_distance: 5
+        safe_distance: 20
         vfi_gain: 5.0
         direction: "SAFE_ZONE"
         tag: "C2"

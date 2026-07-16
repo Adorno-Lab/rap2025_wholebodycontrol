@@ -37,7 +37,9 @@ def generate_launch_description():
                 "controller_proportional_gain": 8.0,
                 "controller_damping": 0.1,
 
-                "vfi_file":"/home/juanjqo/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/control_example/cfg/vfi_config.yaml",
+                #"vfi_file":"/home/juanjqo/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/control_example/cfg/vfi_config.yaml",
+                "vfi_file":"/home/s55322jq/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/control_example/cfg/vfi_config.yaml",
+
                 
                 "mobile_base_configuration_limits_min": [float('-inf'), float('-inf'), float('-inf'), float('-inf'), float('-inf'), float('-inf')],
                 "mobile_base_configuration_limits_max": [float('inf'),   float('inf'), float('inf'),   float('inf'), float('inf'),  float('inf')],

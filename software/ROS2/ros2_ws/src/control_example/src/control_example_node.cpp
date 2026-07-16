@@ -46,6 +46,8 @@ int main(int argc, char** argv)
         sas::get_ros_parameter(node,"controller_proportional_gain",configuration.controller_proportional_gain);
         sas::get_ros_parameter(node,"controller_damping",configuration.controller_damping);
         sas::get_ros_parameter(node,"vfi_file", configuration.vfi_file);
+        sas::get_ros_parameter(node,"controller_target_region_size", configuration.controller_target_region_size);
+        sas::get_ros_parameter(node,"controller_target_exit_size", configuration.controller_target_exit_size);
 
 
         ///------------------------------Configuration Limits-----------------------------------------------

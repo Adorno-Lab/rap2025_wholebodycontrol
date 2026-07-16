@@ -51,6 +51,8 @@ struct ControlExampleConfiguration
     std::string vfi_file;
     double controller_proportional_gain;
     double controller_damping;
+    double controller_target_region_size;
+    double controller_target_exit_size;
 };
 
 class ControlExample
