@@ -80,6 +80,14 @@ void MonitorCoppeliaSim::control_loop()
             _set_object_pose(configuration_.cs_B1_1_robotname, robot_client_1_->get_b1_pose());
         }
 
+        auto human_cylinder = _try_get_vicon_marker(configuration_.obstacle_vicon_marker_name);
+        if (human_cylinder.has_value())
+        {
+            DQ obstacle = human_cylinder.value();
+            VectorXd pobstacle = obstacle.translation().vec3();
+            DQ cylinder = 1 +0.5*E_*(pobstacle(0)*i_ + pobstacle(1)*j_ + 1*k_);
+            _set_object_pose(configuration_.obstacle_coppeliasim_name, cylinder);
+        }
 
         // read from CS the center of formation and publish on a ROS2 topic
        // _publish_pose_stamped_data_of_coppeliasim_object_object(publisher_center_of_formation_pose_state_,

@@ -61,6 +61,9 @@ struct MonitorCoppeliaSimConfiguration
     std::string cs_B1Z1_1_frame_xd;
     std::string cs_B1Z1_2_frame_xd;
 
+    std::string obstacle_vicon_marker_name;
+    std::string obstacle_coppeliasim_name;
+
 };
 
 class MonitorCoppeliaSim

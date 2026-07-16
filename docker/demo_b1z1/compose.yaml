@@ -17,24 +17,7 @@ services:
       export ROS_DOMAIN_ID=77;
       ros2 launch motion_capture_tracking launch.py"
 
-  coppeliasim:
-    image: murilomarinho/coppeliasim:noble_470rev4
-    stop_signal: SIGINT
-    platform: linux/amd64
-    environment:
-      DISPLAY: $DISPLAY # x server related
-      ROS_DOMAIN_ID: 77
-    privileged: true # Needed for some gpu configurations.
-    volumes:
-      - ../../coppeliasim_scenes:/app/coppeliasim_scenes
-      - /tmp/.X11-unix:/tmp/.X11-unix # x server related
-      - ~/.Xauthority:/root/.Xauthority # x server related
-    network_mode: "host" # x server related
-    ipc: "host"
-    command: /bin/bash -c "
-      sleep 3;
-      cd "$$COPPELIASIM_PATH"
-      && ./coppeliaSim.sh -s0 /app/coppeliasim_scenes/B1_with_Z1_showcase.ttt"    
+## put here the simulation service  
 
 
   sas_coppeliasim_unitree_b1z1: ####

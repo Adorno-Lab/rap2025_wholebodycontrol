@@ -54,6 +54,9 @@ int main(int argc, char** argv)
         sas::get_ros_parameter(node,"cs_B1Z1_1_frame_xd",configuration.cs_B1Z1_1_frame_xd);
         sas::get_ros_parameter(node,"cs_B1Z1_2_frame_xd",configuration.cs_B1Z1_2_frame_xd);
 
+        sas::get_ros_parameter(node,"obstacle_vicon_marker_name", configuration.obstacle_vicon_marker_name);
+        sas::get_ros_parameter(node,"obstacle_coppeliasim_name", configuration.obstacle_coppeliasim_name);
+
 
 
         auto robot_driver = std::make_shared<sas::MonitorCoppeliaSim>(node,

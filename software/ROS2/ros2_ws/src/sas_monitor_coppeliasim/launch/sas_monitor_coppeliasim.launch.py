@@ -38,6 +38,8 @@ def generate_launch_description():
                 "cs_B1Z1_2_frame_x": "x2",
                 "cs_B1Z1_1_frame_xd": "xd1",
                 "cs_B1Z1_2_frame_xd": "xd2",
+                "obstacle_vicon_marker_name": "B1Z1_Frame_human_obstacle",
+                "obstacle_coppeliasim_name": "Human_Cylinder"
                
             }]
         ),
