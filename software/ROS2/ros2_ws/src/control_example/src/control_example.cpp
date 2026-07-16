@@ -57,6 +57,30 @@ VectorXd _get_rotation_error(const DQ &x, const DQ &xd)
     }
 }
 
+std::tuple<MatrixXd, VectorXd> _compute_objective_funtion_components(const MatrixXd& J,
+                                                                     const VectorXd& error,
+                                                                     const int &l,
+                                                                     const double& controller_gain,
+                                                                     const double& damping_factor,
+                                                                     const double& slack_weight_beta
+                                                                     )
+{
+    const int m = J.rows();
+    const int n = J.cols();
+    MatrixXd zeros_mxl = MatrixXd::Zero(m,l);
+    MatrixXd Gamma = MatrixXd::Zero(m, n+l);
+    Gamma << J, zeros_mxl;
+
+    MatrixXd lambda = MatrixXd::Zero(n + l, n + l);
+    lambda.topLeftCorner(n, n) = pow(damping_factor, 2) * MatrixXd::Identity(n, n);
+    lambda.bottomRightCorner(l, l) = pow(slack_weight_beta, 2) * MatrixXd::Identity(l, l);
+
+    MatrixXd H = Gamma.transpose()*Gamma + lambda;
+    VectorXd f = 2*controller_gain*error.transpose()*Gamma;
+
+    return {H,f};
+}
+
 namespace sas
 {
 
@@ -360,10 +384,11 @@ void ControlExample::control_loop()
     const double& damping = configuration_.controller_damping;
     const double& gain = configuration_.controller_proportional_gain;
     auto solver_ = std::make_shared<DQ_QPOASESSolver>();
-    MatrixXd A;
-    VectorXd b;
+
     MatrixXd Aeq = impl_->Aeq_wm_;
     VectorXd beq = impl_->beq_wm_;
+
+
 
     //---------------------Robot constraint Manager
 
@@ -384,12 +409,12 @@ void ControlExample::control_loop()
     VectorXd qarm_max = q_max.tail(narm);
 
 
-    MatrixXd Aarm_config_min = MatrixXd(6,2*narm);
+    MatrixXd Aarm_config_min = MatrixXd(6,n);
     Aarm_config_min << MatrixXd::Zero(6,6), -MatrixXd::Identity(narm,narm);
 
-    MatrixXd Aarm_config_max = MatrixXd(6,2*narm);
+    MatrixXd Aarm_config_max = MatrixXd(6,n);
     Aarm_config_max << MatrixXd::Zero(6,6), MatrixXd::Identity(narm,narm);
-    //double narm = 5.0;
+    double n_gain_arm = 5.0;
 
     auto vfi_config_yaml = std::make_shared<DQ_robotics_extensions::VFIConfigurationFileYaml>();
 
@@ -410,6 +435,17 @@ void ControlExample::control_loop()
     const int p = rcm->get_number_of_vfi_constraints();
 
     MatrixXd Ip = MatrixXd::Identity(p,p);
+
+    MatrixXd A = MatrixXd::Zero(p+4*n+12, n+p);
+    VectorXd b = VectorXd::Zero(3*p+4*n+2*narm);
+
+    MatrixXd zero_2nxp = MatrixXd::Zero(2*n,p);
+    MatrixXd zero_6xp = MatrixXd::Zero(6,p);
+    MatrixXd zero_nxn = MatrixXd::Zero(n,n);
+    VectorXd zero_p = VectorXd::Zero(p);
+    VectorXd smax = VectorXd::Zero(p);
+    MatrixXd Aeq_ex = MatrixXd(3, n+p);
+    Aeq_ex << Aeq, MatrixXd::Zero(3,p);
 
     //rcm->set_configuration_limits({q_min, q_max});
     //rcm->set_configuration_velocity_limits({q_dot_min, q_dot_max});
@@ -501,15 +537,32 @@ void ControlExample::control_loop()
         try {
             ///-------------------------------------------------------------------
 
-            rcm->add_inequality_constraint(Aarm_config_min,  narm*(qi_arm-qarm_min)); //arm configuration
-            rcm->add_inequality_constraint(Aarm_config_max, -narm*(qi_arm-qarm_max)); //arm configuration
+            rcm->add_inequality_constraint(Aarm_config_min,  n_gain_arm*(qi_arm-qarm_min)); //arm configuration
+            rcm->add_inequality_constraint(Aarm_config_max, -n_gain_arm*(qi_arm-qarm_max)); //arm configuration
             rcm->add_inequality_constraint(A_sat,  b_sat); //arm configuration
 
-            auto constraints = rcm->get_inequality_constraints(q,false, false);
-            A = std::get<0>(constraints);
-            b = std::get<1>(constraints);
+            auto [W, w] = rcm->get_inequality_constraints(q,false,false);
 
-            u = solver_->solve_quadratic_program(H,f,A,b,Aeq,beq);
+
+            A << W,                  -Ip,
+                 A_sat,              zero_2nxp,
+                 Aarm_config_min,    zero_6xp,
+                Aarm_config_max,    zero_6xp,
+                zero_nxn, Ip,
+                zero_nxn, -Ip;
+
+            smax << (-w).array().max(0.0);
+
+            b << w,
+                 b_sat,
+                 n_gain_arm*(qi_arm-qarm_min),
+                -n_gain_arm*(qi_arm-qarm_max),
+                smax,
+                zero_p;
+
+            const auto [H2,f2] = _compute_objective_funtion_components(J, vec8(error), p, gain, damping, 100);
+
+            u = solver_->solve_quadratic_program(H2,f2,A,b,Aeq_ex,beq);
             // std::cout<<"u: "<<u.transpose()<<std::endl;
             ///-------------------------------------------------------------------
         } catch (const std::exception& e) {
