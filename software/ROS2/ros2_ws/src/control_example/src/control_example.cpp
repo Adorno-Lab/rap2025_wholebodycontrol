@@ -464,6 +464,8 @@ void ControlExample::control_loop()
         //------------------------------------------
 
         ///------------------
+        ///
+        /*
         double alpha = 0.99;
         VectorXd et = vec4(x.translation() - xd.translation());
 
@@ -488,6 +490,7 @@ void ControlExample::control_loop()
 
         MatrixXd H2 = alpha*Ht + (1.0 - alpha)*Hr + Hd;
         VectorXd f2 = alpha*ft + (1.0 - alpha)*fr;
+       */
 
         try {
             ///-------------------------------------------------------------------
