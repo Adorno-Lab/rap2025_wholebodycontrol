@@ -54,7 +54,7 @@ services:
       sleep 3; 
       source /opt/ros/jazzy/setup.bash;
       cd /app/software/ROS2/ros2_ws/ && colcon build && source install/setup.bash ;
-      ros2 launch sas_coppeliasim_unitree_b1z1 sas_coppeliasim_unitree_b1z1_white_launch.py"    
+      ros2 launch sas_monitor_coppeliasim sas_monitor_coppeliasim.launch.py"    
 
 
   micro_ros_agent:

@@ -25,50 +25,24 @@ clock_{configuration.thread_sampling_time_sec}
                                                              configuration_.B1_1_topic_prefix,
                                                              configuration_.Z1_1_topic_prefix,
                                                              UnitreeB1Z1RobotClient::MODE::MONITORING);
-    robot_client_2_ = std::make_shared<UnitreeB1Z1RobotClient>(node_,
-                                                               configuration_.B1_2_topic_prefix,
-                                                               configuration_.Z1_2_topic_prefix,
-                                                               UnitreeB1Z1RobotClient::MODE::MONITORING);
+
 
 
     subscriber_x1_fkm_ = node_->create_subscription<geometry_msgs::msg::PoseStamped>(
         configuration_.B1_1_topic_prefix+ "/set/coppeliasim_frame_x", 1,
         std::bind(&MonitorCoppeliaSim::_callback_x1_fkm_state, this, std::placeholders::_1)
         );
-    subscriber_x2_fkm_ = node_->create_subscription<geometry_msgs::msg::PoseStamped>(
-        configuration_.B1_2_topic_prefix+ "/set/coppeliasim_frame_x", 1,
-        std::bind(&MonitorCoppeliaSim::_callback_x2_fkm_state, this, std::placeholders::_1)
-        );
+
 
     publisher_x1d_ = node_->create_publisher<geometry_msgs::msg::PoseStamped>(
         configuration_.B1_1_topic_prefix+ "/get/coppeliasim_frame_xd",1
      );
 
 
-    subscriber_x2d_ = node_->create_subscription<geometry_msgs::msg::PoseStamped>(
-        configuration_.B1_2_topic_prefix+ "/set/coppeliasim_frame_xd", 1,
-        std::bind(&MonitorCoppeliaSim::_callback_x2d_state, this, std::placeholders::_1)
-        );
-
-
-
-
     tf_buffer_ = std::make_unique<tf2_ros::Buffer>(node_->get_clock());;
     tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
-
-
-
-
-
-
-
-
     Z1_1_name_ = configuration_.cs_B1_1_robotname + "/UnitreeZ1";
-
-
-
-    Z1_2_name_ = configuration_.cs_B1_2_robotname + "/UnitreeZ1";
 
 
 }
@@ -90,18 +64,10 @@ void MonitorCoppeliaSim::control_loop()
         if (is_unit(x1_fkm_))
             _set_object_pose(configuration_.cs_B1Z1_1_frame_x, x1_fkm_);
 
-        if (is_unit(x2_fkm_))
-            _set_object_pose(configuration_.cs_B1Z1_2_frame_x, x2_fkm_);
 
         DQ xd = cs_->get_object_pose(configuration_.cs_B1Z1_1_frame_xd);
         if (is_unit(xd))
             publisher_x1d_->publish(sas::dq_to_geometry_msgs_pose_stamped(xd));
-
-
-        if (is_unit(x2d_))
-            _set_object_pose(configuration_.cs_B1Z1_2_frame_xd, x2d_);
-
-
 
 
         if (robot_client_1_->is_enabled())
@@ -112,16 +78,6 @@ void MonitorCoppeliaSim::control_loop()
             _set_joint_states_on_coppeliasim(B1_1_RL_jointnames_, robot_client_1_->get_leg_joint_states(UnitreeB1Z1RobotClient::LEG::RL));
             _set_joint_states_on_coppeliasim(B1_1_RR_jointnames_, robot_client_1_->get_leg_joint_states(UnitreeB1Z1RobotClient::LEG::RR));
             _set_object_pose(configuration_.cs_B1_1_robotname, robot_client_1_->get_b1_pose());
-        }
-
-        if (robot_client_2_->is_enabled())
-        {
-            _set_joint_states_on_coppeliasim(Z1_2_arm_jointnames_, robot_client_2_->get_arm_joint_states_including_gripper());
-            _set_joint_states_on_coppeliasim(B1_2_FR_jointnames_, robot_client_2_->get_leg_joint_states(UnitreeB1Z1RobotClient::LEG::FR));
-            _set_joint_states_on_coppeliasim(B1_2_FL_jointnames_, robot_client_2_->get_leg_joint_states(UnitreeB1Z1RobotClient::LEG::FL));
-            _set_joint_states_on_coppeliasim(B1_2_RL_jointnames_, robot_client_2_->get_leg_joint_states(UnitreeB1Z1RobotClient::LEG::RL));
-            _set_joint_states_on_coppeliasim(B1_2_RR_jointnames_, robot_client_2_->get_leg_joint_states(UnitreeB1Z1RobotClient::LEG::RR));
-            //_set_object_pose(configuration_.cs_B1_2_robotname, robot_client_2_->get_b1_pose());
         }
 
 
@@ -137,16 +93,6 @@ void MonitorCoppeliaSim::_callback_x1_fkm_state(const geometry_msgs::msg::PoseSt
     x1_fkm_ = geometry_msgs_pose_stamped_to_dq(msg);
 }
 
-void MonitorCoppeliaSim::_callback_x2_fkm_state(const geometry_msgs::msg::PoseStamped &msg)
-{
-    x2_fkm_ = geometry_msgs_pose_stamped_to_dq(msg);
-}
-
-
-void MonitorCoppeliaSim::_callback_x2d_state(const geometry_msgs::msg::PoseStamped &msg)
-{
-    x2d_ = geometry_msgs_pose_stamped_to_dq(msg);
-}
 
 
 std::optional<DQ> MonitorCoppeliaSim::_try_get_vicon_marker(const std::string& marker_name)
@@ -233,28 +179,7 @@ void MonitorCoppeliaSim::_connect()
                                };
 
 
-        Z1_2_arm_jointnames_ = cs_->get_jointnames_from_object(Z1_2_name_);
 
-
-        B1_2_FR_jointnames_ = {configuration_.cs_B1_2_robotname + "/FR_hip_joint",
-                               configuration_.cs_B1_2_robotname + "/FR_thigh_joint",
-                               configuration_.cs_B1_2_robotname + "/FR_calf_joint",
-                               };
-
-        B1_2_FL_jointnames_ = {configuration_.cs_B1_2_robotname + "/FL_hip_joint",
-                               configuration_.cs_B1_2_robotname + "/FL_thigh_joint",
-                               configuration_.cs_B1_2_robotname + "/FL_calf_joint",
-                               };
-
-        B1_2_RR_jointnames_ = {configuration_.cs_B1_2_robotname + "/RR_hip_joint",
-                               configuration_.cs_B1_2_robotname + "/RR_thigh_joint",
-                               configuration_.cs_B1_2_robotname + "/RR_calf_joint",
-                               };
-
-        B1_2_RL_jointnames_ = {configuration_.cs_B1_2_robotname + "/RL_hip_joint",
-                               configuration_.cs_B1_2_robotname + "/RL_thigh_joint",
-                               configuration_.cs_B1_2_robotname + "/RL_calf_joint",
-                               };
 
 
 

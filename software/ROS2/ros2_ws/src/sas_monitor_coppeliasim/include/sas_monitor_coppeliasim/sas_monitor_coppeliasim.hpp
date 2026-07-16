@@ -75,11 +75,10 @@ private:
 
 
     std::shared_ptr<UnitreeB1Z1RobotClient> robot_client_1_;
-    std::shared_ptr<UnitreeB1Z1RobotClient> robot_client_2_;
 
 
     std::vector<std::string> Z1_1_arm_jointnames_;
-    std::vector<std::string> Z1_2_arm_jointnames_;
+
     //std::string b1_name_;
 
 
@@ -88,33 +87,22 @@ private:
     std::vector<std::string> B1_1_RR_jointnames_;
     std::vector<std::string> B1_1_RL_jointnames_;
 
-    std::vector<std::string> B1_2_FR_jointnames_;
-    std::vector<std::string> B1_2_FL_jointnames_;
-    std::vector<std::string> B1_2_RR_jointnames_;
-    std::vector<std::string> B1_2_RL_jointnames_;
 
 
     std::string Z1_1_name_;
-    std::string Z1_2_name_;
 
 
 
-    DQ x1_fkm_{1};
+    DQ x1_fkm_;
     Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr subscriber_x1_fkm_;
     void _callback_x1_fkm_state(const geometry_msgs::msg::PoseStamped& msg);
 
-    DQ x2_fkm_{1};
-    Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr subscriber_x2_fkm_;
-    void _callback_x2_fkm_state(const geometry_msgs::msg::PoseStamped& msg);
+
 
 
 
     //DQ x1d_;
     Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_x1d_;
-
-    DQ x2d_;
-    Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr subscriber_x2d_;
-    void _callback_x2d_state(const geometry_msgs::msg::PoseStamped& msg);
 
 
 
