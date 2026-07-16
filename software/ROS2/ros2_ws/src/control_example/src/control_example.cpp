@@ -81,6 +81,8 @@ public:
     MatrixXd Aeq_wm_;
     VectorXd beq_wm_;
 
+
+    int dim_arm_configuration_space_;
     int dim_control_inputs_;
 
 
@@ -249,7 +251,8 @@ void ControlExample::_update_kinematic_model()
         DQ x = impl_->robot_model_->fkm(q);
         impl_->cs_->set_object_pose(configuration_.cs_desired_frame, x);
 
-        impl_->dim_control_inputs_ = 12;
+        impl_->dim_arm_configuration_space_ = arm->get_dim_configuration_space();
+        impl_->dim_control_inputs_ = 6 + impl_->dim_arm_configuration_space_;
 
 
 
@@ -365,26 +368,28 @@ void ControlExample::control_loop()
     //---------------------Robot constraint Manager
 
 
-   auto [q_dot_min, q_dot_max] = configuration_.configuration_velocity_limits;
+    auto [q_dot_min, q_dot_max] = configuration_.configuration_velocity_limits;
 
-    VectorXd b_sat = VectorXd(24);
+    const int& n = impl_->dim_control_inputs_;
+    VectorXd b_sat = VectorXd(2*n); //24
     b_sat << q_dot_max, -q_dot_min;
 
-    MatrixXd A_sat = MatrixXd(24, 12);
-    A_sat << MatrixXd::Identity(12,12), -MatrixXd::Identity(12,12);
+    MatrixXd A_sat = MatrixXd(2*n, n);
+    A_sat << MatrixXd::Identity(n,n), -MatrixXd::Identity(n,n);
 
     auto [q_min, q_max] = configuration_.configuration_limits;
 
-    VectorXd qarm_min = q_min.tail(6);
-    VectorXd qarm_max = q_max.tail(6);
+    const int& narm = impl_->dim_arm_configuration_space_;
+    VectorXd qarm_min = q_min.tail(narm);
+    VectorXd qarm_max = q_max.tail(narm);
 
 
-    MatrixXd Aarm_config_min = MatrixXd(6,12);
-    Aarm_config_min << MatrixXd::Zero(6,6), -MatrixXd::Identity(6,6);
+    MatrixXd Aarm_config_min = MatrixXd(6,2*narm);
+    Aarm_config_min << MatrixXd::Zero(6,6), -MatrixXd::Identity(narm,narm);
 
-    MatrixXd Aarm_config_max = MatrixXd(6,12);
-    Aarm_config_max << MatrixXd::Zero(6,6), MatrixXd::Identity(6,6);
-    double narm = 5.0;
+    MatrixXd Aarm_config_max = MatrixXd(6,2*narm);
+    Aarm_config_max << MatrixXd::Zero(6,6), MatrixXd::Identity(narm,narm);
+    //double narm = 5.0;
 
     auto vfi_config_yaml = std::make_shared<DQ_robotics_extensions::VFIConfigurationFileYaml>();
 
