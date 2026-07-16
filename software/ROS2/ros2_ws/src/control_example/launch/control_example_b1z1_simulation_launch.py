@@ -40,7 +40,9 @@ def generate_launch_description():
                 "controller_target_exit_size": 0.2,
 
                 #"vfi_file":"/home/juanjqo/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/control_example/cfg/vfi_config.yaml",
-                "vfi_file":"/app/software/ROS2/ros2_ws/src/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/control_example/cfg/vfi_config.yaml",
+                "vfi_file":"/app/software/ROS2/ros2_ws/src/control_example/cfg/vfi_config.yaml",
+                                               
+
 
                 
                 "mobile_base_configuration_limits_min": [float('-inf'), float('-inf'), float('-inf'), float('-inf'), float('-inf'), float('-inf')],
