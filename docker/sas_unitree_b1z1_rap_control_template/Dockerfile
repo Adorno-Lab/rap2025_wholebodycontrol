@@ -33,8 +33,8 @@ RUN mkdir -p /app/software/ROS2/ros2_ws/src
 # Copy files from this repository to the image
 # Note: The folder sas_extended_kalman_filter_unitree_b1 is already included in the base image
 
-COPY ./software/ROS2/ros2_ws/src/sas_control_unitree_b1z1 /app/software/ROS2/ros2_ws/src/sas_control_unitree_b1z1
-COPY ./software/ROS2/ros2_ws/src/sas_coppeliasim_unitree_b1z1 /app/software/ROS2/ros2_ws/src/sas_coppeliasim_unitree_b1z1 
+COPY ./software/ROS2/ros2_ws/src/control_example /app/software/ROS2/ros2_ws/src/control_example 
+COPY ./software/ROS2/ros2_ws/src/sas_monitor_coppeliasim /app/software/ROS2/ros2_ws/src/sas_monitor_coppeliasim
 COPY ./software/submodules /app/software/submodules
 
 
@@ -46,8 +46,8 @@ COPY ./software/submodules /app/software/submodules
 RUN cd /app/software/ROS2/ros2_ws/\
 && /bin/bash -c "source /opt/ros/jazzy/setup.bash; colcon build && source install/setup.bash" 
 
-RUN echo "alias launch_sas_white_control='cdros2 && source install/setup.bash && ros2 launch sas_control_unitree_b1z1 sas_control_unitree_b1z1_white_full_drivers_launch.py ' " >> /etc/bash_env
-RUN echo "alias launch_sas_black_control='cdros2 && source install/setup.bash && ros2 launch sas_control_unitree_b1z1 sas_control_unitree_b1z1_black_full_drivers_launch.py ' " >> /etc/bash_env
+RUN echo "alias launch_sas_white_control='cdros2 && source install/setup.bash && ros2 launch control_example ros2 launch control_example_b1z1_white_full_drivers_launch.py ' " >> /etc/bash_env
+#RUN echo "alias launch_sas_black_control='cdros2 && source install/setup.bash && ros2 launch sas_control_unitree_b1z1 sas_control_unitree_b1z1_black_full_drivers_launch.py ' " >> /etc/bash_env
 
 
 

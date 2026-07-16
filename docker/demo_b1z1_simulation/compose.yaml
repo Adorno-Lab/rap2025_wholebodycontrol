@@ -36,7 +36,7 @@ services:
     command: /bin/bash -c "
       source /opt/ros/jazzy/setup.bash;
       cd /app/software/ROS2/ros2_ws/ && colcon build && source install/setup.bash ;
-      ros2 launch sas_control_unitree_b1z1 sas_control_unitree_b1z1_simulation_launch.py "
+      ros2 launch control_example control_example_b1z1_simulation_launch.py"
 
   sas_datalogger:
     image: murilomarinho/sas:jazzy    
