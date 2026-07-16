@@ -32,10 +32,23 @@ def generate_launch_description():
                 "B1_topic_prefix": "sas_b1/b1_2",
                 "Z1_topic_prefix": "sas_z1/z1_2",
                 "thread_sampling_time_sec": 0.002,
-                "configuration_limits_min_deg": [-10000.0, -10000.0, -10000.0, -30.0,  45.0,  -90.0, -80.0, -45.0, -160.0],  
-                "configuration_limits_max_deg": [ 10000.0,  10000.0,  10000.0,  30.0, 165.0,    0.0,  80.0,  45.0,  160.0],  
-                "config_vel_limits_min": [-0.15, -0.15, -0.15, -1.57, -1.57, -1.57, -1.57, -1.57, -1.57],
-                "config_vel_limits_max": [ 0.2,  0.15,  0.15,  1.57,  1.57,  1.57,  1.57,  1.57,  1.57],
+                "controller_proportional_gain": 8.0,
+                "controller_damping": 0.1,
+                "controller_target_region_size": 0.15,
+                "controller_target_exit_size": 0.2,
+
+                #"vfi_file":"/home/juanjqo/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/control_example/cfg/vfi_config.yaml",
+                "vfi_file":"/app/software/ROS2/ros2_ws/src/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/control_example/cfg/vfi_config.yaml",
+
+                
+                "mobile_base_configuration_limits_min": [float('-inf'), float('-inf'), float('-inf'), float('-inf'), float('-inf'), float('-inf')],
+                "mobile_base_configuration_limits_max": [float('inf'),   float('inf'), float('inf'),   float('inf'), float('inf'),  float('inf')],
+                "mobile_base_configuration_velocity_limits_min": [-0.1, -0.1, -0.1, -0.1, -0.1, -0.1],
+                "mobile_base_configuration_velocity_limits_max": [ 0.1,  0.1,  0.1,  0.1,  0.1,  0.1],
+                "arm_configuration_limits_min": [-30.0,  45.0, -90.0, -80.0, -45.0, -160.0], # degrees
+                "arm_configuration_limits_max": [ 30.0, 165.0,   0.0,  80.0,  45.0,  160.0], # degrees
+                "arm_configuration_velocity_limits_min": [-1.57, -1.57, -1.57, -1.57, -1.57, -1.57], # rad/s
+                "arm_configuration_velocity_limits_max": [ 1.57,  1.57,  1.57,  1.57,  1.57,  1.57], # rad/s
                 
             }]
         ),
