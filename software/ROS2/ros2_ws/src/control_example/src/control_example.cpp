@@ -403,7 +403,13 @@ void ControlExample::control_loop()
 
 
 
+    double nd_qbuffer = configuration_.controller_proportional_gain;
 
+
+    //const int n = impl_->kin_mobile_manipulator_->get_dim_configuration_space();
+    const int p = rcm->get_number_of_vfi_constraints();
+
+    MatrixXd Ip = MatrixXd::Identity(p,p);
 
     //rcm->set_configuration_limits({q_min, q_max});
     //rcm->set_configuration_velocity_limits({q_dot_min, q_dot_max});
