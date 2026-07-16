@@ -243,7 +243,7 @@ void ControlExample::_update_kinematic_model()
         DQ x = impl_->robot_model_->fkm(q);
         impl_->cs_->set_object_pose(configuration_.cs_desired_frame, x);
 
-        dim_control_inputs_ = 12;
+        impl_->dim_control_inputs_ = 12;
 
 
 
@@ -269,7 +269,9 @@ ControlExample::ControlExample(std::shared_ptr<Node> &node,
 configuration_{configuration},
 st_break_loops_{break_loops},
 node_{node},
-robot_reached_region_{false}
+robot_reached_region_{false},
+show_controller_idle_status_{true},
+show_controller_on_status_{true}
 {
     impl_ = std::make_unique<ControlExample::Impl>(node_,
                                                    configuration_.thread_sampling_time_sec,
@@ -492,11 +494,13 @@ void ControlExample::control_loop()
         } catch (const std::exception& e) {
             RCLCPP_INFO_STREAM(node_->get_logger(), "::QP not solved!");
             RCLCPP_INFO_STREAM(node_->get_logger(), e.what());
-            u = VectorXd::Zero(dim_control_inputs);
+            u = VectorXd::Zero(impl_->dim_control_inputs_);
         }
 
         //Compute the distance between the end-effector and desired points
         double distance = (x.translation()-xd.translation()).vec3().norm();
+
+
 
 
         if (distance <= configuration_.controller_target_region_size)
@@ -510,7 +514,7 @@ void ControlExample::control_loop()
 
         if (robot_reached_region_)
         {
-            u = VectorXd::Zero(12);
+            u = VectorXd::Zero(impl_->dim_control_inputs_);
             if (show_controller_idle_status_)
             {
                 RCLCPP_INFO_STREAM(node_->get_logger(), "::Reached target zone. No risk of collision. ZERO mode enabled!");

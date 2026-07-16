@@ -36,6 +36,8 @@ def generate_launch_description():
                 "thread_sampling_time_sec": 0.002,
                 "controller_proportional_gain": 8.0,
                 "controller_damping": 0.1,
+                "controller_target_region_size": 0.15,
+                "controller_target_exit_size": 0.2,
 
                 #"vfi_file":"/home/juanjqo/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/control_example/cfg/vfi_config.yaml",
                 "vfi_file":"/home/s55322jq/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/control_example/cfg/vfi_config.yaml",
