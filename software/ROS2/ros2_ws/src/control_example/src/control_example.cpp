@@ -428,7 +428,6 @@ void ControlExample::control_loop()
 
 
 
-    double nd_qbuffer = configuration_.controller_proportional_gain;
 
 
     //const int n = impl_->kin_mobile_manipulator_->get_dim_configuration_space();
@@ -436,7 +435,7 @@ void ControlExample::control_loop()
 
     MatrixXd Ip = MatrixXd::Identity(p,p);
 
-    MatrixXd A = MatrixXd::Zero(3*p + 2*n + 12, n+p);
+    MatrixXd A = MatrixXd::Zero(3*p + 2*n + 2*narm, n+p);
     VectorXd b = VectorXd::Zero(p + 2*n + 2*narm+  2*p);
 
     MatrixXd zero_2nxp = MatrixXd::Zero(2*n,p);
@@ -462,6 +461,7 @@ void ControlExample::control_loop()
 */
 
     VectorXd u;
+    VectorXd u_qdot;
 
 
     while(!_should_shutdown())
@@ -538,33 +538,45 @@ void ControlExample::control_loop()
         try {
             ///-------------------------------------------------------------------
 
-          //  rcm->add_inequality_constraint(Aarm_config_min,  n_gain_arm*(qi_arm-qarm_min)); //arm configuration
-          //  rcm->add_inequality_constraint(Aarm_config_max, -n_gain_arm*(qi_arm-qarm_max)); //arm configuration
-          //  rcm->add_inequality_constraint(A_sat,  b_sat); //arm configuration
+            /*
+            rcm->add_inequality_constraint(Aarm_config_min,  n_gain_arm*(qi_arm-qarm_min)); //arm configuration
+            rcm->add_inequality_constraint(Aarm_config_max, -n_gain_arm*(qi_arm-qarm_max)); //arm configuration
+            rcm->add_inequality_constraint(A_sat,  b_sat); //arm configuration
+            auto [A1, b1] = rcm->get_inequality_constraints(q,false,false);
+            u = solver_->solve_quadratic_program(H,f,A1,b1,Aeq,beq);
+            */
+
+
 
             auto [W, w] = rcm->get_inequality_constraints(q,false,false);
 
+
             A << W,                  -Ip,
+
                  A_sat,              zero_2nxp,
                  Aarm_config_min,    zero_narmxp,
                  Aarm_config_max,    zero_narmxp,
+
                  zero_pxn, Ip,
                  zero_pxn, -Ip;
 
             smax << (-w).array().max(0.0);
 
             b << w,
+
                  b_sat,
                  n_gain_arm*(qi_arm-qarm_min),
                 -n_gain_arm*(qi_arm-qarm_max),
+
                 smax,
                 zero_p;
 
 
-            const auto [H2,f2] = _compute_objective_funtion_components(J, vec8(error), p, gain, damping, 100);
+            const auto [H2,f2] = _compute_objective_funtion_components(J, vec8(error), p, gain, damping, 1000.0);
 
             u = solver_->solve_quadratic_program(H2,f2,A,b,Aeq_ex,beq);
-            // std::cout<<"u: "<<u.transpose()<<std::endl;
+
+            //std::cout<<"u: "<<u.transpose()<<std::endl;
             ///-------------------------------------------------------------------
         } catch (const std::exception& e) {
             RCLCPP_INFO_STREAM(node_->get_logger(), "::QP not solved!");
@@ -607,8 +619,10 @@ void ControlExample::control_loop()
             }
         }
 
-        DQ twist_u = DQ(u.head(6));
-        VectorXd uarm = u.tail(6);
+        u_qdot = u.head(n);
+
+        DQ twist_u = DQ(u_qdot.head(6));
+        VectorXd uarm = u_qdot.tail(narm);
 
         //Numerical integration
         qi_arm = qi_arm + T*uarm;
