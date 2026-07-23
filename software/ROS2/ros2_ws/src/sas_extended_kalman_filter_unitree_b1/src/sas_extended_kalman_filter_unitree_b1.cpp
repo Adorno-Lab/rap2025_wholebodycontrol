@@ -502,10 +502,10 @@ void ExtendedKalmanFilter::_prediction_step()
     DQ angular_velocity_world_frame = r_*angular_velocity_from_robot_data_*r_.conj();
     DQ linear_velocity_world_frame = r_*linear_velocity_from_robot_data_*r_.conj();
 
-    VectorXd linear_velocities = linear_velocity_world_frame.vec3();
+    VectorXd linear_velocities_world_frame = linear_velocity_world_frame.vec3();
     VectorXd angular_velocities = angular_velocity_world_frame.vec3();
-    const double& vx = linear_velocities(0);
-    const double& vy = linear_velocities(1);
+    const double& vx = linear_velocities_world_frame(0);
+    const double& vy = linear_velocities_world_frame(1);
     const double& wz =  angular_velocities(2);
 
     x = x + vx * dt;
@@ -527,8 +527,12 @@ void ExtendedKalmanFilter::_prediction_step()
     predicted_robot_pose_ = r + 0.5*E_*t*r;
 
     // Compute Jacobian for state transition
-    double v = std::sqrt( vx*vx + vy*vy );
-    Eigen::MatrixXd G = jacobian_matrix(v, phi);
+
+    VectorXd linear_velocities_body_frame = linear_velocity_from_robot_data_.vec3();
+    const double& vx_body_frame = linear_velocities_body_frame(0);
+    const double& vy_body_frame  = linear_velocities_body_frame(1);
+    //double v = std::sqrt( vx*vx + vy*vy );
+    Eigen::MatrixXd G = jacobian_matrix(vx_body_frame, vy_body_frame , phi);
 
     // Propagate covariance:
     SIGMA_ = G * SIGMA_ * G.transpose() + R_;
@@ -597,16 +601,18 @@ VectorXd ExtendedKalmanFilter::_get_mobile_platform_configuration_from_pose(cons
 
 /**
  * @brief ExtendedKalmanFilter::jacobian_matrix compute the Jacobian matrix of the model
- * @param v the linear velocitiy
+ * @param vx_body_frame the linear velocitiy
  * @param phi the rotation angle
  * @return The deisred Jacobian matrix
  */
-MatrixXd ExtendedKalmanFilter::jacobian_matrix(const double &v, const double &phi)
+MatrixXd ExtendedKalmanFilter::jacobian_matrix(const double &vx_body_frame,
+                                               const double &vy_body_frame,
+                                               const double &phi)
 {
     const double& T = configuration_.thread_sampling_time_sec;
     Eigen::MatrixXd J(3, 3);
-    J << 1, 0, -T*v*sin(phi),
-         0, 0,  T*v*cos(phi),
+    J << 1, 0, -T*vx_body_frame*sin(phi),
+        0, 0,  T*vx_body_frame*cos(phi),
          0, 0,             1;
     return J;
 }
