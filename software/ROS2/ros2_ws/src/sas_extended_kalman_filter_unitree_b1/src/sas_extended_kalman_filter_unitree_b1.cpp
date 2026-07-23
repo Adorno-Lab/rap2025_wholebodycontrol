@@ -611,8 +611,8 @@ MatrixXd ExtendedKalmanFilter::jacobian_matrix(const double &vx_body_frame,
 {
     const double& T = configuration_.thread_sampling_time_sec;
     Eigen::MatrixXd J(3, 3);
-    J << 1, 0, -T*vx_body_frame*sin(phi),
-        0, 0,  T*vx_body_frame*cos(phi),
+    J << 1, 0, -T*(vx_body_frame*sin(phi) + vy_body_frame*cos(phi)),
+         0, 1,  T*(vx_body_frame*cos(phi) - vy_body_frame*sin(phi)),
          0, 0,             1;
     return J;
 }
