@@ -81,22 +81,23 @@ services:
       cd /app/software/ROS2/ros2_ws/ && colcon build && source install/setup.bash ;
       ros2 run unitree_monitor unitree_monitor"  
 
-  sas_datalogger:
-    image: murilomarinho/sas:jazzy    
-    stop_signal: SIGINT
-    platform: linux/amd64
+  sas_datalogger_server:
+    image: murilomarinho/sas:jazzy # Set the image
+    container_name: sas_datalogger_server_container # name the container
+    stop_signal: SIGINT # define the signal used by Compose to stop the container
+    stop_grace_period: 30s # specify how long Compose must wait when attempting to stop the container if it doesn't handle "stop_signal"
+    # Set environment variables
     environment:
-      DISPLAY: $DISPLAY # x server related
-      ROS_DOMAIN_ID: 77
-    privileged: true # Needed for some gpu configurations.
+      PYTHONUNBUFFERED: 1 # enforce unbuffered output mode in Python
+      ROS_DOMAIN_ID: 77 
+    network_mode: "host" # x server related and for ROS2 networking
+    ipc: "host"    
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix # x server related
-      - ~/.Xauthority:/root/.Xauthority # x server related
-    network_mode: "host" # x server related
-    ipc: "host"
+      - ./logs:/root/logs
     command: /bin/bash -c "
-      source /opt/ros/jazzy/setup.bash;
-      ros2 run sas_datalogger sas_datalogger_node.py "    
+      cd /root/logs &&
+      ros2 launch sas_datalogger  
+      sas_datalogger_launch.py"
 
 
 
