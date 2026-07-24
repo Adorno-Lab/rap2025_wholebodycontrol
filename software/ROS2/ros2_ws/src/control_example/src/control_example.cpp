@@ -303,6 +303,7 @@ configuration_{configuration},
 st_break_loops_{break_loops},
 node_{node},
 robot_reached_region_{false},
+datalogger_client_{node},
 show_controller_idle_status_{true},
 show_controller_on_status_{true}
 {
@@ -367,9 +368,6 @@ void ControlExample::control_loop()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
         //impl_->robot_client_->set_stand_mode();
     }
-
-
-
 
     VectorXd qi_arm = impl_->robot_client_->get_arm_joint_states();
     [[maybe_unused]] unsigned int i = 0;
@@ -447,18 +445,30 @@ void ControlExample::control_loop()
     Aeq_ex << Aeq, MatrixXd::Zero(3,p);
 
 
-    //rcm->set_configuration_limits({q_min, q_max});
-    //rcm->set_configuration_velocity_limits({q_dot_min, q_dot_max});
 
-
-    /*
     RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "Waiting for a connection with sas_datalogger...");
     while(!impl_->datalogger_client_.is_enabled() && !_should_shutdown())
     {
-
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
+        rclcpp::spin_some(node_);
     }
     RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "Connected to sas_datalogger!");
-*/
+
+    std::vector<std::string> tags = rcm->get_vfi_tags();
+    for (auto& tag : tags)
+      datalogger_client_.log("tags", tag);
+
+    datalogger_client_.log("T", configuration_.thread_sampling_time_sec);
+    datalogger_client_.log("controller_gain", configuration_.controller_proportional_gain);
+    datalogger_client_.log("damping_factor", configuration_.controller_damping);
+    datalogger_client_.log("slack_weight_beta", slack_weight_beta_);
+
+    datalogger_client_.log("q_min", q_min);
+    datalogger_client_.log("q_max", q_max);
+    datalogger_client_.log("q_dot_min", q_dot_min);
+    datalogger_client_.log("q_dot_max", q_dot_max);
+
+
 
     VectorXd u;
     VectorXd u_qdot;
@@ -505,6 +515,9 @@ void ControlExample::control_loop()
         MatrixXd H = H_aux + MatrixXd::Identity(H_aux.cols(), H_aux.cols())*damping*damping;
         VectorXd f = gain*2*J.transpose()*vec8(error);
         //------------------------------------------
+
+
+
 
         ///------------------
         ///
@@ -572,7 +585,7 @@ void ControlExample::control_loop()
                 zero_p;
 
 
-            const auto [H2,f2] = _compute_objective_funtion_components(J, vec8(error), p, gain, damping, 1000.0);
+            const auto [H2,f2] = _compute_objective_funtion_components(J, vec8(error), p, gain, damping, slack_weight_beta_);
 
             u = solver_->solve_quadratic_program(H2,f2,A,b,Aeq_ex,beq);
 
@@ -636,6 +649,39 @@ void ControlExample::control_loop()
         impl_->robot_client_->set_target_b1_planar_joint_velocities(planar_vel);
 
         i++;
+
+
+        //--------------------- datalogger
+        VectorXd vec_x = vec8(x);
+        VectorXd vec_xd = vec8(x);
+        datalogger_client_.log("x", vec_x);
+        datalogger_client_.log("xd", vec_xd);
+
+        ///------------------Logging---------------------------------------------------------
+        ///
+        VectorXd distances      = VectorXd(tags.size());
+        VectorXd safe_distances = VectorXd(tags.size());
+        VectorXd vfi_buffer     = VectorXd(tags.size());
+        for (size_t i=0;i<tags.size();i++)
+        {
+            //distance, square_distance, distance_error, square_distance_error, line_to_line_angle_rad, vfi_type
+            auto [d, sq_d, d_error, sq_d_error, l2l_angle, vfi_type] = rcm->get_vfi_log_data(tags.at(i));
+
+            auto build_data = rcm->get_vfi_build_data(tags.at(i));
+
+            distances(i) = d;
+            safe_distances(i) = build_data.safe_distance;
+            vfi_buffer(i) = build_data.buffer;
+
+        }
+
+        // Log data
+        datalogger_client_.log("distances", distances);
+        datalogger_client_.log("safe_distances", safe_distances);
+        datalogger_client_.log("robot_reached_region", robot_reached_region_);
+        datalogger_client_.log("u_qdot", u_qdot);
+        datalogger_client_.log("u", u);
+        datalogger_client_.log("q", q);
 
     }
 

@@ -28,6 +28,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <dqrobotics/DQ.h>
 #include <sas_core/sas_clock.hpp>
+#include <sas_datalogger/sas_datalogger_client.hpp>
 
 
 using namespace rclcpp;
@@ -64,6 +65,7 @@ private:
     std::shared_ptr<rclcpp::Node> node_;
     bool robot_reached_region_;
 
+    sas::DataloggerClient datalogger_client_;
     class Impl;
     std::unique_ptr<Impl> impl_;
 
@@ -72,6 +74,8 @@ private:
 
     bool _should_shutdown() const;
     void _update_kinematic_model();
+
+    double slack_weight_beta_ = 1000.0;
 
 public:
     ControlExample(const ControlExample&)=delete;
