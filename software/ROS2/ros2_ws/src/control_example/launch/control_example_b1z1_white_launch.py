@@ -28,7 +28,7 @@ def generate_launch_description():
                 "cs_host": "192.168.8.100",
                 "cs_port": 23000,
                 "cs_TIMEOUT_IN_MILISECONDS": 5000,
-                "vfi_file":"/home/s55322jq/git/project-clerice/software/ROS2/ros2_ws/src/cff_model_tests/control_example/cfg/vfi_config.yaml",
+                #"vfi_file":"/home/s55322jq/git/project-clerice/software/ROS2/ros2_ws/src/cff_model_tests/control_example/cfg/vfi_config.yaml",
                 "cs_B1_robotname": "UnitreeB1_1",
                 "cs_Z1_robotname": "UnitreeZ1",
                 "cs_desired_frame": "xd1",
@@ -45,8 +45,8 @@ def generate_launch_description():
                 
                 "mobile_base_configuration_limits_min": [float('-inf'), float('-inf'), float('-inf'), float('-inf'), float('-inf'), float('-inf')],
                 "mobile_base_configuration_limits_max": [float('inf'),   float('inf'), float('inf'),   float('inf'), float('inf'),  float('inf')],
-                "mobile_base_configuration_velocity_limits_min": [-0.15, -0.1, -0.2, -0.1, -0.1, -0.1],
-                "mobile_base_configuration_velocity_limits_max": [ 0.15,  0.1,  0.2,  0.1,  0.1,  0.1],
+                "mobile_base_configuration_velocity_limits_min": [-0.2, -0.2, -0.2, -0.2, -0.2, -0.2],
+                "mobile_base_configuration_velocity_limits_max": [ 0.2,  0.2,  0.2,  0.2,  0.2,  0.2],
                 "arm_configuration_limits_min": [-50.0,  45.0, -90.0, -80.0, -45.0, -160.0], # degrees
                 "arm_configuration_limits_max": [ 50.0, 165.0,   0.0,  80.0,  45.0,  160.0], # degrees
                 "arm_configuration_velocity_limits_min": [-1.57, -1.57, -1.57, -1.57, -1.57, -1.57], # rad/s
