@@ -143,7 +143,9 @@ private:
 
     double normalize_angle(double angle);
     VectorXd _get_mobile_platform_configuration_from_pose(const DQ& pose) const;
-    MatrixXd jacobian_matrix(const double& v, const double& phi);
+    MatrixXd jacobian_matrix(const double& vx_body_frame,
+                             const double& vy_body_frame,
+                             const double& phi);
     //-----------------
 
 
