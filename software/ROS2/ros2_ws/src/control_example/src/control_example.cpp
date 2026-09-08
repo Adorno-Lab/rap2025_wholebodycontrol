@@ -653,7 +653,7 @@ void ControlExample::control_loop()
 
         //--------------------- datalogger
         VectorXd vec_x = vec8(x);
-        VectorXd vec_xd = vec8(x);
+        VectorXd vec_xd = vec8(xd);
         datalogger_client_.log("x", vec_x);
         datalogger_client_.log("xd", vec_xd);
 
