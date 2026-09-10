@@ -491,50 +491,8 @@ void ControlExample::control_loop()
         VectorXd f = gain*2*J.transpose()*vec8(error);
         //------------------------------------------
 
-
-
-
-        ///------------------
-        ///
-        /*
-        double alpha = 0.99;
-        VectorXd et = vec4(x.translation() - xd.translation());
-
-
-        VectorXd er = _get_rotation_error(x, xd);
-
-        const MatrixXd& Jx = J;
-        DQ rd = xd.rotation();
-        MatrixXd Jr = DQ_Kinematics::rotation_jacobian(Jx);
-        MatrixXd Nr = haminus4(rd)*C4()*Jr;
-        MatrixXd Jt = DQ_Kinematics::translation_jacobian(Jx, x);
-
-
-
-        MatrixXd Ht = Jt.transpose()*Jt;
-        VectorXd ft = gain*Jt.transpose()*et;
-
-        MatrixXd Hr = Nr.transpose()*Nr;
-        VectorXd fr = gain*Nr.transpose()*er;
-
-        MatrixXd Hd = MatrixXd::Identity(Ht.cols(), Ht.cols())*damping*damping;
-
-        MatrixXd H2 = alpha*Ht + (1.0 - alpha)*Hr + Hd;
-        VectorXd f2 = alpha*ft + (1.0 - alpha)*fr;
-       */
-
         try {
             ///-------------------------------------------------------------------
-
-            /*
-            rcm->add_inequality_constraint(Aarm_config_min,  n_gain_arm*(qi_arm-qarm_min)); //arm configuration
-            rcm->add_inequality_constraint(Aarm_config_max, -n_gain_arm*(qi_arm-qarm_max)); //arm configuration
-            rcm->add_inequality_constraint(A_sat,  b_sat); //arm configuration
-            auto [A1, b1] = rcm->get_inequality_constraints(q,false,false);
-            u = solver_->solve_quadratic_program(H,f,A1,b1,Aeq,beq);
-            */
-
-
 
             auto [W, w] = rcm->get_inequality_constraints(q,false,false);
 
@@ -615,10 +573,9 @@ void ControlExample::control_loop()
         //Numerical integration
         qi_arm = qi_arm + T*uarm;
 
+        impl_->robot_client_->set_arm_joint_positions(DQ_robotics_extensions::Numpy::vstack(qi_arm,
+                                                      DQ_robotics_extensions::CVectorXd({0.0})));
 
-    //    impl_->robot_client_->set_forced_stand_commands(rpy.x(),rpy.y(),rpy.z(), 0.0);
-        impl_->robot_client_->set_arm_joint_positions(DQ_robotics_extensions::Numpy::vstack(qi_arm, DQ_robotics_extensions::CVectorXd({0.0})));
-        //impl_->robot_client_->set_target_b1_twist(twist_u);
         VectorXd twist_u_vec = twist_u.vec6();
         VectorXd planar_vel = (VectorXd(3) << twist_u_vec(3), twist_u_vec(4), twist_u_vec(2)).finished();
         impl_->robot_client_->set_target_b1_planar_joint_velocities(planar_vel);
@@ -627,6 +584,16 @@ void ControlExample::control_loop()
 
 
         //--------------------- datalogger
+        VectorXd qFL = impl_->robot_client_->get_leg_joint_states(UnitreeB1Z1RobotClient::LEG::FL);
+        VectorXd qFR = impl_->robot_client_->get_leg_joint_states(UnitreeB1Z1RobotClient::LEG::FR);
+        VectorXd qRL = impl_->robot_client_->get_leg_joint_states(UnitreeB1Z1RobotClient::LEG::RL);
+        VectorXd qRR = impl_->robot_client_->get_leg_joint_states(UnitreeB1Z1RobotClient::LEG::RR);
+
+        datalogger_client_.log("qFL", qFL);
+        datalogger_client_.log("qFR", qFR);
+        datalogger_client_.log("qRL", qRL);
+        datalogger_client_.log("qRR", qRR);
+
         VectorXd vec_x = vec8(x);
         VectorXd vec_xd = vec8(xd);
         datalogger_client_.log("x", vec_x);
