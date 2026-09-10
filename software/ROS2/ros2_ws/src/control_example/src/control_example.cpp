@@ -378,8 +378,8 @@ void ControlExample::control_loop()
     const MatrixXd In = MatrixXd::Identity(n,n);
 
     MatrixXd A_sat = MatrixXd(12 + 2*n, 6+n);
-    A_sat << In,
-        -In;
+    A_sat << MatrixXd::Identity(6+n,6+n),
+            -MatrixXd::Identity(6+n,6+n);
 
     auto [q_min, q_max] = configuration_.configuration_limits;
 
@@ -508,6 +508,10 @@ void ControlExample::control_loop()
 
             auto [W, w] = rcm->get_inequality_constraints(q,false,false);
 
+            smax << (-w).array().max(0.0),
+                (-n_gain_arm*(qi_arm-qarm_min - configuration_.b_arm_buffer)).array().max(0.0),
+                (+n_gain_arm*(qi_arm-qarm_max + configuration_.b_arm_buffer)).array().max(0.0);
+
 
             A << W,                          -Ip,     zero_pxn,  zero_pxn,
                 A_sat,               zero_satxp,   zero_satxn, zero_satxn,
@@ -520,10 +524,10 @@ void ControlExample::control_loop()
 
                 MatrixXd::Zero(p,6+n),      -Ip,     zero_pxn,    zero_pxn,
                 MatrixXd::Zero(n,6+n), zero_nxp,          -In,    zero_nxn,
-                MatrixXd::Zero(n,6+n), zero_nxp,     zero_nxn,         -In,
+                MatrixXd::Zero(n,6+n), zero_nxp,     zero_nxn,         -In;
 
 
-                smax << (-w).array().max(0.0);
+
 
             b << w,
                 b_sat,
@@ -533,7 +537,7 @@ void ControlExample::control_loop()
                 zero_l;
 
 
-            const auto [H2,f2] = _compute_objective_funtion_components(J, vec8(error), p, gain, damping, slack_weight_beta_);
+            const auto [H2,f2] = _compute_objective_funtion_components(J, vec8(error), l, gain, damping, slack_weight_beta_);
 
             u = solver_->solve_quadratic_program(H2,f2,A,b,Aeq_ex,beq);
 
