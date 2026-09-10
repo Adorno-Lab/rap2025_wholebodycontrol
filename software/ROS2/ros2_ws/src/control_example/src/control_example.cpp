@@ -276,8 +276,7 @@ void ControlExample::_update_kinematic_model()
         impl_->cs_->set_object_pose(configuration_.cs_desired_frame, x);
 
         impl_->dim_arm_configuration_space_ = arm->get_dim_configuration_space();
-        impl_->dim_control_inputs_ = impl_->dim_base_control_inputs_
-                                     + impl_->dim_arm_configuration_space_;
+        impl_->dim_control_inputs_ = impl_->dim_base_control_inputs_ + impl_->dim_arm_configuration_space_;
 
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Model updated!");
     }
@@ -454,6 +453,7 @@ void ControlExample::control_loop()
     datalogger_client_.log("q_max", q_max);
     datalogger_client_.log("q_dot_min", q_dot_min);
     datalogger_client_.log("q_dot_max", q_dot_max);
+    datalogger_client_.log("q_arm_buffer", configuration_.b_arm_buffer);
 
 
 
@@ -508,12 +508,7 @@ void ControlExample::control_loop()
 
             auto [W, w] = rcm->get_inequality_constraints(q,false,false);
 
-            smax << (-w).array().max(0.0),
-                (-n_gain_arm*(qi_arm-qarm_min - configuration_.b_arm_buffer)).array().max(0.0),
-                (+n_gain_arm*(qi_arm-qarm_max + configuration_.b_arm_buffer)).array().max(0.0);
-
-
-            A << W,                          -Ip,     zero_pxn,  zero_pxn,
+            A <<W,                          -Ip,     zero_pxn,   zero_pxn,
                 A_sat,               zero_satxp,   zero_satxn, zero_satxn,
                 Aarm_config_min,       zero_nxp,          -In,   zero_nxn,
                 Aarm_config_max,       zero_nxp,     zero_nxn,        -In,
@@ -526,7 +521,9 @@ void ControlExample::control_loop()
                 MatrixXd::Zero(n,6+n), zero_nxp,          -In,    zero_nxn,
                 MatrixXd::Zero(n,6+n), zero_nxp,     zero_nxn,         -In;
 
-
+            smax << (-w).array().max(0.0),
+                (-n_gain_arm*(qi_arm-qarm_min - configuration_.b_arm_buffer)).array().max(0.0),
+                (+n_gain_arm*(qi_arm-qarm_max + configuration_.b_arm_buffer)).array().max(0.0);
 
 
             b << w,
@@ -546,7 +543,7 @@ void ControlExample::control_loop()
         } catch (const std::exception& e) {
             RCLCPP_INFO_STREAM(node_->get_logger(), "::QP not solved!");
             RCLCPP_INFO_STREAM(node_->get_logger(), e.what());
-            u = VectorXd::Zero(impl_->dim_control_inputs_);
+            u = VectorXd::Zero(impl_->dim_control_inputs_ + l);
         }
 
         //Compute the distance between the end-effector and desired points
@@ -566,7 +563,7 @@ void ControlExample::control_loop()
 
         if (robot_reached_region_)
         {
-            u = VectorXd::Zero(impl_->dim_control_inputs_);
+            u = VectorXd::Zero(impl_->dim_control_inputs_ + l);
             if (show_controller_idle_status_)
             {
                 RCLCPP_INFO_STREAM(node_->get_logger(), "::Reached target zone. No risk of collision. ZERO mode enabled!");
@@ -584,7 +581,7 @@ void ControlExample::control_loop()
             }
         }
 
-        u_qdot = u.head(n);
+        u_qdot = u.head(impl_->dim_control_inputs_);
 
         DQ twist_u = DQ(u_qdot.head(6));
         VectorXd uarm = u_qdot.tail(n);
@@ -622,7 +619,7 @@ void ControlExample::control_loop()
         ///
         VectorXd distances      = VectorXd(tags.size());
         VectorXd safe_distances = VectorXd(tags.size());
-        VectorXd vfi_buffer     = VectorXd(tags.size());
+        VectorXd vfi_buffers     = VectorXd(tags.size());
         for (size_t i=0;i<tags.size();i++)
         {
             //distance, square_distance, distance_error, square_distance_error, line_to_line_angle_rad, vfi_type
@@ -632,18 +629,19 @@ void ControlExample::control_loop()
 
             distances(i) = d;
             safe_distances(i) = build_data.safe_distance;
-            vfi_buffer(i) = build_data.buffer;
+            vfi_buffers(i) = build_data.buffer;
 
         }
 
         // Log data
         datalogger_client_.log("distances", distances);
         datalogger_client_.log("safe_distances", safe_distances);
+        datalogger_client_.log("smax", smax);
+        datalogger_client_.log("vfi_buffers", vfi_buffers);
         datalogger_client_.log("robot_reached_region", robot_reached_region_);
         datalogger_client_.log("u_qdot", u_qdot);
         datalogger_client_.log("u", u);
         datalogger_client_.log("q", q);
-
     }
 
 
