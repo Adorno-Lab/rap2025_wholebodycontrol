@@ -30,6 +30,31 @@ int main(int argc, char** argv)
     rclcpp::init(argc,argv);
     auto node = std::make_shared<rclcpp::Node>("sas_consensus_control_node");
 
+    // The robot configuration is represented by q = [vec8(xbase); q_arm], where xbase is a unit dual quaternion that
+    // represents the pose of the quadruped robot.
+    // Since no limits are applied for vec8(xbase), we use (-inf, inf).
+    std::vector<double> mobile_base_configuration_limits_min = {
+        -std::numeric_limits<double>::infinity(),
+        -std::numeric_limits<double>::infinity(),
+        -std::numeric_limits<double>::infinity(),
+        -std::numeric_limits<double>::infinity(),
+        -std::numeric_limits<double>::infinity(),
+        -std::numeric_limits<double>::infinity(),
+        -std::numeric_limits<double>::infinity(),
+        -std::numeric_limits<double>::infinity()
+    };
+
+    std::vector<double> mobile_base_configuration_limits_max = {
+        std::numeric_limits<double>::infinity(),
+        std::numeric_limits<double>::infinity(),
+        std::numeric_limits<double>::infinity(),
+        std::numeric_limits<double>::infinity(),
+        std::numeric_limits<double>::infinity(),
+        std::numeric_limits<double>::infinity(),
+        std::numeric_limits<double>::infinity(),
+        std::numeric_limits<double>::infinity()
+    };
+
     try
     {
 
@@ -51,10 +76,10 @@ int main(int argc, char** argv)
 
 
         ///------------------------------Configuration Limits-----------------------------------------------
-        std::vector<double> mobile_base_configuration_limits_min;
-        std::vector<double> mobile_base_configuration_limits_max;
-        sas::get_ros_parameter(node,"mobile_base_configuration_limits_min", mobile_base_configuration_limits_min);
-        sas::get_ros_parameter(node,"mobile_base_configuration_limits_max", mobile_base_configuration_limits_max);
+        //std::vector<double> mobile_base_configuration_limits_min;
+        //std::vector<double> mobile_base_configuration_limits_max;
+        //sas::get_ros_parameter(node,"mobile_base_configuration_limits_min", mobile_base_configuration_limits_min);
+        //sas::get_ros_parameter(node,"mobile_base_configuration_limits_max", mobile_base_configuration_limits_max);
 
         VectorXd q_base_min = sas::std_vector_double_to_vectorxd(mobile_base_configuration_limits_min);
         VectorXd q_base_max = sas::std_vector_double_to_vectorxd(mobile_base_configuration_limits_max);
