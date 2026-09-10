@@ -325,21 +325,6 @@ void ControlExample::control_loop()
     impl_->clock_.init();
     rclcpp::spin_some(node_);
 
-
-    /// If you want to set the desired pose using a topic, you need to wait for that topic before
-    /// start the control loop. I commented the following lines, since for this example I am not waiting for a desired pose.
-    /// In the following lines, I wait for the topic configuration_.B1_topic_prefix + "/get/coppeliasim_frame_xd"
-    /*
-    while (!impl_->new_coppeliasim_xd_data_available() && !_should_shutdown())
-    {
-        rclcpp::spin_some(node_);
-        impl_->clock_.update_and_sleep();
-        rclcpp::spin_some(node_);
-        RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Waiting for desired pose from CoppeliaSim ");
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
-    */
-
     // Wait for the robot drivers
     while (!impl_->robot_client_->is_enabled() && !_should_shutdown())
     {
@@ -358,16 +343,6 @@ void ControlExample::control_loop()
 
     //###########################################################################################################//
     //####################### Main Kinematic control loop running here ##########################################//
-
-    for (int i=0;i<2000;i++) //---------??????????????????????????????
-    {
-        rclcpp::spin_some(node_);
-        impl_->clock_.update_and_sleep();
-        rclcpp::spin_some(node_);
-        //RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Setting Forced stand mode ");
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        //impl_->robot_client_->set_stand_mode();
-    }
 
     VectorXd qi_arm = impl_->robot_client_->get_arm_joint_states();
     [[maybe_unused]] unsigned int i = 0;
