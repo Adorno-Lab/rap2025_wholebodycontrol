@@ -76,7 +76,7 @@ private:
     bool _should_shutdown() const;
     void _update_kinematic_model();
 
-    double slack_weight_beta_ = 1000.0;
+    double slack_weight_beta_ = 100.0;
 
 public:
     ControlExample(const ControlExample&)=delete;
