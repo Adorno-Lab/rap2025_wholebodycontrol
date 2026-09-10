@@ -101,9 +101,12 @@ int main(int argc, char** argv)
 
         configuration.configuration_limits = {q_min, q_max};
 
-        // Configuration buffer
-        VectorXd q_arm_buffer(q_arm_min.size());
-        q_arm_buffer << 5,5,5,5,5,5; //Deg
+        ///------------------------ Configuration buffer
+        /// arm_configuration_buffer
+        ///
+        std::vector<double> arm_configuration_buffer;
+        sas::get_ros_parameter(node,"arm_configuration_buffer", arm_configuration_buffer);
+        VectorXd q_arm_buffer =  deg2rad(sas::std_vector_double_to_vectorxd(arm_configuration_buffer));
 
         VectorXd q_base_buffer(q_base_min.size());
         q_base_buffer << 0,0,0,0,0,0,0,0;
