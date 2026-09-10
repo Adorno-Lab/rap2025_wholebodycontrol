@@ -105,7 +105,7 @@ public:
     MatrixXd Aeq_wm_;
     VectorXd beq_wm_;
 
-
+    const int dim_base_control_inputs_ = 6; // A twist expressed at the body frame
     int dim_arm_configuration_space_;
     int dim_control_inputs_;
 
@@ -276,9 +276,8 @@ void ControlExample::_update_kinematic_model()
         impl_->cs_->set_object_pose(configuration_.cs_desired_frame, x);
 
         impl_->dim_arm_configuration_space_ = arm->get_dim_configuration_space();
-        impl_->dim_control_inputs_ = 6 + impl_->dim_arm_configuration_space_;
-
-
+        impl_->dim_control_inputs_ = impl_->dim_base_control_inputs_
+                                     + impl_->dim_arm_configuration_space_;
 
         RCLCPP_INFO_STREAM_ONCE(node_->get_logger(), "::Model updated!");
     }
@@ -298,14 +297,14 @@ ControlExample::~ControlExample()
 ControlExample::ControlExample(std::shared_ptr<Node> &node,
                                const ControlExampleConfiguration &configuration,
                                std::atomic_bool *break_loops)
-:
-configuration_{configuration},
-st_break_loops_{break_loops},
-node_{node},
-robot_reached_region_{false},
-datalogger_client_{node},
-show_controller_idle_status_{true},
-show_controller_on_status_{true}
+    :
+    configuration_{configuration},
+    st_break_loops_{break_loops},
+    node_{node},
+    robot_reached_region_{false},
+    datalogger_client_{node},
+    show_controller_idle_status_{true},
+    show_controller_on_status_{true}
 {
     impl_ = std::make_unique<ControlExample::Impl>(node_,
                                                    configuration_.thread_sampling_time_sec,
@@ -358,8 +357,8 @@ void ControlExample::control_loop()
     const double& gain = configuration_.controller_proportional_gain;
     auto solver_ = std::make_shared<DQ_QPOASESSolver>();
 
-    MatrixXd Aeq = impl_->Aeq_wm_;
-    VectorXd beq = impl_->beq_wm_;
+    const MatrixXd Aeq = impl_->Aeq_wm_;
+    const VectorXd beq = impl_->beq_wm_;
 
 
 
@@ -368,25 +367,31 @@ void ControlExample::control_loop()
 
     auto [q_dot_min, q_dot_max] = configuration_.configuration_velocity_limits;
 
-    const int& n = impl_->dim_control_inputs_;
-    VectorXd b_sat = VectorXd(2*n); //24
+    //const int& n = impl_->dim_control_inputs_; 12
+
+    // n = dimension of the arm configuration space n=6
+    const int& n = impl_->dim_arm_configuration_space_;
+
+    VectorXd b_sat = VectorXd(12 + 2*n); //24
     b_sat << q_dot_max, -q_dot_min;
 
-    MatrixXd A_sat = MatrixXd(2*n, n);
-    A_sat << MatrixXd::Identity(n,n), -MatrixXd::Identity(n,n);
+    const MatrixXd In = MatrixXd::Identity(n,n);
+
+    MatrixXd A_sat = MatrixXd(12 + 2*n, 6+n);
+    A_sat << In,
+        -In;
 
     auto [q_min, q_max] = configuration_.configuration_limits;
 
-    const int& narm = impl_->dim_arm_configuration_space_;
-    VectorXd qarm_min = q_min.tail(narm);
-    VectorXd qarm_max = q_max.tail(narm);
+    VectorXd qarm_min = q_min.tail(n);
+    VectorXd qarm_max = q_max.tail(n);
 
 
-    MatrixXd Aarm_config_min = MatrixXd(narm,n);
-    Aarm_config_min << MatrixXd::Zero(narm,6), -MatrixXd::Identity(narm,narm);
+    MatrixXd Aarm_config_min = MatrixXd(n,6+n);
+    Aarm_config_min << MatrixXd::Zero(n,6), -In;
 
-    MatrixXd Aarm_config_max = MatrixXd(narm,n);
-    Aarm_config_max << MatrixXd::Zero(narm,6), MatrixXd::Identity(narm,narm);
+    MatrixXd Aarm_config_max = MatrixXd(n,6+n);
+    Aarm_config_max << MatrixXd::Zero(n,6), In;
     double n_gain_arm = 5.0;
 
     auto vfi_config_yaml = std::make_shared<DQ_robotics_extensions::VFIConfigurationFileYaml>();
@@ -405,19 +410,26 @@ void ControlExample::control_loop()
 
     //const int n = impl_->kin_mobile_manipulator_->get_dim_configuration_space();
     const int p = rcm->get_number_of_vfi_constraints();
+    const int l = p +2*n;
 
-    MatrixXd Ip = MatrixXd::Identity(p,p);
+    const MatrixXd Ip = MatrixXd::Identity(p,p);
 
-    MatrixXd A = MatrixXd::Zero(3*p + 2*n + 2*narm, n+p);
-    VectorXd b = VectorXd::Zero(p + 2*n + 2*narm+  2*p);
+    MatrixXd A = MatrixXd::Zero(p+12+2*n+2*n+2*(p+2*n), 6+n+p+2*n);
+    VectorXd b = VectorXd::Zero(p+12+2*n+2*n+2*(p+2*n));
 
-    MatrixXd zero_2nxp = MatrixXd::Zero(2*n,p);
-    MatrixXd zero_narmxp = MatrixXd::Zero(narm,p);
-    MatrixXd zero_pxn = MatrixXd::Zero(p,n);
-    VectorXd zero_p = VectorXd::Zero(p);
-    VectorXd smax = VectorXd::Zero(p);
-    MatrixXd Aeq_ex = MatrixXd(3, n+p);
-    Aeq_ex << Aeq, MatrixXd::Zero(3,p);
+    const MatrixXd zero_satxp = MatrixXd::Zero(12+2*n,p);
+    const MatrixXd zero_satxn = MatrixXd::Zero(12+2*n,n);
+    const MatrixXd zero_nxp = MatrixXd::Zero(n,p);
+    const MatrixXd zero_pxn = MatrixXd::Zero(p,n);
+    const MatrixXd zero_nxn = MatrixXd::Zero(n,n);
+
+
+
+    const VectorXd zero_l = VectorXd::Zero(l);
+    VectorXd smax = VectorXd::Zero(l);
+
+    MatrixXd Aeq_ex(Aeq.rows(), Aeq.cols()+l);
+    Aeq_ex << Aeq, MatrixXd::Zero(Aeq.rows(), l);
 
 
 
@@ -431,7 +443,7 @@ void ControlExample::control_loop()
 
     std::vector<std::string> tags = rcm->get_vfi_tags();
     for (auto& tag : tags)
-      datalogger_client_.log("tags", tag);
+        datalogger_client_.log("tags", tag);
 
     datalogger_client_.log("T", configuration_.thread_sampling_time_sec);
     datalogger_client_.log("controller_gain", configuration_.controller_proportional_gain);
@@ -497,25 +509,28 @@ void ControlExample::control_loop()
             auto [W, w] = rcm->get_inequality_constraints(q,false,false);
 
 
-            A << W,                  -Ip,
+            A << W,                          -Ip,     zero_pxn,  zero_pxn,
+                A_sat,               zero_satxp,   zero_satxn, zero_satxn,
+                Aarm_config_min,       zero_nxp,          -In,   zero_nxn,
+                Aarm_config_max,       zero_nxp,     zero_nxn,        -In,
 
-                 A_sat,              zero_2nxp,
-                 Aarm_config_min,    zero_narmxp,
-                 Aarm_config_max,    zero_narmxp,
+                MatrixXd::Zero(p,6+n),       Ip,     zero_pxn,    zero_pxn,
+                MatrixXd::Zero(n,6+n), zero_nxp,           In,    zero_nxn,
+                MatrixXd::Zero(n,6+n), zero_nxp,     zero_nxn,          In,
 
-                 zero_pxn, Ip,
-                 zero_pxn, -Ip;
+                MatrixXd::Zero(p,6+n),      -Ip,     zero_pxn,    zero_pxn,
+                MatrixXd::Zero(n,6+n), zero_nxp,          -In,    zero_nxn,
+                MatrixXd::Zero(n,6+n), zero_nxp,     zero_nxn,         -In,
 
-            smax << (-w).array().max(0.0);
+
+                smax << (-w).array().max(0.0);
 
             b << w,
-
-                 b_sat,
-                 n_gain_arm*(qi_arm-qarm_min),
-                -n_gain_arm*(qi_arm-qarm_max),
-
+                b_sat,
+                n_gain_arm*(qi_arm-qarm_min - configuration_.b_arm_buffer),
+                -n_gain_arm*(qi_arm-qarm_max + configuration_.b_arm_buffer),
                 smax,
-                zero_p;
+                zero_l;
 
 
             const auto [H2,f2] = _compute_objective_funtion_components(J, vec8(error), p, gain, damping, slack_weight_beta_);
@@ -568,13 +583,13 @@ void ControlExample::control_loop()
         u_qdot = u.head(n);
 
         DQ twist_u = DQ(u_qdot.head(6));
-        VectorXd uarm = u_qdot.tail(narm);
+        VectorXd uarm = u_qdot.tail(n);
 
         //Numerical integration
         qi_arm = qi_arm + T*uarm;
 
         impl_->robot_client_->set_arm_joint_positions(DQ_robotics_extensions::Numpy::vstack(qi_arm,
-                                                      DQ_robotics_extensions::CVectorXd({0.0})));
+                                                                                            DQ_robotics_extensions::CVectorXd({0.0})));
 
         VectorXd twist_u_vec = twist_u.vec6();
         VectorXd planar_vel = (VectorXd(3) << twist_u_vec(3), twist_u_vec(4), twist_u_vec(2)).finished();
