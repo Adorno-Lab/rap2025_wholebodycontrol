@@ -101,6 +101,19 @@ int main(int argc, char** argv)
 
         configuration.configuration_limits = {q_min, q_max};
 
+        // Configuration buffer
+        VectorXd q_arm_buffer(q_arm_min.size());
+        q_arm_buffer << 5,5,5,5,5,5; //Deg
+
+        VectorXd q_base_buffer(q_base_min.size());
+        q_base_buffer << 0,0,0,0,0,0,0,0;
+
+        VectorXd q_buffer(q_base_min.size() + q_arm_min.size());
+        q_buffer << q_base_buffer, q_arm_buffer;
+
+
+        configuration.configuration_buffer = deg2rad(q_buffer);
+
         ///------------------------------Configuration Velocity Limits----------------------------------------
 
         std::vector<double> mobile_base_configuration_velocity_limits_min;

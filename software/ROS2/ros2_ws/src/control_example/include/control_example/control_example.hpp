@@ -49,6 +49,7 @@ struct ControlExampleConfiguration
     double thread_sampling_time_sec;
     std::tuple<VectorXd, VectorXd> configuration_limits;
     std::tuple<VectorXd, VectorXd> configuration_velocity_limits;
+    VectorXd configuration_buffer;
     std::string vfi_file;
     double controller_proportional_gain;
     double controller_damping;
