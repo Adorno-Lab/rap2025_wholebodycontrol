@@ -106,16 +106,8 @@ int main(int argc, char** argv)
         ///
         std::vector<double> arm_configuration_buffer;
         sas::get_ros_parameter(node,"arm_configuration_buffer", arm_configuration_buffer);
-        VectorXd q_arm_buffer =  deg2rad(sas::std_vector_double_to_vectorxd(arm_configuration_buffer));
-
-        VectorXd q_base_buffer(q_base_min.size());
-        q_base_buffer << 0,0,0,0,0,0,0,0;
-
-        VectorXd q_buffer(q_base_min.size() + q_arm_min.size());
-        q_buffer << q_base_buffer, q_arm_buffer;
-
-
-        configuration.configuration_buffer = deg2rad(q_buffer);
+        VectorXd b_arm_buffer =  deg2rad(sas::std_vector_double_to_vectorxd(arm_configuration_buffer));
+        configuration.b_arm_buffer = b_arm_buffer;
 
         ///------------------------------Configuration Velocity Limits----------------------------------------
 
