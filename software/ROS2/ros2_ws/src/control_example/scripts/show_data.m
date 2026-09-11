@@ -34,13 +34,17 @@ tags_cell = cellstr(tags);
 for i=1:p
         subplot(4,5,i);
             
-        plot(dist(i,:), 'k','LineWidth',w);
+        
         hold on
-        if any(strcmp(tags_cell{i}, 'C2'))
+        if any(strcmp(tags_cell{i}, 'C2')) % conic constraint
+            fangle = dist(i,:);
+            angle = acos((2-fangle)/2);
+            plot(angle, 'k','LineWidth',w);
             plot(tline,(deg2rad(safe_dist(i)) - deg2rad(vfi_buffer(i)))*ones(length(tline)), '--b', 'LineWidth',1);
             hold on
             plot(tline,deg2rad(safe_dist(i))*ones(length(tline)), '--r', 'LineWidth',1);
         else
+            plot(dist(i,:), 'k','LineWidth',w);
             plot(tline,(safe_dist(i) + vfi_buffer(i))*ones(length(tline)), '--b', 'LineWidth',1);
             hold on
             plot(tline,safe_dist(i)*ones(length(tline)), '--r', 'LineWidth',1);
