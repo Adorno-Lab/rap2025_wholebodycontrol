@@ -20,7 +20,7 @@ void sig_int_handler(int)
 //   true  -> use HARDCODED parameters (Qt debugging)
 //   false -> read parameters from the launch file
 //============================================================
-static constexpr bool USE_HARDCODED_PARAMETERS = true;
+static constexpr bool USE_HARDCODED_PARAMETERS = false;
 
 int main(int argc, char** argv)
 {

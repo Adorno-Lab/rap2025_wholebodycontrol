@@ -455,7 +455,11 @@ void ControlExample::control_loop()
     datalogger_client_.log("q_dot_max", q_dot_max);
     datalogger_client_.log("q_arm_buffer", configuration_.b_arm_buffer);
 
-
+    // Save information about the obstacles
+    const VectorXd xworkspace = impl_->cs_->get_object_pose("workspace").vec8();
+    const VectorXd xhuman     = impl_->cs_->get_object_pose("Human_Cylinder").vec8();
+    datalogger_client_.log("xworkspace", xworkspace);
+    datalogger_client_.log("xhuman", xhuman);
 
     VectorXd u;
     VectorXd u_qdot;

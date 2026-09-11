@@ -43,8 +43,8 @@ def generate_launch_description():
                 #"vfi_file":"/home/juanjqo/git/rap2025_wholebodycontrol/software/ROS2/ros2_ws/src/control_example/cfg/vfi_config.yaml",
                 "vfi_file":"/app/software/ROS2/ros2_ws/src/control_example/cfg/vfi_config.yaml",
 
-                "mobile_base_configuration_velocity_limits_min": [-0.2, -0.2, -0.2, -0.2, -0.2, -0.2],
-                "mobile_base_configuration_velocity_limits_max": [ 0.2,  0.2,  0.2,  0.2,  0.2,  0.2],
+                "mobile_base_configuration_velocity_limits_min": [-0.18, -0.18, -0.18, -0.18, -0.18, -0.18],
+                "mobile_base_configuration_velocity_limits_max": [ 0.18,  0.18,  0.18,  0.18,  0.18,  0.18],
                 "arm_configuration_limits_min": [-50.0,  45.0, -90.0, -80.0, -45.0, -160.0], # degrees
                 "arm_configuration_limits_max": [ 50.0, 165.0,   0.0,  80.0,  45.0,  160.0], # degrees
                 "arm_configuration_buffer": [5.0,  5.0, 5.0, 5.0, 5.0, 5.0], # degrees

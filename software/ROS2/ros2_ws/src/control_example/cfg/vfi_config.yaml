@@ -194,7 +194,7 @@ vfi_array:
         robot_index: 1
         joint_index: 6
         safe_distance: 0.7
-        buffer: 0.2
+        buffer: 0.3
         vfi_gain: 5.0
         direction: "RESTRICTED_ZONE"
         tag: "CH1"
@@ -207,7 +207,7 @@ vfi_array:
         robot_index: 1
         joint_index: 6
         safe_distance: 0.7
-        buffer: 0.2
+        buffer: 0.3
         vfi_gain: 5.0
         direction: "RESTRICTED_ZONE"
         tag: "CH2"
@@ -220,7 +220,7 @@ vfi_array:
         robot_index: 1
         joint_index: 6
         safe_distance: 0.7
-        buffer: 0.2
+        buffer: 0.3
         vfi_gain: 5.0
         direction: "RESTRICTED_ZONE"
         tag: "CH3"
@@ -233,7 +233,7 @@ vfi_array:
         robot_index: 1
         joint_index: 12
         safe_distance: 0.45
-        buffer: 0.2
+        buffer: 0.3
         vfi_gain: 5.0
         direction: "RESTRICTED_ZONE"
         tag: "CH4"
