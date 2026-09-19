@@ -14,7 +14,7 @@ The command `newgrp docker` starts a new shell with docker as the current group.
 
 ## Clone repository
 ```shell
-mkdir -p ~/git/ && cd /git/
+mkdir -p ~/git/ && cd ~/git/
 git clone https://github.com/Adorno-Lab/rap2025_wholebodycontrol.git --recursive
 ```
 
