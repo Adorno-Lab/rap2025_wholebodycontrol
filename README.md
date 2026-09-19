@@ -2,13 +2,24 @@
 
 # rap2025_wholebodycontrol
 
+## Docker installation
+```shell
+sudo apt install docker.io docker-compose-v2
+sudo usermod -aG docker $USER
+newgrp docker
+```
+The command `usermod` modifies the user account, with the flag `-a` being used to append a new group without removing existing ones, and `-G docker` being used add $USER to the docker supplementary group.
+
+The command `newgrp docker` starts a new shell with docker as the current group. Changes take effect immediately and logging out and in is unnecessary.
+
+## Clone repository
 ```shell
 mkdir -p ~/git/ && cd /git/
 git clone https://github.com/Adorno-Lab/rap2025_wholebodycontrol.git --recursive
 ```
 
 
-## Simulation test
+## Run simulation
 
 ```shell
 cd ~/git/rap2025_wholebodycontrol/docker/demo_b1z1_simulation
