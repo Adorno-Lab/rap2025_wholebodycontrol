@@ -21,6 +21,10 @@ git clone https://github.com/Adorno-Lab/rap2025_wholebodycontrol.git --recursive
 
 ## Run simulation
 
+### Requirements
+
+- Architecture: x86_64 / amd64 only (no ARM, no Apple Silicon)
+
 ```shell
 cd ~/git/rap2025_wholebodycontrol/docker/demo_b1z1_simulation
 xhost +local:root
