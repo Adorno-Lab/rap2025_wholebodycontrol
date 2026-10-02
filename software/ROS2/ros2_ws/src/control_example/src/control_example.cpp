@@ -330,7 +330,7 @@ void ControlExample::control_loop()
     }
     impl_->spin_and_update(std::string("Robot is ready!"));
 
-    // Since both the drivers and the CoppeliaSim node is running, we can connect to CoppeliaSim
+    // Since both the drivers and the CoppeliaSim node are running, we can connect to CoppeliaSim
     // to update the kinematic model offsets.
     impl_->connect(configuration_.cs_host,
                    configuration_.cs_port,
