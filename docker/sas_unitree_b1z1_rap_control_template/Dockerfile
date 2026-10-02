@@ -1,4 +1,4 @@
-FROM ghcr.io/adorno-lab/sas_unitree_b1z1_jazzy:latest  
+FROM ghcr.io/adorno-lab/clerice_b1/sas_unitree_b1z1_jazzy:02_10_2026_09_59_20
 ENV BASH_ENV="/etc/bash_env"
 
 RUN echo "export ROS_DOMAIN_ID=77" >> /etc/bash_env
@@ -21,7 +21,6 @@ RUN cd ~/git && git clone https://github.com/Adorno-Lab/robot_constraint_manager
 RUN cd ~/git/robot_constraint_manager && mkdir -p build && cd build && cmake .. && make && make install
 
 
-RUN cd ~/git && git clone https://github.com/Adorno-Lab/sas_unitree_b1z1_control_template
 RUN cp -r ~/git/sas_unitree_b1z1_control_template/ros2_ws/src/unitree_monitor /app/software/ROS2/ros2_ws/src/unitree_monitor
 
 
@@ -46,7 +45,7 @@ COPY ./software/submodules /app/software/submodules
 RUN cd /app/software/ROS2/ros2_ws/\
 && /bin/bash -c "source /opt/ros/jazzy/setup.bash; colcon build && source install/setup.bash" 
 
-RUN echo "alias launch_sas_white_control='cdros2 && source install/setup.bash && ros2 launch control_example ros2 launch control_example_b1z1_white_full_drivers_launch.py ' " >> /etc/bash_env
+RUN echo "alias launch_sas_white_control='cdros2 && source install/setup.bash && ros2 launch control_example control_example_b1z1_white_full_drivers_launch.py ' " >> /etc/bash_env
 #RUN echo "alias launch_sas_black_control='cdros2 && source install/setup.bash && ros2 launch sas_control_unitree_b1z1 sas_control_unitree_b1z1_black_full_drivers_launch.py ' " >> /etc/bash_env
 
 
